@@ -101,6 +101,9 @@ model LeetCodeEntry {
   hard     Int      @default(0)
   topics   String[]
   notes    String?
+  contestName String?
+  rating      Int?
+  rank        Int?
   userId   String
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

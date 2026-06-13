@@ -137,6 +137,8 @@ async function fetchEntries() {
     const res = await window.apiFetch(API_URL);
     const data = await res.json();
     if (data.success) {
+      // Sort entries by date descending (latest first)
+      data.data.sort((a, b) => new Date(b.date) - new Date(a.date));
       renderTable(data.data);
       updateStats(data.data);
     }

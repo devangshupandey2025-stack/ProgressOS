@@ -64,7 +64,11 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
   </div>
 
   <!-- Stats Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+    <div class="glass-card p-6 rounded-xl text-center border-b-4 border-b-primary">
+      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Rating</p>
+      <p id="stat-rating" class="text-3xl font-bold text-primary mt-2">-</p>
+    </div>
     <div class="glass-card p-6 rounded-xl text-center">
       <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Total Solved</p>
       <p id="stat-total" class="text-3xl font-bold text-on-surface mt-2">0</p>
@@ -89,6 +93,7 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
       <thead>
         <tr class="bg-gray-50 border-b border-outline-variant text-xs text-on-surface-variant uppercase tracking-wider">
           <th class="px-6 py-4 font-medium">Date</th>
+          <th class="px-6 py-4 font-medium">Contest / Rating</th>
           <th class="px-6 py-4 font-medium">Easy</th>
           <th class="px-6 py-4 font-medium">Medium</th>
           <th class="px-6 py-4 font-medium">Hard</th>
@@ -97,7 +102,7 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
         </tr>
       </thead>
       <tbody id="entries-table" class="text-sm divide-y divide-outline-variant">
-        <tr><td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Loading data...</td></tr>
+        <tr><td colspan="7" class="px-6 py-8 text-center text-on-surface-variant">Loading data...</td></tr>
       </tbody>
     </table>
   </div>
@@ -129,6 +134,23 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
         <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">Topics (comma separated)</label>
         <input id="in-topics" type="text" placeholder="Arrays, DP, Graphs" class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
       </div>
+      <div class="border-t border-outline-variant my-4 pt-4">
+        <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Optional: Contest Info</p>
+        <div>
+          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">Contest Name</label>
+          <input id="in-contestName" type="text" placeholder="e.g. Weekly Contest 400" class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">New Rating</label>
+            <input id="in-rating" type="number" class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+          </div>
+          <div>
+            <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">Rank</label>
+            <input id="in-rank" type="number" class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+          </div>
+        </div>
+      </div>
       <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-[#e68a2e] transition-all">
         Save Entry
       </button>
@@ -147,6 +169,8 @@ async function fetchEntries() {
     const res = await window.apiFetch(API_URL);
     const data = await res.json();
     if (data.success) {
+      // Sort entries by date descending
+      data.data.sort((a, b) => new Date(b.date) - new Date(a.date));
       renderTable(data.data);
       updateStats(data.data);
     }
@@ -156,17 +180,19 @@ async function fetchEntries() {
 function renderTable(entries) {
   const tbody = document.getElementById('entries-table');
   if (entries.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">No sessions logged yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-on-surface-variant">No sessions logged yet.</td></tr>';
     return;
   }
   
   tbody.innerHTML = entries.map(entry => {
     const date = new Date(entry.date).toLocaleDateString();
     const topicsHtml = entry.topics.map(t => `<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs mr-1">${t}</span>`).join('');
-    
+    const contestHtml = entry.contestName ? `<span class="font-bold text-primary">${entry.rating || '-'}</span> <span class="text-xs text-gray-500">(${entry.contestName})</span>` : '<span class="text-gray-400">Practice</span>';
+
     return `
       <tr class="hover:bg-gray-50 transition-colors group">
         <td class="px-6 py-4 font-medium text-on-surface">${date}</td>
+        <td class="px-6 py-4">${contestHtml}</td>
         <td class="px-6 py-4 text-green-600 font-bold">${entry.easy}</td>
         <td class="px-6 py-4 text-yellow-600 font-bold">${entry.medium}</td>
         <td class="px-6 py-4 text-red-600 font-bold">${entry.hard}</td>
@@ -181,7 +207,17 @@ function renderTable(entries) {
 
 function updateStats(entries) {
   let easy = 0, medium = 0, hard = 0;
+  // Find latest rating
+  let latestRating = '-';
+  for (const e of entries) {
+    if (e.rating) {
+      latestRating = e.rating;
+      break;
+    }
+  }
+
   entries.forEach(e => { easy += e.easy; medium += e.medium; hard += e.hard; });
+  document.getElementById('stat-rating').textContent = latestRating;
   document.getElementById('stat-total').textContent = easy + medium + hard;
   document.getElementById('stat-easy').textContent = easy;
   document.getElementById('stat-medium').textContent = medium;
@@ -194,12 +230,17 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
   const medium = parseInt(document.getElementById('in-medium').value) || 0;
   const hard = parseInt(document.getElementById('in-hard').value) || 0;
   const topics = document.getElementById('in-topics').value.split(',').map(t => t.trim()).filter(Boolean);
+  const contestName = document.getElementById('in-contestName').value || null;
+  const rating = parseInt(document.getElementById('in-rating').value) || null;
+  const rank = parseInt(document.getElementById('in-rank').value) || null;
   
+  const data = { easy, medium, hard, topics, contestName, rating, rank };
+
   try {
     const res = await window.apiFetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ easy, medium, hard, topics })
+      body: JSON.stringify(data)
     });
     if (res.ok) {
       closeModal();

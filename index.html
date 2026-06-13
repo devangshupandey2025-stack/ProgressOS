@@ -353,7 +353,7 @@
                             <a href="trackers/cgpa.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">CGPA
                                 Tracker</a>
-                            <a href="#"
+                            <a href="trackers/subjects.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Subjects</a>
                             <div class="border-t border-outline-variant my-1"></div>
                             <p class="nav-group-label">Programming</p>
@@ -361,31 +361,31 @@
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">LeetCode</a>
                             <a href="trackers/codeforces.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Codeforces</a>
-                            <a href="#"
+                            <a href="trackers/corecs.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Core
                                 CS</a>
                             <div class="border-t border-outline-variant my-1"></div>
                             <p class="nav-group-label">Career</p>
                             <a href="trackers/projects.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Projects</a>
-                            <a href="#"
+                            <a href="trackers/opensource.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Open
                                 Source</a>
-                            <a href="#"
+                            <a href="trackers/nptel.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">NPTEL</a>
                             <div class="border-t border-outline-variant my-1"></div>
                             <p class="nav-group-label">Advanced</p>
-                            <a href="#"
+                            <a href="trackers/aiml.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">AI
                                 / ML</a>
-                            <a href="#"
+                            <a href="trackers/cyber.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Cybersecurity</a>
-                            <a href="#"
+                            <a href="trackers/gate.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">GATE
                                 CSE</a>
                             <div class="border-t border-outline-variant my-1"></div>
                             <p class="nav-group-label">Research</p>
-                            <a href="#"
+                            <a href="trackers/research.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Papers
                                 & Publications</a>
                         </div>
@@ -881,27 +881,6 @@
         const XP_RATES = {
             DSA: 10, PROJECT: 20, ML: 15, CYBER: 15, ACADEMICS: 10, OPEN_SOURCE: 25
         };
-
-        // ─── API Helper (uses Clerk token via global apiFetch from auth.js) ──────────
-        async function apiRequest(method, path, body = null) {
-            const opts = {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            };
-            if (body) {
-                opts.body = JSON.stringify(body);
-            }
-            try {
-                const res = await window.apiFetch(`${API_BASE}${path}`, opts);
-                const data = await res.json();
-                return data;
-            } catch (err) {
-                console.error(`API Error [${method} ${path}]:`, err);
-                return { success: false, error: err.message };
-            }
-        }
 
 
         // ─── Fetch Dashboard Data ───────────────────────────────────────────────────

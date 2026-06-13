@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Open Source Tracker | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = { theme: { extend: { colors: { primary: "#FF9933", secondary: "#000080", tertiary: "#128807", error: "#EF4444" }, spacing: { "max_width": "1440px", "gutter": "24px" } } } }
+</script>
+<style>
+body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: all 0.3s ease; }
+</style>
+  <script src="../js/auth.js"></script>
+</head>
+<body class="bg-background selection:bg-primary/20 selection:text-primary">
+
+<header id="topnav" class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
+  <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
+    <div class="flex justify-between w-full"><div class="flex items-center gap-8">
+      <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+      <nav class="hidden lg:flex items-center gap-4">
+        <a href="../index.html" class="text-gray-500 font-medium text-sm hover:text-primary">Dashboard</a>
+        <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">Open</a>
+      </nav>
+      <div id="auth-container"></div>
+    </div>
+  </div>
+</header>
+
+<main class="pt-24 pb-16 px-gutter max-w-max_width mx-auto">
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 font-['Geist']">Open Source Tracker</h1>
+      <p class="text-gray-500 mt-1">Track your progress and details.</p>
+    </div>
+    <button onclick="openModal()" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-[#e68a2e] active:scale-95 transition-all">
+      <span class="material-symbols-outlined text-[18px] mr-1">add</span> Add Entry
+    </button>
+  </div>
+
+  <div class="glass-card rounded-xl overflow-hidden">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase tracking-wider">
+          <th class="px-6 py-4 font-medium">Repository</th>
+          <th class="px-6 py-4 font-medium">PR Title</th>
+          <th class="px-6 py-4 font-medium">Status</th>
+          <th class="px-6 py-4 font-medium">Date</th>
+          <th class="px-6 py-4 font-medium text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="entries-table" class="text-sm divide-y divide-gray-200">
+        <tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">Loading data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div id="modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-bold text-gray-900 font-['Geist']">Add Entry</h3>
+      <button onclick="closeModal()" class="material-symbols-outlined text-gray-400 hover:text-gray-900">close</button>
+    </div>
+    <form id="entry-form" class="p-6 space-y-4">
+
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">Repository (e.g., facebook/react)</label>
+        <input id="in-repo" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">PR Title</label>
+        <input id="in-prTitle" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">PR URL</label>
+        <input id="in-prUrl" type="url" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+      </div>
+      <div>
+        <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">Status</label>
+        <select id="in-status" class="w-full px-3 py-2 text-sm border rounded-lg outline-none bg-white">
+          <option value="OPEN">Open</option>
+          <option value="MERGED">Merged</option>
+          <option value="CLOSED">Closed</option>
+        </select>
+      </div>
+    
+      <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-[#e68a2e] transition-all">
+        Save Entry
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const API_ENDPOINT = '/api/trackers/opensource';
+
+  function openModal() {
+    document.getElementById('entry-form').reset();
+    document.getElementById('modal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.add('hidden');
+  }
+
+
+  async function loadData() {
+    if (!window.clerkReady) return;
+    try {
+      const res = await apiRequest('GET', API_ENDPOINT);
+      const tbody = document.getElementById('entries-table');
+      if (!res.success || !res.data.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No PRs logged yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = res.data.map(d => {
+        const urlStr = d.prUrl ? `<a href="${d.prUrl}" target="_blank" class="text-blue-500 hover:underline">${d.prTitle}</a>` : d.prTitle;
+        let color = 'gray';
+        if (d.status === 'MERGED') color = 'purple';
+        else if (d.status === 'OPEN') color = 'green';
+        else if (d.status === 'CLOSED') color = 'red';
+        return `
+        <tr>
+          <td class="px-6 py-4 font-medium text-gray-900">${d.repo}</td>
+          <td class="px-6 py-4">${urlStr}</td>
+          <td class="px-6 py-4"><span class="px-2 py-1 text-[10px] font-bold rounded-full bg-${color}-100 text-${color}-700">${d.status}</span></td>
+          <td class="px-6 py-4 text-gray-500">${new Date(d.date).toLocaleDateString()}</td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="deleteEntry('${d.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">Delete</button>
+          </td>
+        </tr>
+      `}).join('');
+    } catch (e) {
+      document.getElementById('entries-table').innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Failed to load data.</td></tr>';
+    }
+  }
+
+  document.getElementById('entry-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      repo: document.getElementById('in-repo').value,
+      prTitle: document.getElementById('in-prTitle').value,
+      prUrl: document.getElementById('in-prUrl').value || null,
+      status: document.getElementById('in-status').value
+    };
+    try {
+      await apiRequest('POST', API_ENDPOINT, data);
+      closeModal();
+      loadData();
+    } catch (err) {
+      alert('Failed to save entry');
+    }
+  });
+
+  async function deleteEntry(id) {
+    if(!confirm('Delete this entry?')) return;
+    try {
+      await apiRequest('DELETE', `${API_ENDPOINT}/${id}`);
+      loadData();
+    } catch(e) {
+      alert('Failed to delete');
+    }
+  }
+
+  window.addEventListener('clerk-ready', loadData);
+  if (window.clerkReady) loadData();
+    
+</script>
+</body>
+</html>

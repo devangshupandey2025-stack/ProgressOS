@@ -129,6 +129,31 @@ async function apiFetch(endpoint, options = {}) {
   return response;
 }
 
+// Global API Request Helper
+window.apiRequest = async function(method, path, body = null) {
+  const API_BASE = 'http://localhost:5000';
+  // If path already starts with http, don't prepend base
+  const fullUrl = path.startsWith('http') ? path : `${API_BASE}${path}`;
+  
+  const opts = {
+      method,
+      headers: {
+          'Content-Type': 'application/json',
+      },
+  };
+  if (body) {
+      opts.body = JSON.stringify(body);
+  }
+  try {
+      const res = await window.apiFetch(fullUrl, opts);
+      const data = await res.json();
+      return data;
+  } catch (err) {
+      console.error(`API Error [${method} ${path}]:`, err);
+      return { success: false, error: err.message };
+  }
+}
+
 // Start initialization
 window.addEventListener('DOMContentLoaded', initClerk);
 

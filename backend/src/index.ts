@@ -103,3 +103,6 @@ app.listen(env.PORT, () => {
 });
 
 export default app;
+
+// Trigger restart for prisma client
+
