@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Codeforces Tracker | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#FF9933",
+        "primary-container": "#FF9933",
+        "on-primary-container": "#FFFFFF",
+        "surface": "#FFFFFF",
+        "background": "#F9FAFB",
+        "outline-variant": "#E5E7EB",
+        "on-surface": "#1E293B",
+        "on-surface-variant": "#64748B",
+        "error": "#EF4444",
+      },
+      spacing: { "max_width": "1440px", "gutter": "24px" },
+    },
+  },
+}
+</script>
+<style>
+body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: all 0.3s ease; }
+</style>
+  <script src="../js/auth.js"></script>
+</head>
+<body class="bg-background selection:bg-primary/20 selection:text-primary">
+
+<header id="topnav" class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
+  <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
+    <div class="flex justify-between w-full"><div class="flex items-center gap-8">
+      <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+      <nav class="hidden lg:flex items-center gap-4">
+        <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
+        <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">Codeforces</a>
+      </nav>
+      <div id="auth-container"></div>
+    </div>
+  </div>
+</header>
+
+<main class="pt-24 pb-16 px-gutter max-w-max_width mx-auto">
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-on-surface font-['Geist']">Codeforces Tracker</h1>
+      <p class="text-on-surface-variant mt-1">Track your contest ratings and ranks.</p>
+    </div>
+    <button onclick="openModal()" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-[#e68a2e] active:scale-95 transition-all">
+      <span class="material-symbols-outlined text-[18px] mr-1">add</span> Log Contest
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="glass-card p-6 rounded-xl text-center border-b-4 border-b-primary">
+      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Current Rating</p>
+      <p id="stat-rating" class="text-3xl font-bold text-on-surface mt-2">0</p>
+    </div>
+    <div class="glass-card p-6 rounded-xl text-center">
+      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Peak Rating</p>
+      <p id="stat-peak" class="text-3xl font-bold text-on-surface mt-2">0</p>
+    </div>
+    <div class="glass-card p-6 rounded-xl text-center">
+      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Contests Played</p>
+      <p id="stat-count" class="text-3xl font-bold text-on-surface mt-2">0</p>
+    </div>
+  </div>
+
+  <div class="glass-card rounded-xl overflow-hidden">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-gray-50 border-b border-outline-variant text-xs text-on-surface-variant uppercase tracking-wider">
+          <th class="px-6 py-4 font-medium">Date</th>
+          <th class="px-6 py-4 font-medium">Contest</th>
+          <th class="px-6 py-4 font-medium">Rank</th>
+          <th class="px-6 py-4 font-medium">Rating</th>
+          <th class="px-6 py-4 font-medium">Solved</th>
+          <th class="px-6 py-4 font-medium text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="entries-table" class="text-sm divide-y divide-outline-variant">
+        <tr><td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Loading data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div id="modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+      <h3 class="text-lg font-bold text-on-surface font-['Geist']">Log CF Contest</h3>
+      <button onclick="closeModal()" class="material-symbols-outlined text-on-surface-variant hover:text-on-surface">close</button>
+    </div>
+    <form id="entry-form" class="p-6 space-y-4">
+      <div>
+        <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">Contest Name</label>
+        <input id="in-name" type="text" required class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">New Rating</label>
+          <input id="in-rating" type="number" required class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+        </div>
+        <div>
+          <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">Rank</label>
+          <input id="in-rank" type="number" class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">Problems Solved</label>
+        <input id="in-solved" type="number" min="0" value="0" required class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+      </div>
+      <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-[#e68a2e] transition-all">
+        Save Entry
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+const API_URL = 'http://localhost:5000/api/trackers/codeforces';
+
+function openModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); }
+function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); }
+
+async function fetchEntries() {
+  try {
+    const res = await window.apiFetch(API_URL);
+    const data = await res.json();
+    if (data.success) {
+      renderTable(data.data);
+      updateStats(data.data);
+    }
+  } catch (err) { console.error(err); }
+}
+
+function renderTable(entries) {
+  const tbody = document.getElementById('entries-table');
+  if (entries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">No contests logged yet.</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = entries.map((entry, index) => {
+    const date = new Date(entry.date).toLocaleDateString();
+    
+    // Rating diff logic if we have a previous entry
+    let diffHtml = '';
+    if (index < entries.length - 1) {
+      const diff = entry.rating - entries[index+1].rating;
+      const color = diff >= 0 ? 'text-green-600' : 'text-red-600';
+      const sign = diff >= 0 ? '+' : '';
+      diffHtml = `<span class="text-xs font-bold ${color} ml-2">${sign}${diff}</span>`;
+    }
+
+    return `
+      <tr class="hover:bg-gray-50 transition-colors group">
+        <td class="px-6 py-4 font-medium text-on-surface">${date}</td>
+        <td class="px-6 py-4 font-medium">${entry.contestName || '-'}</td>
+        <td class="px-6 py-4">#${entry.rank || '-'}</td>
+        <td class="px-6 py-4 font-bold">${entry.rating} ${diffHtml}</td>
+        <td class="px-6 py-4">${entry.solved}</td>
+        <td class="px-6 py-4 text-right">
+          <button onclick="deleteEntry('${entry.id}')" class="text-error opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold hover:underline">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function updateStats(entries) {
+  if (entries.length === 0) return;
+  const current = entries[0].rating;
+  const peak = Math.max(...entries.map(e => e.rating));
+  document.getElementById('stat-rating').textContent = current;
+  document.getElementById('stat-peak').textContent = peak;
+  document.getElementById('stat-count').textContent = entries.length;
+}
+
+document.getElementById('entry-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = {
+    contestName: document.getElementById('in-name').value,
+    rating: parseInt(document.getElementById('in-rating').value),
+    rank: parseInt(document.getElementById('in-rank').value) || null,
+    solved: parseInt(document.getElementById('in-solved').value) || 0
+  };
+  
+  try {
+    const res = await window.apiFetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) { closeModal(); document.getElementById('entry-form').reset(); fetchEntries(); }
+  } catch (err) { console.error(err); }
+});
+
+async function deleteEntry(id) {
+  if (!confirm('Delete?')) return;
+  try { await window.apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); fetchEntries(); } catch (err) {}
+}
+
+if (window.clerkReady) fetchEntries();
+else window.addEventListener('clerk-ready', fetchEntries);
+</script>
+</body>
+</html>

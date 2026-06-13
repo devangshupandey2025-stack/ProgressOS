@@ -44,14 +44,10 @@ The MVP is focused on solving four core problems:
 
 ## Frontend
 
-* React
-* TypeScript
-* Vite
+* Vanilla JavaScript
+* HTML5
 * Tailwind CSS
-* React Router
-* Axios
-* Recharts
-* Clerk
+* Clerk (Authentication)
 
 ## Backend
 
@@ -61,22 +57,17 @@ The MVP is focused on solving four core problems:
 
 ## Database
 
-* PostgreSQL
+* PostgreSQL (Neon)
 * Prisma ORM
-
-## Authentication
-
-* Clerk Authentication
 
 ## Deployment
 
-* Frontend → Vercel
-* Backend → Render
+* Backend → Render (Planned)
 * Database → Neon PostgreSQL
 
 ---
 
-# Core MVP Features
+# Core Features
 
 ## Authentication
 
@@ -92,9 +83,18 @@ Powered by Clerk.
 
 ---
 
+## Dynamic Tracker System
+
+The backend utilizes a generic `trackerFactory` to automatically generate API endpoints for any custom activity tracking category, such as:
+
+* LeetCode & Codeforces
+* CGPA & Subject scores
+* Projects & Open Source
+* Machine Learning, Cyber, and Research
+
 ## Daily Activity Logging
 
-Users can record work performed each day.
+Users can record work performed each day. Activities automatically feed into the XP and Growth engines.
 
 ### Categories
 
@@ -121,7 +121,7 @@ Cybersecurity → Completed TryHackMe Room
 
 ## XP System
 
-Every activity contributes toward total XP.
+Every activity contributes toward total XP, calculated dynamically in the backend.
 
 ### XP Allocation
 
@@ -139,7 +139,7 @@ Every activity contributes toward total XP.
 ## Level System
 
 ```text
-Level = floor(totalXP / 100) + 1
+Level = floor(totalXP / 1000) + 1
 ```
 
 ### Example
@@ -147,9 +147,9 @@ Level = floor(totalXP / 100) + 1
 | XP   | Level |
 | ---- | ----- |
 | 0    | 1     |
-| 100  | 2     |
-| 500  | 6     |
-| 1000 | 11    |
+| 1000 | 2     |
+| 5000 | 6     |
+| 10000| 11    |
 
 ---
 
@@ -175,153 +175,13 @@ Track consistency through:
 * Current Level
 * Current Streak
 * Longest Streak
+* Market Readiness Score
 
 ### Analytics
 
 * Weekly XP
-* Weekly Activity Count
-* Study Hours
-
-### Charts
-
-* XP Over Time
-* Category Distribution
-
----
-
-## Activity History
-
-Users can:
-
-* View previous logs
-* Review activities
-* Analyze consistency
-* Track growth over time
-
----
-
-# Database Schema
-
-## User
-
-```prisma
-model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-
-  logs       DailyLog[]
-  streak     Streak?
-}
-```
-
----
-
-## DailyLog
-
-```prisma
-model DailyLog {
-  id        String     @id @default(cuid())
-  date      DateTime
-  notes     String?
-  totalXP   Int        @default(0)
-
-  userId    String
-  user      User       @relation(fields: [userId], references: [id])
-
-  activities Activity[]
-
-  createdAt DateTime @default(now())
-}
-```
-
----
-
-## Activity
-
-```prisma
-model Activity {
-  id         String   @id @default(cuid())
-  category   String
-  title      String
-  hours      Float
-  xp         Int
-
-  dailyLogId String
-  dailyLog   DailyLog @relation(fields: [dailyLogId], references: [id])
-
-  createdAt  DateTime @default(now())
-}
-```
-
----
-
-## Streak
-
-```prisma
-model Streak {
-  id             String @id @default(cuid())
-
-  currentStreak  Int @default(0)
-  longestStreak  Int @default(0)
-
-  userId         String @unique
-  user           User @relation(fields: [userId], references: [id])
-}
-```
-
----
-
-# API Endpoints
-
-## Authentication
-
-Authentication is handled by Clerk.
-
-Backend verifies Clerk sessions before granting access to protected resources.
-
----
-
-## Daily Logs
-
-```http
-POST   /api/logs
-GET    /api/logs
-GET    /api/logs/:id
-DELETE /api/logs/:id
-```
-
----
-
-## Activities
-
-```http
-POST   /api/activity
-PUT    /api/activity/:id
-DELETE /api/activity/:id
-```
-
----
-
-## Dashboard
-
-```http
-GET /api/dashboard
-```
-
-Example Response:
-
-```json
-{
-  "totalXP": 1320,
-  "level": 14,
-  "currentStreak": 12,
-  "longestStreak": 21,
-  "weeklyActivities": 28
-}
-```
+* Real-time XP Velocity Graph
+* Skill Distribution Ring Chart
 
 ---
 
@@ -330,23 +190,18 @@ Example Response:
 ```text
 progressos/
 
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── hooks/
-│   │   └── context/
+├── index.html            # Main Dashboard UI
+├── trackers/             # Frontend Tracker Pages
+├── js/                   # Frontend Logic
 │
 ├── backend/
 │   ├── src/
-│   │   ├── routes/
+│   │   ├── routes/       # API endpoints (users, activities, trackers)
 │   │   ├── controllers/
-│   │   ├── middleware/
+│   │   ├── middleware/   # Auth (Clerk), Error Handling, Validation
 │   │   ├── services/
-│   │   ├── utils/
-│   │   └── prisma/
+│   │   ├── utils/        # Generic Tracker Factory
+│   │   └── prisma/       # Schema & Migrations
 │
 └── docs/
 ```
@@ -355,51 +210,52 @@ progressos/
 
 # Development Roadmap
 
-## Phase 1 — Foundation
+## Phase 1 — Foundation (✅ Completed)
 
 * Repository Setup
-* React + Vite
+* Vanilla UI Foundation
 * Express + TypeScript
-* PostgreSQL
+* PostgreSQL (Neon)
 * Prisma
 * Clerk Integration
 
-## Phase 2 — User Management
+## Phase 2 — User Management (✅ Completed)
 
 * Clerk Authentication
 * Protected Routes
-* User Synchronization
+* User Synchronization with Database
 
-## Phase 3 — Activity Tracking
+## Phase 3 — Activity Tracking (✅ Completed)
 
-* Daily Logs
+* Tracker Factory Architecture
+* Daily Logs API
 * Activity Creation
 * CRUD Operations
 
-## Phase 4 — Progress Engine
+## Phase 4 — Progress Engine (✅ Completed)
 
-* XP Calculation
-* Level System
-* Streak Tracking
+* Dynamic XP Calculation
+* Level System Engine
+* Dynamic Dashboard Data Wiring
 
-## Phase 5 — Dashboard
+## Phase 5 — Dashboard (✅ Completed)
 
-* Statistics
-* Analytics APIs
-* Charts
+* Real-time XP Charts
+* Realistic Skill Distribution
+* Market Readiness Score
+* Activity Heatmap Prep
 
-## Phase 6 — UI Polish
+## Phase 6 — UI Polish (In Progress)
 
-* Responsive Design
 * Dark Mode
-* Loading States
 * Toast Notifications
+* Loading States
 
-## Phase 7 — Deployment
+## Phase 7 — Deployment (Planned)
 
-* Vercel
-* Render
-* Neon PostgreSQL
+* Frontend → Vercel
+* Backend → Render
+* Database → Neon PostgreSQL
 
 ---
 
@@ -409,7 +265,7 @@ progressos/
 
 * Weekly Reviews
 * Achievement System
-* Heatmaps
+* Heatmaps Completion
 * Goal Tracking
 * Career Score
 

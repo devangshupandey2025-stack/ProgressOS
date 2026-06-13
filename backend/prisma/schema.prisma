@@ -1,0 +1,294 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Category {
+  DSA
+  PROJECT
+  ML
+  CYBER
+  ACADEMICS
+  OPEN_SOURCE
+}
+
+// ─── User ────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(uuid())
+  clerkId       String     @unique
+  email         String     @unique
+  name          String?
+  totalXP       Int        @default(0)
+  currentStreak Int        @default(0)
+  longestStreak Int        @default(0)
+  lastActiveAt  DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  activities      Activity[]
+  dailyLogs       DailyLog[]
+  leetcode        LeetCodeEntry[]
+  codeforces      CodeforcesEntry[]
+  cgpa            CGPAEntry[]
+  subjects        SubjectEntry[]
+  projects        ProjectEntry[]
+  openSource      OpenSourceEntry[]
+  coreCS          CoreCSEntry[]
+  nptel           NPTELEntry[]
+  aiml            AIMLEntry[]
+  cyber           CyberEntry[]
+  gate            GATEEntry[]
+  research        ResearchEntry[]
+
+  @@index([clerkId])
+}
+
+// ─── Activity ────────────────────────────────────────────────────────────────
+
+model Activity {
+  id        String   @id @default(uuid())
+  title     String
+  category  Category
+  hours     Float
+  xp        Int
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dailyLogId String?
+  dailyLog   DailyLog? @relation(fields: [dailyLogId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([dailyLogId])
+  @@index([createdAt])
+}
+
+// ─── DailyLog ────────────────────────────────────────────────────────────────
+
+model DailyLog {
+  id      String   @id @default(uuid())
+  date    DateTime
+  notes   String?
+  totalXP Int      @default(0)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  activities Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+// ─── LeetCode Tracker ────────────────────────────────────────────────────────
+
+model LeetCodeEntry {
+  id       String   @id @default(uuid())
+  date     DateTime @default(now())
+  easy     Int      @default(0)
+  medium   Int      @default(0)
+  hard     Int      @default(0)
+  topics   String[]
+  notes    String?
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+}
+
+// ─── Codeforces Tracker ──────────────────────────────────────────────────────
+
+model CodeforcesEntry {
+  id          String   @id @default(uuid())
+  date        DateTime @default(now())
+  contestName String?
+  rating      Int
+  rank        Int?
+  solved      Int      @default(0)
+  notes       String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+}
+
+// ─── CGPA Tracker ────────────────────────────────────────────────────────────
+
+model CGPAEntry {
+  id       String  @id @default(uuid())
+  semester Int
+  sgpa     Float
+  cgpa     Float
+  credits  Int?
+  notes    String?
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, semester])
+  @@index([userId])
+}
+
+// ─── Subject Tracker ─────────────────────────────────────────────────────────
+
+model SubjectEntry {
+  id       String  @id @default(uuid())
+  name     String
+  semester Int
+  grade    String?
+  marks    Float?
+  maxMarks Float?
+  credits  Int?
+  status   String  @default("IN_PROGRESS")
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Project Tracker ─────────────────────────────────────────────────────────
+
+model ProjectEntry {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  techStack   String[]
+  status      String    @default("IN_PROGRESS")
+  githubUrl   String?
+  liveUrl     String?
+  startDate   DateTime?
+  endDate     DateTime?
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Open Source Tracker ─────────────────────────────────────────────────────
+
+model OpenSourceEntry {
+  id      String   @id @default(uuid())
+  repo    String
+  prTitle String
+  prUrl   String?
+  status  String   @default("OPEN")
+  date    DateTime @default(now())
+  notes   String?
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Core CS Topic Tracker ───────────────────────────────────────────────────
+
+model CoreCSEntry {
+  id         String   @id @default(uuid())
+  subject    String
+  topic      String
+  status     String   @default("NOT_STARTED")
+  confidence Int?
+  notes      String?
+  date       DateTime @default(now())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── NPTEL Tracker ───────────────────────────────────────────────────────────
+
+model NPTELEntry {
+  id          String  @id @default(uuid())
+  courseName  String
+  platform    String  @default("NPTEL")
+  weeks       Int?
+  completed   Int?
+  score       Float?
+  certificate String?
+  status      String  @default("IN_PROGRESS")
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── AI/ML Tracker ───────────────────────────────────────────────────────────
+
+model AIMLEntry {
+  id        String   @id @default(uuid())
+  title     String
+  type      String
+  framework String?
+  status    String   @default("IN_PROGRESS")
+  notes     String?
+  date      DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Cybersecurity Tracker ───────────────────────────────────────────────────
+
+model CyberEntry {
+  id         String   @id @default(uuid())
+  title      String
+  platform   String?
+  type       String
+  difficulty String?
+  completed  Boolean  @default(false)
+  notes      String?
+  date       DateTime @default(now())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── GATE CSE Tracker ────────────────────────────────────────────────────────
+
+model GATEEntry {
+  id                 String   @id @default(uuid())
+  subject            String
+  topic              String
+  questionsAttempted Int      @default(0)
+  correct            Int      @default(0)
+  mockScore          Float?
+  notes              String?
+  date               DateTime @default(now())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Research / Publications ─────────────────────────────────────────────────
+
+model ResearchEntry {
+  id      String   @id @default(uuid())
+  title   String
+  type    String
+  authors String?
+  venue   String?
+  url     String?
+  status  String   @default("READING")
+  notes   String?
+  date    DateTime @default(now())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

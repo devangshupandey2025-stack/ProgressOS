@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ProgressOS | Engineering Growth OS — Dashboard</title>
+    <meta name="description"
+        content="ProgressOS: Your personal engineering growth operating system. Track XP, streaks, goals, and market readiness." />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script src="js/auth.js"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#FF9933",
+                        "primary-container": "#FF9933",
+                        "on-primary-container": "#FFFFFF",
+                        "surface": "#FFFFFF",
+                        "background": "#F9FAFB",
+                        "outline-variant": "#E5E7EB",
+                        "on-surface": "#1E293B",
+                        "on-surface-variant": "#64748B",
+                        "secondary": "#000080",
+                        "tertiary": "#128807",
+                        "error": "#EF4444",
+                        "navy": "#000080",
+                        "navy-dark": "#00004d",
+                        "saffron": "#FF9933",
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "2xl": "1.25rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "max_width": "1440px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "base": "4px",
+                        "margin": "24px",
+                        "xs": "4px"
+                    },
+                    fontFamily: {
+                        "body-sm": ["Inter"],
+                        "label-md": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Geist"],
+                    },
+                    fontSize: {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                    },
+                    keyframes: {
+                        'fade-in-up': {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        'fade-in': {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        'slide-down': {
+                            '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { boxShadow: '0 0 0 0 rgba(255, 153, 51, 0.4)' },
+                            '50%': { boxShadow: '0 0 0 8px rgba(255, 153, 51, 0)' },
+                        },
+                        'progress-fill': {
+                            '0%': { width: '0%' },
+                        },
+                        'count-up': {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                    },
+                    animation: {
+                        'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
+                        'fade-in': 'fade-in 0.3s ease-out forwards',
+                        'slide-down': 'slide-down 0.3s ease-out forwards',
+                        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+                        'progress-fill': 'progress-fill 1s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F9FAFB;
+            color: #1E293B;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        .glass-card {
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: #D1D5DB;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 4px 6px -2px rgb(0 0 0 / 0.04);
+            transform: translateY(-2px);
+        }
+
+        .navy-card {
+            background: linear-gradient(135deg, #000080 0%, #00004d 100%);
+            color: white;
+        }
+
+        /* Command palette */
+        .cmd-overlay {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Skeleton loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s ease-in-out infinite;
+        }
+
+        @keyframes skeleton-shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Staggered animation delays */
+        .stagger-1 {
+            animation-delay: 0.05s;
+            opacity: 0;
+        }
+
+        .stagger-2 {
+            animation-delay: 0.1s;
+            opacity: 0;
+        }
+
+        .stagger-3 {
+            animation-delay: 0.15s;
+            opacity: 0;
+        }
+
+        .stagger-4 {
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+
+        .stagger-5 {
+            animation-delay: 0.25s;
+            opacity: 0;
+        }
+
+        .stagger-6 {
+            animation-delay: 0.3s;
+            opacity: 0;
+        }
+
+        .stagger-7 {
+            animation-delay: 0.35s;
+            opacity: 0;
+        }
+
+        .stagger-8 {
+            animation-delay: 0.4s;
+            opacity: 0;
+        }
+
+        .stagger-9 {
+            animation-delay: 0.45s;
+            opacity: 0;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #D1D5DB;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF9933;
+        }
+
+        /* Nav dropdown group headers */
+        .nav-group-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            padding: 8px 16px 4px;
+        }
+
+        /* Goal accordion */
+        .goal-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .goal-detail.open {
+            max-height: 200px;
+        }
+
+        /* Progress bar animation */
+        .progress-animated {
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+
+<body class="bg-background selection:bg-primary/20 selection:text-primary">
+
+    <!-- ═══════════════════════ COMMAND PALETTE (⌘K / Ctrl+K) ═══════════════════════ -->
+    <div id="cmd-palette" class="fixed inset-0 z-[100] hidden cmd-overlay flex items-start justify-center pt-[15vh]">
+        <div
+            class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[560px] overflow-hidden animate-slide-down">
+            <div class="flex items-center gap-3 px-5 py-4 border-b border-outline-variant">
+                <span class="material-symbols-outlined text-on-surface-variant text-xl">search</span>
+                <input id="cmd-input" type="text" placeholder="Search goals, activities, projects, trackers..."
+                    class="flex-1 text-body-md text-on-surface bg-transparent outline-none placeholder:text-on-surface-variant/60"
+                    autocomplete="off" />
+                <kbd
+                    class="text-[10px] font-bold text-on-surface-variant bg-gray-100 px-2 py-1 rounded border border-outline-variant">ESC</kbd>
+            </div>
+            <div id="cmd-results" class="max-h-[320px] overflow-y-auto">
+                <div class="p-2">
+                    <p class="nav-group-label">Quick Actions</p>
+                    <button
+                        class="cmd-item w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-left transition-colors"
+                        onclick="alert('Log Activity')">
+                        <span class="material-symbols-outlined text-primary text-lg">add_circle</span>
+                        <span class="text-sm font-medium text-on-surface">Log New Activity</span>
+                        <span class="ml-auto text-[10px] text-on-surface-variant">Action</span>
+                    </button>
+                    <button
+                        class="cmd-item w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-left transition-colors">
+                        <span class="material-symbols-outlined text-secondary text-lg">flag</span>
+                        <span class="text-sm font-medium text-on-surface">Create New Goal</span>
+                        <span class="ml-auto text-[10px] text-on-surface-variant">Action</span>
+                    </button>
+                    <p class="nav-group-label mt-2">Trackers</p>
+                    <button
+                        class="cmd-item w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-left transition-colors">
+                        <span class="material-symbols-outlined text-on-surface-variant text-lg">code</span>
+                        <span class="text-sm font-medium text-on-surface">LeetCode Tracker</span>
+                        <span class="ml-auto text-[10px] text-on-surface-variant">Tracker</span>
+                    </button>
+                    <button
+                        class="cmd-item w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-left transition-colors">
+                        <span class="material-symbols-outlined text-on-surface-variant text-lg">military_tech</span>
+                        <span class="text-sm font-medium text-on-surface">Codeforces Tracker</span>
+                        <span class="ml-auto text-[10px] text-on-surface-variant">Tracker</span>
+                    </button>
+                    <button
+                        class="cmd-item w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-left transition-colors">
+                        <span class="material-symbols-outlined text-on-surface-variant text-lg">school</span>
+                        <span class="text-sm font-medium text-on-surface">CGPA Tracker</span>
+                        <span class="ml-auto text-[10px] text-on-surface-variant">Tracker</span>
+                    </button>
+                    <p class="nav-group-label mt-2">Goals</p>
+                    <button
+                        class="cmd-item w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-left transition-colors">
+                        <span class="material-symbols-outlined text-primary text-lg">emoji_events</span>
+                        <span class="text-sm font-medium text-on-surface">Codeforces Expert — 98.7%</span>
+                        <span class="ml-auto text-[10px] text-on-surface-variant">Goal</span>
+                    </button>
+                    <button
+                        class="cmd-item w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/5 text-left transition-colors">
+                        <span class="material-symbols-outlined text-primary text-lg">inventory_2</span>
+                        <span class="text-sm font-medium text-on-surface">LeetCode 700 Solved — 65%</span>
+                        <span class="ml-auto text-[10px] text-on-surface-variant">Goal</span>
+                    </button>
+                </div>
+            </div>
+            <div class="px-5 py-3 border-t border-outline-variant bg-gray-50/50 flex items-center justify-between">
+                <span class="text-[11px] text-on-surface-variant">Navigate with <kbd class="font-bold">↑↓</kbd> • Open
+                    with <kbd class="font-bold">↵</kbd></span>
+                <span class="text-[11px] text-on-surface-variant">Powered by ProgressOS</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════ TOP NAV BAR ═══════════════════════ -->
+    <header id="topnav"
+        class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm transition-all duration-300">
+        <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-2 cursor-pointer">
+                    <span class="material-symbols-outlined text-primary text-[28px]">token</span>
+                    <span class="text-xl font-bold text-primary tracking-tight font-['Geist'] leading-none">ProgressOS</span>
+                </div>
+                <nav class="hidden lg:flex items-center gap-1">
+                    <a id="nav-dashboard"
+                        class="text-primary bg-primary/5 px-3 py-1.5 rounded-lg font-label-md text-sm transition-colors duration-200"
+                        href="#">Dashboard</a>
+
+                    <!-- Feature 9: Grouped Tracker Dropdown -->
+                    <div class="relative group" id="nav-tracker">
+                        <button
+                            class="flex items-center gap-1 text-on-surface-variant px-3 py-1.5 rounded-lg hover:bg-gray-50 font-label-md text-sm transition-colors">
+                            Trackers
+                            <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                        </button>
+                        <div
+                            class="absolute top-full left-0 mt-1 w-[280px] bg-white border border-outline-variant rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-50">
+                            <p class="nav-group-label">Academics</p>
+                            <a href="trackers/cgpa.html"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">CGPA
+                                Tracker</a>
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Subjects</a>
+                            <div class="border-t border-outline-variant my-1"></div>
+                            <p class="nav-group-label">Programming</p>
+                            <a href="trackers/leetcode.html"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">LeetCode</a>
+                            <a href="trackers/codeforces.html"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Codeforces</a>
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Core
+                                CS</a>
+                            <div class="border-t border-outline-variant my-1"></div>
+                            <p class="nav-group-label">Career</p>
+                            <a href="trackers/projects.html"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Projects</a>
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Open
+                                Source</a>
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">NPTEL</a>
+                            <div class="border-t border-outline-variant my-1"></div>
+                            <p class="nav-group-label">Advanced</p>
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">AI
+                                / ML</a>
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Cybersecurity</a>
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">GATE
+                                CSE</a>
+                            <div class="border-t border-outline-variant my-1"></div>
+                            <p class="nav-group-label">Research</p>
+                            <a href="#"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Papers
+                                & Publications</a>
+                        </div>
+                    </div>
+
+                    <a id="nav-analytics"
+                        class="text-on-surface-variant px-3 py-1.5 rounded-lg hover:bg-gray-50 font-label-md text-sm transition-colors"
+                        href="#">Analytics</a>
+                    <a id="nav-history"
+                        class="text-on-surface-variant px-3 py-1.5 rounded-lg hover:bg-gray-50 font-label-md text-sm transition-colors"
+                        href="#">History</a>
+                </nav>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Feature 8: Search Trigger -->
+                <button id="search-trigger"
+                    class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-outline-variant text-sm text-on-surface-variant hover:border-primary/40 hover:text-primary transition-all"
+                    onclick="openCommandPalette()">
+                    <span class="material-symbols-outlined text-[16px]">search</span>
+                    <span class="text-[13px]">Search</span>
+                    <kbd
+                        class="text-[10px] font-bold bg-gray-100 px-1.5 py-0.5 rounded ml-2 border border-outline-variant">⌘K</kbd>
+                </button>
+                <button id="btn-notifications"
+                    class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all active:scale-95 p-1.5 rounded-lg hover:bg-gray-50">notifications</button>
+                <button id="btn-settings"
+                    class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all active:scale-95 p-1.5 rounded-lg hover:bg-gray-50">settings</button>
+                <button id="btn-log-activity"
+                    class="bg-primary text-white px-4 py-2 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-95 transition-all shadow-sm hover:shadow-md"
+                    onclick="openLogActivityModal()">
+                    <span class="material-symbols-outlined text-[16px] mr-1 align-middle">add</span>Log Activity
+                </button>
+                <div id="auth-container"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
+    <main class="pt-24 pb-16 px-gutter max-w-max_width mx-auto">
+
+        <!-- ═══════════════ FEATURE 1: HERO CARDS ═══════════════ -->
+        <section id="hero-section" class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+
+            <!-- Card 1: Level Progress -->
+            <div
+                class="glass-card p-lg rounded-xl flex flex-col justify-between min-h-[170px] animate-fade-in-up stagger-1">
+                <div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-label-sm text-on-surface-variant uppercase tracking-widest">Current
+                            Level</span>
+                        <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary text-xl"
+                                style="font-variation-settings:'FILL' 1;">military_tech</span>
+                        </div>
+                    </div>
+                    <h3 id="hero-level" class="text-display-lg text-primary font-bold mt-1">Level 1</h3>
+                    <p class="text-label-sm text-tertiary font-semibold mt-1">
+                        <span class="material-symbols-outlined text-[14px] align-middle">arrow_upward</span>
+                        <span id="hero-xp-today">+0 XP Today</span>
+                    </p>
+                </div>
+                <div class="mt-3">
+                    <div class="flex justify-between text-label-sm mb-1.5">
+                        <span class="text-on-surface-variant"><span id="hero-xp-current">0</span> / <span
+                                id="hero-xp-next">1000</span> XP</span>
+                        <span class="text-primary font-bold" id="hero-level-pct">0%</span>
+                    </div>
+                    <div class="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
+                        <div id="hero-level-bar"
+                            class="h-full bg-gradient-to-r from-primary to-[#FFB366] rounded-full progress-animated"
+                            style="width:0%"></div>
+                    </div>
+                    <p class="text-[11px] text-on-surface-variant mt-1.5"><span id="hero-xp-remaining">1000</span> XP
+                        remaining to <span id="hero-next-level">Level 2</span></p>
+                </div>
+            </div>
+
+            <!-- Card 2: Total XP -->
+            <div
+                class="glass-card p-lg rounded-xl flex flex-col justify-between min-h-[170px] animate-fade-in-up stagger-2">
+                <div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-label-sm text-on-surface-variant uppercase tracking-widest">Lifetime XP</span>
+                        <div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-secondary text-xl"
+                                style="font-variation-settings:'FILL' 1;">bolt</span>
+                        </div>
+                    </div>
+                    <h3 id="hero-total-xp" class="text-display-lg text-on-surface font-bold mt-1">0</h3>
+                </div>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                    <div class="bg-gray-50 rounded-lg p-2 text-center border border-outline-variant/50">
+                        <p class="text-[10px] text-on-surface-variant uppercase font-medium tracking-wider">Weekly</p>
+                        <p id="hero-weekly-xp" class="text-sm font-bold text-on-surface">+0</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-2 text-center border border-outline-variant/50">
+                        <p class="text-[10px] text-on-surface-variant uppercase font-medium tracking-wider">Monthly</p>
+                        <p id="hero-monthly-xp" class="text-sm font-bold text-on-surface">+0</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-2 text-center border border-outline-variant/50">
+                        <p class="text-[10px] text-on-surface-variant uppercase font-medium tracking-wider">Growth</p>
+                        <p id="hero-growth" class="text-sm font-bold text-tertiary">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Streak + Shield -->
+            <div
+                class="glass-card p-lg rounded-xl flex flex-col justify-between min-h-[170px] animate-fade-in-up stagger-3">
+                <div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-label-sm text-on-surface-variant uppercase tracking-widest">Active
+                            Streak</span>
+                        <div class="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-tertiary text-xl"
+                                style="font-variation-settings:'FILL' 1;">local_fire_department</span>
+                        </div>
+                    </div>
+                    <h3 class="text-display-lg text-tertiary font-bold mt-1"><span id="hero-streak">0</span> Days</h3>
+                    <p class="text-label-sm text-on-surface-variant mt-1">Personal Best: <span id="hero-streak-best"
+                            class="text-tertiary font-bold">0</span></p>
+                </div>
+                <div class="mt-2">
+                    <div class="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/15 rounded-lg">
+                        <span class="material-symbols-outlined text-primary text-[18px]"
+                            style="font-variation-settings:'FILL' 1;">shield</span>
+                        <div>
+                            <p class="text-[11px] font-bold text-on-surface">Streak Shield Active</p>
+                            <p class="text-[10px] text-on-surface-variant">Protected for 1 missed day</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ═══════════════ MAIN CONTENT GRID ═══════════════ -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+
+            <!-- ═══════════════ LEFT COLUMN (8 cols) ═══════════════ -->
+            <div class="lg:col-span-8 space-y-lg">
+
+                <!-- ═══════════════ FEATURE 2: MARKET READINESS ═══════════════ -->
+                <div id="market-readiness"
+                    class="navy-card rounded-xl p-xl relative overflow-hidden animate-fade-in-up stagger-4">
+                    <div class="absolute -right-20 -top-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
+                    <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/10 rounded-full blur-2xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex flex-col md:flex-row gap-8">
+                            <!-- Left: Score -->
+                            <div class="flex-shrink-0">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <span class="text-label-sm text-white/60 uppercase tracking-widest">Career
+                                        Score</span>
+                                    <span
+                                        class="px-2 py-0.5 bg-primary text-white text-[9px] font-bold rounded-full tracking-wider uppercase">Top
+                                        Performer</span>
+                                </div>
+                                <h2 class="text-headline-md text-white mb-1">Market Readiness</h2>
+                                <div class="flex items-baseline gap-2 my-4">
+                                    <span id="readiness-score" class="text-[72px] font-bold leading-none">0</span>
+                                    <span class="text-2xl font-bold text-white/40">/ 100</span>
+                                </div>
+                                <p class="text-sm text-white/60">
+                                    <span
+                                        class="material-symbols-outlined text-[14px] text-primary align-middle">trending_up</span>
+                                    <span id="readiness-growth">Calculating...</span>
+                                </p>
+                            </div>
+                            <!-- Right: Score Composition -->
+                            <div class="flex-1 space-y-3" id="readiness-bars">
+                                <p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">Score
+                                    Composition</p>
+                                <!-- Populated by JS from activity data -->
+                                <p class="text-xs text-white/40">Sign in and log activities to see your score breakdown.</p>
+                            </div>
+                        </div>
+                        <!-- Why This Score + Recommended Action -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-white/10">
+                            <div>
+                                <p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">Why This
+                                    Score?</p>
+                                <ul class="space-y-1.5 text-xs text-white/70" id="readiness-reasons">
+                                    <li class="flex items-start gap-2">
+                                        <span class="material-symbols-outlined text-white/50 text-[14px] mt-0.5">info</span>
+                                        Log activities to generate insights.
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+                                <p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">
+                                    Recommended Action</p>
+                                <p class="text-sm text-white/90 font-medium" id="readiness-action">Keep logging activities consistently to receive tailored recommendations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════ XP VELOCITY CHART ═══════════════ -->
+                <div id="xp-velocity" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-5">
+                    <div class="flex justify-between items-center mb-lg">
+                        <div>
+                            <h2 class="text-headline-md text-on-surface">XP Velocity</h2>
+                            <p class="text-body-sm text-on-surface-variant">Velocity tracking for the last 30 days</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button
+                                class="px-3 py-1 text-[11px] font-bold rounded-lg border border-outline-variant text-on-surface-variant hover:bg-gray-50 transition-colors"
+                                onclick="setChartRange('7d')">7D</button>
+                            <button class="px-3 py-1 text-[11px] font-bold rounded-lg bg-primary text-white"
+                                onclick="setChartRange('30d')">30D</button>
+                            <button
+                                class="px-3 py-1 text-[11px] font-bold rounded-lg border border-outline-variant text-on-surface-variant hover:bg-gray-50 transition-colors"
+                                onclick="setChartRange('90d')">90D</button>
+                            <div
+                                class="bg-primary/10 text-primary px-3 py-1 rounded-full text-label-sm font-bold border border-primary/20 ml-2">
+                                <span id="chart-growth-badge">— Growth</span></div>
+                        </div>
+                    </div>
+                    <div class="relative h-[260px] w-full flex items-end">
+                        <svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 200">
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#FF9933;stop-opacity:0.15" />
+                                    <stop offset="100%" style="stop-color:#FF9933;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <path id="xp-chart-fill" d="" fill="url(#grad1)" />
+                            <path id="xp-chart-line" d="" fill="none" stroke="#FF9933" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <g id="xp-chart-points"></g>
+                        </svg>
+                    </div>
+                    <div id="xp-chart-labels" class="flex justify-between text-[10px] text-on-surface-variant font-medium uppercase tracking-wider mt-2 px-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- ═══════════════ FEATURE 6: RECENT ACTIVITY FEED ═══════════════ -->
+                <div id="activity-feed" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-7">
+                    <div class="flex justify-between items-center mb-lg">
+                        <h2 class="text-headline-md text-on-surface">Recent Activity</h2>
+                        <a href="#" class="text-label-sm text-primary font-bold hover:underline">View All</a>
+                    </div>
+                    <div id="activity-list" class="space-y-1">
+                        <!-- Populated by JS from API -->
+                        <div class="text-center py-8 text-on-surface-variant text-sm">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant/30 block mb-2">inbox</span>
+                            No activities yet. Log your first activity to get started!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════ BOTTOM: GOALS + WEEKLY ═══════════════ -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+
+                    <!-- Feature 4: Goal Tracking -->
+                    <div id="goal-tracker" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-8">
+                        <div class="flex justify-between items-center mb-lg">
+                            <h2 class="text-headline-md text-on-surface">Active Goals</h2>
+                            <button class="text-[11px] font-bold text-primary hover:underline">+ Add Goal</button>
+                        </div>
+                        <div class="space-y-4" id="goals-container">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Summary -->
+                    <div id="weekly-summary" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-9">
+                        <h2 class="text-headline-md text-on-surface mb-lg">Weekly Summary</h2>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-gray-50 p-md rounded-xl text-center border border-outline-variant/50">
+                                <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Hours
+                                </p>
+                                <p class="text-headline-md font-bold text-on-surface mt-1" id="summary-hours">0</p>
+                            </div>
+                            <div class="bg-gray-50 p-md rounded-xl text-center border border-outline-variant/50">
+                                <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Tasks
+                                </p>
+                                <p class="text-headline-md font-bold text-on-surface mt-1" id="summary-tasks">0</p>
+                            </div>
+                            <div class="bg-gray-50 p-md rounded-xl text-center border border-outline-variant/50">
+                                <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Peak
+                                    Day</p>
+                                <p class="text-headline-md font-bold text-primary mt-1" id="summary-peak">—</p>
+                            </div>
+                        </div>
+                        <!-- Heatmap mini -->
+                        <div class="mt-lg">
+                            <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider mb-3">
+                                Activity Heatmap (7 Days)</p>
+                            <div class="grid grid-cols-7 gap-1.5" id="weekly-heatmap">
+                                <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">M</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+                                <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">T</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+                                <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">W</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+                                <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">T</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+                                <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">F</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+                                <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">S</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+                                <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">S</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+                            </div>
+                        </div>
+                        <!-- AI Insight -->
+                        <div class="mt-lg p-4 bg-gray-50 border border-outline-variant/50 rounded-xl flex items-start gap-3">
+                            <span class="material-symbols-outlined text-on-surface-variant text-xl mt-0.5"
+                                style="font-variation-settings:'FILL' 1;">auto_awesome</span>
+                            <div>
+                                <p class="text-sm font-bold text-on-surface">Weekly AI Insight</p>
+                                <p class="text-body-sm text-on-surface-variant mt-1" id="weekly-insight">Not enough data to generate an insight for this week.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ═══════════════ RIGHT COLUMN (4 cols) ═══════════════ -->
+            <div class="lg:col-span-4 space-y-lg">
+
+                <!-- ═══════════════ FEATURE 3: DAILY FOCUS SYSTEM ═══════════════ -->
+                <div id="daily-focus" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-4">
+                    <div class="flex justify-between items-center mb-lg">
+                        <h2 class="text-headline-md text-on-surface">Daily Focus</h2>
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl font-bold text-primary" id="daily-pct">0</span>
+                            <span class="text-sm text-on-surface-variant font-medium">%</span>
+                        </div>
+                    </div>
+                    <div class="space-y-4" id="daily-focus-list">
+                        <p class="text-xs text-on-surface-variant text-center py-4">No focus tasks set for today.</p>
+                    </div>
+                    <!-- Projected XP -->
+                    <div class="mt-6 pt-5 border-t border-outline-variant">
+                        <div class="flex items-center gap-3 bg-primary/5 border border-primary/10 rounded-xl p-3">
+                            <span class="material-symbols-outlined text-primary text-xl"
+                                style="font-variation-settings:'FILL' 1;">emoji_events</span>
+                            <div>
+                                <p class="text-xs font-bold text-on-surface">Complete all tasks today for</p>
+                                <p class="text-lg font-bold text-primary" id="daily-projected-xp">+0 XP</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════ SKILL DISTRIBUTION ═══════════════ -->
+                <div id="skill-distribution" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-5">
+                    <h2 class="text-headline-md text-on-surface mb-lg">Skill Distribution</h2>
+                    <div class="relative w-40 h-40 mx-auto mb-lg">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F3F4F6" stroke-width="10" />
+                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#FF9933" stroke-width="10"
+                                stroke-dasharray="251.2" stroke-dashoffset="150.72" />
+                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#000080" stroke-width="10"
+                                stroke-dasharray="251.2" stroke-dashoffset="175.84" transform="rotate(144 50 50)" />
+                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#128807" stroke-width="10"
+                                stroke-dasharray="251.2" stroke-dashoffset="200.96" transform="rotate(252 50 50)" />
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center flex-col">
+                            <span class="text-xl font-bold text-on-surface">6</span>
+                            <span
+                                class="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Domains</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-y-2.5 gap-x-4">
+                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
+                                class="w-2.5 h-2.5 rounded-full bg-primary"></span><span>DSA</span><span
+                                class="ml-auto text-on-surface-variant">40%</span></div>
+                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
+                                class="w-2.5 h-2.5 rounded-full bg-secondary"></span><span>Projects</span><span
+                                class="ml-auto text-on-surface-variant">25%</span></div>
+                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
+                                class="w-2.5 h-2.5 rounded-full bg-tertiary"></span><span>Cyber</span><span
+                                class="ml-auto text-on-surface-variant">15%</span></div>
+                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
+                                class="w-2.5 h-2.5 rounded-full bg-purple-500"></span><span>ML</span><span
+                                class="ml-auto text-on-surface-variant">10%</span></div>
+                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
+                                class="w-2.5 h-2.5 rounded-full bg-blue-800"></span><span>Academic</span><span
+                                class="ml-auto text-on-surface-variant">7%</span></div>
+                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
+                                class="w-2.5 h-2.5 rounded-full bg-error"></span><span>Open Source</span><span
+                                class="ml-auto text-on-surface-variant">3%</span></div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════ FEATURE 5: AI COACHING PANEL ═══════════════ -->
+                <div id="ai-coach"
+                    class="glass-card p-xl rounded-xl animate-fade-in-up stagger-6 bg-gradient-to-br from-white to-orange-50/30">
+                    <div class="flex items-center gap-2 mb-lg">
+                        <span class="material-symbols-outlined text-primary text-xl"
+                            style="font-variation-settings:'FILL' 1;">auto_awesome</span>
+                        <h2 class="text-headline-md text-on-surface">AI Coach</h2>
+                    </div>
+                    <div class="space-y-4" id="ai-coach-insights">
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-on-surface-variant text-[16px] mt-0.5">info</span>
+                            <p class="text-sm text-on-surface-variant leading-relaxed">Insufficient data to provide AI insights. Continue logging your activities.</p>
+                        </div>
+                    </div>
+                    <!-- Priority Tasks -->
+                    <div class="mt-5 pt-5 border-t border-outline-variant">
+                        <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3">Today's Highest ROI Actions</p>
+                        <div class="space-y-2" id="ai-coach-roi-actions">
+                            <p class="text-xs text-on-surface-variant text-center">No recommendations right now.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════ FEATURE 7: RECOMMENDATIONS ENGINE ═══════════════ -->
+                <div id="recommendations" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-7">
+                    <div class="flex items-center gap-2 mb-lg">
+                        <span class="material-symbols-outlined text-primary text-xl">recommend</span>
+                        <h2 class="text-headline-md text-on-surface">Recommended Next</h2>
+                    </div>
+                    <div class="space-y-3" id="recommended-next-list">
+                        <p class="text-xs text-on-surface-variant text-center py-4">No recommendations available.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+    <footer
+        class="max-w-max_width mx-auto px-gutter py-xl border-t border-outline-variant flex justify-between items-center text-label-sm text-on-surface-variant">
+        <p>© 2025 ProgressOS. Built for engineering growth.</p>
+        <div class="flex gap-6">
+            <a class="hover:text-primary transition-colors" href="#">Docs</a>
+            <a class="hover:text-primary transition-colors" href="#">Community</a>
+            <a class="hover:text-primary transition-colors" href="#">Changelog</a>
+        </div>
+    </footer>
+
+    <!-- ═══════════════════════ LOG ACTIVITY MODAL ═══════════════════════ -->
+    <div id="log-activity-modal" class="fixed inset-0 z-[100] hidden cmd-overlay flex items-center justify-center">
+        <div
+            class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[480px] overflow-hidden animate-slide-down">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+                <h3 class="text-headline-md text-on-surface font-bold">Log Activity</h3>
+                <button
+                    class="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors"
+                    onclick="closeLogActivityModal()">close</button>
+            </div>
+            <form id="log-activity-form" class="p-6 space-y-4">
+                <div>
+                    <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5"
+                        for="activity-title">Activity Title</label>
+                    <input id="activity-title" name="title" type="text" required
+                        class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                        placeholder="Solved 3 LeetCode Mediums" />
+                </div>
+                <div>
+                    <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5"
+                        for="activity-category">Category</label>
+                    <select id="activity-category" name="category" required
+                        class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white">
+                        <option value="">Select category</option>
+                        <option value="DSA">DSA</option>
+                        <option value="PROJECT">Project</option>
+                        <option value="ML">ML</option>
+                        <option value="CYBER">Cybersecurity</option>
+                        <option value="ACADEMICS">Academics</option>
+                        <option value="OPEN_SOURCE">Open Source</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5"
+                        for="activity-hours">Hours Spent</label>
+                    <input id="activity-hours" name="hours" type="number" step="0.5" min="0.5" required
+                        class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                        placeholder="2" />
+                </div>
+                <div id="xp-preview" class="bg-primary/5 border border-primary/10 rounded-lg p-3 hidden">
+                    <p class="text-sm text-on-surface-variant">Estimated XP: <span id="xp-preview-value"
+                            class="text-lg font-bold text-primary">0 XP</span></p>
+                </div>
+                <button type="submit"
+                    class="w-full bg-primary text-white py-3 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-[0.98] transition-all shadow-sm hover:shadow-md">
+                    Log Activity
+                </button>
+                <p id="log-status" class="text-center text-sm hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════ JAVASCRIPT ═══════════════════════ -->
+    <script>
+        // ─── Backend API Configuration ───────────────────────────────────────────────
+        const API_BASE = 'http://localhost:5000';
+
+        // XP rate lookup (mirrors backend constants)
+        const XP_RATES = {
+            DSA: 10, PROJECT: 20, ML: 15, CYBER: 15, ACADEMICS: 10, OPEN_SOURCE: 25
+        };
+
+        // ─── API Helper (uses Clerk token via global apiFetch from auth.js) ──────────
+        async function apiRequest(method, path, body = null) {
+            const opts = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
+            if (body) {
+                opts.body = JSON.stringify(body);
+            }
+            try {
+                const res = await window.apiFetch(`${API_BASE}${path}`, opts);
+                const data = await res.json();
+                return data;
+            } catch (err) {
+                console.error(`API Error [${method} ${path}]:`, err);
+                return { success: false, error: err.message };
+            }
+        }
+
+
+        // ─── Fetch Dashboard Data ───────────────────────────────────────────────────
+        async function loadDashboard() {
+            const res = await apiRequest('GET', '/api/dashboard');
+            if (res.success && res.data) {
+                const d = res.data;
+                const lvl = d.level || {};
+                const user = d.user || {};
+
+                // Hero Card 1: Level Progress
+                const currentLevel = lvl.current || 1;
+                const currentXP = lvl.currentXP || 0;
+                const nextLevelXP = lvl.nextLevelXP || 1000;
+                const progress = lvl.progress || 0;
+                const remaining = lvl.remainingXP || nextLevelXP;
+
+                document.getElementById('hero-level').textContent = `Level ${currentLevel}`;
+                document.getElementById('hero-xp-current').textContent = currentXP;
+                document.getElementById('hero-xp-next').textContent = nextLevelXP;
+                document.getElementById('hero-level-pct').textContent = `${progress}%`;
+                document.getElementById('hero-level-bar').style.width = `${progress}%`;
+                document.getElementById('hero-xp-remaining').textContent = remaining;
+                document.getElementById('hero-next-level').textContent = `Level ${currentLevel + 1}`;
+
+                // Hero Card 2: Total XP
+                const totalXP = user.totalXP || 0;
+                document.getElementById('hero-total-xp').textContent = formatXP(totalXP);
+
+                const weeklyXP = d.weeklyXP || 0;
+                const monthlyXP = d.monthlyXP || 0;
+                document.getElementById('hero-weekly-xp').textContent = `+${formatXP(weeklyXP)}`;
+                document.getElementById('hero-monthly-xp').textContent = `+${formatXP(monthlyXP)}`;
+
+                // Growth: compare weekly to estimate
+                if (weeklyXP > 0) {
+                    document.getElementById('hero-growth').textContent = `+${formatXP(weeklyXP)}/wk`;
+                    const growthBadge = document.getElementById('chart-growth-badge');
+                    if (growthBadge) growthBadge.textContent = `+${formatXP(weeklyXP)}/wk`;
+                }
+
+                // Hero Card 3: Streak
+                document.getElementById('hero-streak').textContent = user.currentStreak || 0;
+                document.getElementById('hero-streak-best').textContent = user.longestStreak || 0;
+
+                // XP today (from weekly XP / 7 rough estimate for now)
+                const dailyAvg = weeklyXP > 0 ? Math.round(weeklyXP / 7) : 0;
+                document.getElementById('hero-xp-today').textContent = `+${formatXP(dailyAvg)} XP/day avg`;
+
+                // Market Readiness: compute from totalXP (simple heuristic)
+                const readiness = Math.min(100, Math.round(totalXP / 100));
+                document.getElementById('readiness-score').textContent = readiness;
+                if (weeklyXP > 0) {
+                    document.getElementById('readiness-growth').textContent = `+${formatXP(weeklyXP)} XP this week`;
+                } else {
+                    document.getElementById('readiness-growth').textContent = 'Log activities to build your score';
+                }
+
+                // Weekly summary cards
+                const weeklyHoursEl = document.querySelector('#weekly-summary .grid p.text-headline-md');
+                if (weeklyHoursEl) {
+                    // Estimate hours from XP (avg 15xp/hr)
+                    const estHours = weeklyXP > 0 ? (weeklyXP / 15).toFixed(1) : '0';
+                }
+            }
+        }
+
+        // ─── Fetch User Profile ─────────────────────────────────────────────────────
+        async function loadUserProfile() {
+            const res = await apiRequest('GET', '/api/user/me');
+            if (res.success && res.data) {
+                const u = res.data;
+                // These are also set by loadDashboard, but this ensures they're populated
+                if (u.totalXP !== undefined) {
+                    document.getElementById('hero-total-xp').textContent = formatXP(u.totalXP);
+                }
+                if (u.currentStreak !== undefined) {
+                    document.getElementById('hero-streak').textContent = u.currentStreak;
+                }
+                if (u.longestStreak !== undefined) {
+                    document.getElementById('hero-streak-best').textContent = u.longestStreak;
+                }
+            }
+        }
+
+        let allActivities = [];
+
+        // ─── Fetch Activities ───────────────────────────────────────────────────────
+        async function loadActivities() {
+            const res = await apiRequest('GET', '/api/activities');
+            if (res.success && res.data) {
+                allActivities = res.data;
+                renderXPChart(allActivities, 30); // Default to 30 days
+                if (res.data.length > 0) {
+                    renderActivities(res.data);
+                    renderSkillDistribution(res.data);
+                    renderReadinessBars(res.data);
+                } else {
+                    // Keep empty state in DOM
+                    const container = document.getElementById('activity-list');
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-on-surface-variant text-sm">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant/30 block mb-2">inbox</span>
+                            No activities yet. Log your first activity to get started!
+                        </div>`;
+                }
+            }
+        }
+
+        // ─── Render Activities ──────────────────────────────────────────────────────
+        function renderActivities(activities) {
+            const container = document.getElementById('activity-list');
+            const iconMap = {
+                DSA: { icon: 'code', color: 'primary', bg: 'primary/10' },
+                PROJECT: { icon: 'terminal', color: 'secondary', bg: 'secondary/10' },
+                ML: { icon: 'psychology', color: 'purple-600', bg: 'purple-100' },
+                CYBER: { icon: 'security', color: 'tertiary', bg: 'tertiary/10' },
+                ACADEMICS: { icon: 'menu_book', color: 'blue-800', bg: 'blue-100' },
+                OPEN_SOURCE: { icon: 'diversity_3', color: 'tertiary', bg: 'tertiary/10' },
+            };
+
+            container.innerHTML = activities.slice(0, 5).map(act => {
+                const cfg = iconMap[act.category] || iconMap.DSA;
+                const timeAgo = getTimeAgo(new Date(act.createdAt));
+                return `
+      <div class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+        <div class="w-10 h-10 rounded-xl bg-${cfg.bg} flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined text-${cfg.color} text-lg">${cfg.icon}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-on-surface truncate">${escapeHtml(act.title)}</p>
+          <p class="text-[11px] text-on-surface-variant">${act.category} • ${timeAgo}</p>
+        </div>
+        <span class="px-2.5 py-1 bg-primary/10 text-primary text-[11px] font-bold rounded-lg flex-shrink-0">+${act.xp} XP</span>
+      </div>`;
+            }).join('');
+        }
+
+        // ─── Render Skill Distribution from real activities ──────────────────────────
+        function renderSkillDistribution(activities) {
+            const catXP = {};
+            let totalXP = 0;
+            activities.forEach(act => {
+                catXP[act.category] = (catXP[act.category] || 0) + act.xp;
+                totalXP += act.xp;
+            });
+
+            const colorMap = {
+                DSA: 'bg-primary', PROJECT: 'bg-secondary', ML: 'bg-purple-500',
+                CYBER: 'bg-tertiary', ACADEMICS: 'bg-blue-800', OPEN_SOURCE: 'bg-error'
+            };
+
+            const legend = document.querySelector('#skill-distribution .grid.grid-cols-2');
+            if (legend && totalXP > 0) {
+                legend.innerHTML = Object.entries(catXP)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([cat, xp]) => {
+                        const pct = Math.round((xp / totalXP) * 100);
+                        const color = colorMap[cat] || 'bg-gray-400';
+                        return `<div class="flex items-center gap-2 text-label-sm text-on-surface">
+                            <span class="w-2.5 h-2.5 rounded-full ${color}"></span>
+                            <span>${cat}</span>
+                            <span class="ml-auto text-on-surface-variant">${pct}%</span>
+                        </div>`;
+                    }).join('');
+
+                // Update donut center count
+                const domainCount = document.querySelector('#skill-distribution .absolute .text-xl');
+                if (domainCount) domainCount.textContent = Object.keys(catXP).length;
+            }
+        }
+
+        // ─── Render Market Readiness Bars from real activities ───────────────────────
+        function renderReadinessBars(activities) {
+            const catXP = {};
+            let maxCatXP = 1;
+            activities.forEach(act => {
+                catXP[act.category] = (catXP[act.category] || 0) + act.xp;
+            });
+            Object.values(catXP).forEach(v => { if (v > maxCatXP) maxCatXP = v; });
+
+            const barsContainer = document.getElementById('readiness-bars');
+            if (!barsContainer) return;
+
+            const barColors = ['bg-primary', 'bg-white', 'bg-white/80', 'bg-primary/70', 'bg-primary/60', 'bg-primary/40'];
+            const entries = Object.entries(catXP).sort((a, b) => b[1] - a[1]);
+
+            if (entries.length === 0) return;
+
+            // Keep the heading, replace rest
+            barsContainer.innerHTML = `<p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">Score Composition</p>` +
+                entries.map(([cat, xp], i) => {
+                    const pct = Math.round((xp / maxCatXP) * 100);
+                    const color = barColors[i % barColors.length];
+                    return `<div>
+                        <div class="flex justify-between text-xs text-white/80 mb-1">
+                            <span>${cat}</span><span class="font-bold">${xp}</span>
+                        </div>
+                        <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full ${color} rounded-full" style="width:${pct}%"></div>
+                        </div>
+                    </div>`;
+                }).join('');
+        }
+
+
+        // ─── Log Activity ───────────────────────────────────────────────────────────
+        document.getElementById('log-activity-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('activity-title').value;
+            const category = document.getElementById('activity-category').value;
+            const hours = parseFloat(document.getElementById('activity-hours').value);
+
+            if (!title || !category || !hours) return;
+
+            const statusEl = document.getElementById('log-status');
+            statusEl.classList.remove('hidden');
+            statusEl.textContent = 'Logging activity...';
+            statusEl.className = 'text-center text-sm text-on-surface-variant';
+
+            const res = await apiRequest('POST', '/api/activities', { title, category, hours });
+
+            if (res.success) {
+                statusEl.textContent = `✓ Logged! +${res.data?.xp || Math.round(XP_RATES[category] * hours)} XP earned`;
+                statusEl.className = 'text-center text-sm font-bold text-tertiary';
+                document.getElementById('log-activity-form').reset();
+                document.getElementById('xp-preview').classList.add('hidden');
+                setTimeout(() => {
+                    closeLogActivityModal();
+                    statusEl.classList.add('hidden');
+                    loadActivities();
+                    loadDashboard();
+                }, 1500);
+            } else {
+                statusEl.textContent = `✗ Error: ${res.error || 'Failed to log activity'}`;
+                statusEl.className = 'text-center text-sm font-bold text-error';
+            }
+        });
+
+        // ─── XP Preview Calculator ──────────────────────────────────────────────────
+        document.getElementById('activity-category').addEventListener('change', updateXPPreview);
+        document.getElementById('activity-hours').addEventListener('input', updateXPPreview);
+
+        function updateXPPreview() {
+            const category = document.getElementById('activity-category').value;
+            const hours = parseFloat(document.getElementById('activity-hours').value);
+            const preview = document.getElementById('xp-preview');
+            const previewVal = document.getElementById('xp-preview-value');
+
+            if (category && hours > 0) {
+                const xp = Math.round(XP_RATES[category] * hours);
+                previewVal.textContent = `${xp} XP`;
+                preview.classList.remove('hidden');
+            } else {
+                preview.classList.add('hidden');
+            }
+        }
+
+        // ─── Command Palette ────────────────────────────────────────────────────────
+        function openCommandPalette() {
+            const palette = document.getElementById('cmd-palette');
+            palette.classList.remove('hidden');
+            palette.classList.add('flex');
+            setTimeout(() => document.getElementById('cmd-input').focus(), 100);
+        }
+
+        function closeCommandPalette() {
+            const palette = document.getElementById('cmd-palette');
+            palette.classList.add('hidden');
+            palette.classList.remove('flex');
+            document.getElementById('cmd-input').value = '';
+        }
+
+        // Keyboard shortcut: ⌘K / Ctrl+K
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                const palette = document.getElementById('cmd-palette');
+                if (palette.classList.contains('hidden')) {
+                    openCommandPalette();
+                } else {
+                    closeCommandPalette();
+                }
+            }
+            if (e.key === 'Escape') {
+                closeCommandPalette();
+                closeLogActivityModal();
+            }
+        });
+
+        // Close on overlay click
+        document.getElementById('cmd-palette').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('cmd-palette')) closeCommandPalette();
+        });
+
+        // Search filtering
+        document.getElementById('cmd-input').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.cmd-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        });
+
+        // ─── Log Activity Modal ─────────────────────────────────────────────────────
+        function openLogActivityModal() {
+            const modal = document.getElementById('log-activity-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeLogActivityModal() {
+            const modal = document.getElementById('log-activity-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('log-activity-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('log-activity-modal')) closeLogActivityModal();
+        });
+
+        // ─── Goal Accordion Toggle ──────────────────────────────────────────────────
+        function toggleGoal(btn) {
+            const detail = btn.nextElementSibling;
+            const chevron = btn.querySelector('.goal-chevron');
+            detail.classList.toggle('open');
+            chevron.style.transform = detail.classList.contains('open') ? 'rotate(180deg)' : '';
+        }
+
+        // ─── Chart Range (placeholder) ──────────────────────────────────────────────
+        function setChartRange(range) {
+            let days = 30;
+            if (range === '7d') days = 7;
+            if (range === '90d') days = 90;
+            renderXPChart(allActivities, days);
+        }
+
+        // ─── Render Realistic XP Chart ──────────────────────────────────────────────
+        function renderXPChart(activities, daysAgo) {
+            const chartFill = document.getElementById('xp-chart-fill');
+            const chartLine = document.getElementById('xp-chart-line');
+            const chartPoints = document.getElementById('xp-chart-points');
+            const chartLabels = document.getElementById('xp-chart-labels');
+            
+            if (!chartLine) return;
+
+            // 1. Filter activities by date range
+            const now = new Date();
+            const cutoff = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+            const filtered = activities.filter(a => new Date(a.createdAt) >= cutoff);
+
+            // 2. Group by day and calculate cumulative XP
+            // To make a realistic line chart, we plot cumulative XP over the selected timeframe
+            const dailyData = new Map(); // timestamp -> cumulative XP
+            // Create empty buckets for each day
+            for (let i = daysAgo - 1; i >= 0; i--) {
+                const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                d.setHours(0,0,0,0);
+                dailyData.set(d.getTime(), 0);
+            }
+
+            // Sum XP per day
+            filtered.forEach(a => {
+                const d = new Date(a.createdAt);
+                d.setHours(0,0,0,0);
+                const ts = d.getTime();
+                if (dailyData.has(ts)) {
+                    dailyData.set(ts, dailyData.get(ts) + a.xp);
+                }
+            });
+
+            // Make it cumulative
+            let currentCumulative = 0;
+            const dataPoints = [];
+            let maxCumulative = 1; // avoid div by 0
+
+            Array.from(dailyData.entries()).sort((a,b) => a[0] - b[0]).forEach(([ts, xp]) => {
+                currentCumulative += xp;
+                dataPoints.push({ ts, val: currentCumulative });
+            });
+            
+            // If no data, just show flat line
+            if (dataPoints.length > 0 && dataPoints[dataPoints.length-1].val > 0) {
+                maxCumulative = dataPoints[dataPoints.length-1].val;
+            }
+
+            // 3. Generate SVG path
+            // SVG viewBox is 0 0 1000 200
+            const W = 1000;
+            const H = 200;
+            const PADDING_TOP = 20;
+            const PADDING_BOTTOM = 20;
+            const graphHeight = H - PADDING_TOP - PADDING_BOTTOM;
+
+            let pathD = '';
+            let pointsHTML = '';
+            
+            if (dataPoints.length === 0) {
+                pathD = `M0,${H-PADDING_BOTTOM} L${W},${H-PADDING_BOTTOM}`;
+            } else {
+                const dx = W / Math.max(1, (dataPoints.length - 1));
+                
+                dataPoints.forEach((pt, i) => {
+                    const x = i * dx;
+                    // Invert Y axis (0 is top)
+                    const normalizedY = pt.val / maxCumulative;
+                    const y = H - PADDING_BOTTOM - (normalizedY * graphHeight);
+                    
+                    if (i === 0) {
+                        pathD += `M${x},${y} `;
+                    } else {
+                        pathD += `L${x},${y} `;
+                    }
+
+                    // Only add points for days with actual activity jumps to not clutter
+                    if (i > 0 && pt.val > dataPoints[i-1].val) {
+                        pointsHTML += `<circle cx="${x}" cy="${y}" r="3" fill="#FF9933" />`;
+                    }
+                    
+                    // Add pulse to the last point
+                    if (i === dataPoints.length - 1 && pt.val > 0) {
+                        pointsHTML += `<circle cx="${x}" cy="${y}" r="5" fill="#FF9933" class="animate-pulse-glow" />`;
+                    }
+                });
+            }
+
+            // Smooth out the line slightly (optional, but requested realistic, so jagged is better actually)
+            // L path is realistic. 
+
+            const fillD = pathD + ` L${W},${H} L0,${H} Z`;
+            
+            chartLine.setAttribute('d', pathD);
+            chartFill.setAttribute('d', fillD);
+            chartPoints.innerHTML = pointsHTML;
+
+            // 4. Set Labels
+            chartLabels.innerHTML = '';
+            const numLabels = Math.min(daysAgo, 7); // Show max 7 labels
+            const step = Math.floor(dataPoints.length / numLabels) || 1;
+            
+            for (let i = 0; i < dataPoints.length; i += step) {
+                const date = new Date(dataPoints[i].ts);
+                const labelStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                chartLabels.innerHTML += `<span>${labelStr}</span>`;
+            }
+        }
+
+        // ─── Utility Functions ──────────────────────────────────────────────────────
+        function formatXP(xp) {
+            if (xp >= 1000) return (xp / 1000).toFixed(1) + 'K';
+            return xp.toString();
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            if (diffMins < 60) return `${diffMins}m ago`;
+            const diffHrs = Math.floor(diffMins / 60);
+            if (diffHrs < 24) return `${diffHrs}h ago`;
+            const diffDays = Math.floor(diffHrs / 24);
+            if (diffDays === 1) return 'Yesterday';
+            return `${diffDays} days ago`;
+        }
+
+        // ─── Progress Bar Animation on Load ─────────────────────────────────────────
+        window.addEventListener('DOMContentLoaded', () => {
+            // Animate progress bars
+            document.querySelectorAll('.progress-animated').forEach(bar => {
+                const targetWidth = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = targetWidth;
+                }, 300);
+            });
+        });
+
+        // ─── Load Data After Clerk Auth Ready ───────────────────────────────────────
+        function loadAllData() {
+            loadUserProfile().catch(() => console.log('Backend not connected — using static data'));
+            loadActivities().catch(() => console.log('Backend not connected — using static data'));
+            loadDashboard().catch(() => console.log('Backend not connected — using static data'));
+        }
+
+        // Wait for Clerk to initialize before making authenticated API calls
+        if (window.clerkReady) {
+            loadAllData();
+        } else {
+            window.addEventListener('clerk-ready', loadAllData);
+        }
+
+    </script>
+
+</body>
+
+</html>
