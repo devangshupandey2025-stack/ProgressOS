@@ -89,18 +89,19 @@ app.use((_req, res) => {
 
 app.use(errorHandler);
 
-// ─── Start Server ────────────────────────────────────────────────────────────
-
-app.listen(env.PORT, () => {
-  console.log(`
-  🚀 ProgressOS Backend is running!
-  ────────────────────────────────────
-  📡 Port:        ${env.PORT}
-  🌍 Environment: ${env.NODE_ENV}
-  🕐 Started at:  ${new Date().toISOString()}
-  ────────────────────────────────────
-  `);
-});
+// Only start listening when running as a standalone server (not in Vercel serverless)
+if (!process.env.VERCEL) {
+  app.listen(env.PORT, () => {
+    console.log(`
+    🚀 ProgressOS Backend is running!
+    ────────────────────────────────────
+    📡 Port:        ${env.PORT}
+    🌍 Environment: ${env.NODE_ENV}
+    🕐 Started at:  ${new Date().toISOString()}
+    ────────────────────────────────────
+    `);
+  });
+}
 
 export default app;
 

@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch backend/src/index.ts",
-    "build": "npx tsc -p backend/tsconfig.json",
+    "build:local": "npx tsc -p backend/tsconfig.json",
     "start": "node backend/dist/index.js",
+    "vercel-build": "npm run prisma:generate",
     "prisma:generate": "npx prisma generate --schema=backend/prisma/schema.prisma",
     "prisma:migrate": "npx prisma migrate dev --schema=backend/prisma/schema.prisma",
     "prisma:studio": "npx prisma studio --schema=backend/prisma/schema.prisma",
