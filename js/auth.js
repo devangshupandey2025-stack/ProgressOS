@@ -121,7 +121,14 @@ async function apiFetch(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(endpoint, {
+  // Automatically switch to relative paths in production (Vercel)
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  let finalEndpoint = endpoint;
+  if (!isLocalhost && finalEndpoint.startsWith('http://localhost:5000')) {
+    finalEndpoint = finalEndpoint.replace('http://localhost:5000', '');
+  }
+
+  const response = await fetch(finalEndpoint, {
     ...options,
     headers
   });
@@ -131,7 +138,9 @@ async function apiFetch(endpoint, options = {}) {
 
 // Global API Request Helper
 window.apiRequest = async function(method, path, body = null) {
-  const API_BASE = 'http://localhost:5000';
+  // Automatically use relative path in production (Vercel) and localhost:5000 in dev
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const API_BASE = isLocalhost ? 'http://localhost:5000' : '';
   // If path already starts with http, don't prepend base
   const fullUrl = path.startsWith('http') ? path : `${API_BASE}${path}`;
   
