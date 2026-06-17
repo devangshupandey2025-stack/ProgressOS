@@ -21,6 +21,7 @@ tailwind.config = {
         "on-surface": "#1E293B",
         "on-surface-variant": "#64748B",
         "error": "#EF4444",
+        "tertiary": "#128807",
       },
       spacing: { "max_width": "1440px", "gutter": "24px" },
     },
@@ -31,6 +32,11 @@ tailwind.config = {
 body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
 .glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: all 0.3s ease; }
+.pulse-glow { animation: pulse-glow-anim 2s infinite; }
+@keyframes pulse-glow-anim {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 153, 51, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 153, 51, 0); }
+}
 </style>
   <script src="../js/auth.js"></script>
 </head>
@@ -38,64 +44,194 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
 
 <header id="topnav" class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
   <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
-    <div class="flex justify-between w-full"><div class="flex items-center gap-8">
-      <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
-      <nav class="hidden lg:flex items-center gap-4">
-        <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
-        <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">Codeforces</a>
-      </nav>
+    <div class="flex justify-between w-full">
+      <div class="flex items-center gap-8">
+        <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+        <nav class="hidden lg:flex items-center gap-4">
+          <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
+          <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">Codeforces</a>
+        </nav>
+      </div>
       <div id="auth-container"></div>
     </div>
   </div>
 </header>
 
 <main class="pt-24 pb-16 px-gutter max-w-max_width mx-auto">
+  <!-- 💡 Integration Status Banner -->
+  <div id="cf-banner" class="hidden items-center justify-between p-4 bg-primary/5 border border-primary/10 rounded-xl mb-6 flex-wrap gap-4 animate-fade-in">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-xl">auto_awesome</span>
+      <span id="cf-banner-text" class="text-sm font-medium text-on-surface">Syncing real-time statistics...</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="openSettingsModal()" class="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-bold hover:bg-[#e68a2e] transition-all">Change Handle</button>
+      <button onclick="disconnectHandle()" class="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg text-xs font-bold transition-all">Disconnect</button>
+    </div>
+  </div>
+
+  <div id="cf-unconnected-banner" class="hidden items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-xl mb-6 flex-wrap gap-4">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-blue-600 text-xl">info</span>
+      <span class="text-sm font-medium text-blue-800">Automate your Codeforces updates, history, and get advanced DSA competency scoring by connecting your handle!</span>
+    </div>
+    <button onclick="openSettingsModal()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all">Connect Handle</button>
+  </div>
+
   <div class="flex justify-between items-end mb-8">
     <div>
       <h1 class="text-3xl font-bold text-on-surface font-['Geist']">Codeforces Tracker</h1>
-      <p class="text-on-surface-variant mt-1">Track your contest ratings and ranks.</p>
+      <p class="text-on-surface-variant mt-1">Track your contest ratings, ranks, and algorithmic competency.</p>
     </div>
-    <button onclick="openModal()" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-[#e68a2e] active:scale-95 transition-all">
-      <span class="material-symbols-outlined text-[18px] mr-1">add</span> Log Contest
-    </button>
+    <div class="flex gap-3">
+      <button id="manual-log-btn" onclick="openModal()" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-[#e68a2e] active:scale-95 transition-all text-sm flex items-center">
+        <span class="material-symbols-outlined text-[18px] mr-1">add</span> Log Contest
+      </button>
+    </div>
   </div>
 
+  <!-- Stats Grid -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="glass-card p-6 rounded-xl text-center border-b-4 border-b-primary">
+    <div class="glass-card p-6 rounded-xl text-center border-b-4 border-b-primary relative overflow-hidden">
       <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Current Rating</p>
-      <p id="stat-rating" class="text-3xl font-bold text-on-surface mt-2">0</p>
+      <p id="stat-rating" class="text-3xl font-bold text-on-surface mt-2 font-['Geist']">0</p>
+      <div id="stat-rank-badge" class="mt-2 text-[10px] font-bold uppercase tracking-wider text-white bg-slate-400 px-2 py-0.5 rounded inline-block hidden">Unrated</div>
     </div>
     <div class="glass-card p-6 rounded-xl text-center">
       <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Peak Rating</p>
-      <p id="stat-peak" class="text-3xl font-bold text-on-surface mt-2">0</p>
+      <p id="stat-peak" class="text-3xl font-bold text-on-surface mt-2 font-['Geist']">0</p>
     </div>
     <div class="glass-card p-6 rounded-xl text-center">
       <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Contests Played</p>
-      <p id="stat-count" class="text-3xl font-bold text-on-surface mt-2">0</p>
+      <p id="stat-count" class="text-3xl font-bold text-on-surface mt-2 font-['Geist']">0</p>
     </div>
   </div>
 
-  <div class="glass-card rounded-xl overflow-hidden">
-    <table class="w-full text-left border-collapse">
-      <thead>
-        <tr class="bg-gray-50 border-b border-outline-variant text-xs text-on-surface-variant uppercase tracking-wider">
-          <th class="px-6 py-4 font-medium">Date</th>
-          <th class="px-6 py-4 font-medium">Contest</th>
-          <th class="px-6 py-4 font-medium">Rank</th>
-          <th class="px-6 py-4 font-medium">Rating</th>
-          <th class="px-6 py-4 font-medium">Solved</th>
-          <th class="px-6 py-4 font-medium text-right">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="entries-table" class="text-sm divide-y divide-outline-variant">
-        <tr><td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Loading data...</td></tr>
-      </tbody>
-    </table>
+  <!-- Main Grid Layout -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <!-- Left Column (8 cols when connected, 12 cols when unconnected) -->
+    <div id="cf-left-col" class="lg:col-span-12 space-y-8">
+      
+      <!-- Rating Growth Chart Container -->
+      <div id="cf-chart-card" class="glass-card p-6 rounded-xl hidden">
+        <h2 class="text-lg font-bold text-on-surface font-['Geist'] mb-4">Rating Growth History</h2>
+        <div class="relative h-[220px] w-full flex items-end">
+            <svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 200">
+                <defs>
+                    <linearGradient id="cf-chart-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FF9933;stop-opacity:0.15" />
+                        <stop offset="100%" style="stop-color:#FF9933;stop-opacity:0" />
+                    </linearGradient>
+                </defs>
+                <path id="cf-chart-fill" d="" fill="url(#cf-chart-grad)" />
+                <path id="cf-chart-line" d="" fill="none" stroke="#FF9933" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                <g id="cf-chart-points"></g>
+            </svg>
+        </div>
+        <div id="cf-chart-labels" class="flex justify-between text-[10px] text-on-surface-variant font-medium uppercase tracking-wider mt-3 px-2">
+            <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Contests Table -->
+      <div class="glass-card rounded-xl overflow-hidden">
+        <div class="p-5 border-b border-outline-variant/65 flex justify-between items-center">
+            <h2 id="table-title" class="text-lg font-bold text-on-surface font-['Geist']">Contest Entries</h2>
+            <span id="automated-tag" class="hidden px-2.5 py-0.5 bg-tertiary/10 text-tertiary border border-tertiary/20 text-xs rounded-full font-bold uppercase tracking-wide">Automated Sync</span>
+        </div>
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 border-b border-outline-variant text-xs text-on-surface-variant uppercase tracking-wider">
+              <th class="px-6 py-4 font-medium">Date</th>
+              <th class="px-6 py-4 font-medium">Contest</th>
+              <th class="px-6 py-4 font-medium">Rank</th>
+              <th class="px-6 py-4 font-medium">Rating</th>
+              <th class="px-6 py-4 font-medium" id="solved-th">Solved</th>
+              <th class="px-6 py-4 font-medium text-right" id="actions-th">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="entries-table" class="text-sm divide-y divide-outline-variant">
+            <tr><td colspan="6" class="px-6 py-8 text-center text-on-surface-variant">Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- Right Column (4 cols, visible ONLY when connected) -->
+    <div id="cf-right-col" class="lg:col-span-4 hidden space-y-8">
+      
+      <!-- Analytics Panel -->
+      <div class="glass-card p-6 rounded-xl space-y-6 bg-gradient-to-br from-white to-orange-50/15">
+        <h2 class="text-lg font-bold text-on-surface font-['Geist'] mb-2">Algorithmic Competency</h2>
+        
+        <!-- DSA Score Circle -->
+        <div class="flex items-center gap-6">
+            <div class="relative w-24 h-24 flex-shrink-0">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F3F4F6" stroke-width="8" />
+                    <circle id="dsa-score-circle" cx="50" cy="50" r="40" fill="transparent" stroke="#FF9933" stroke-width="8"
+                        stroke-dasharray="251.2" stroke-dashoffset="251.2" class="transition-all duration-1000" />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center flex-col">
+                    <span id="dsa-score-value" class="text-2xl font-black text-on-surface font-['Geist']">0</span>
+                    <span class="text-[8px] text-on-surface-variant uppercase font-bold tracking-widest leading-none mt-0.5">DSA SCORE</span>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-on-surface">Market Readiness</h3>
+                <p class="text-[11px] text-on-surface-variant leading-relaxed mt-1">This indicator aggregates ratings, historical solves, and sync patterns into a single engineering competency metric.</p>
+            </div>
+        </div>
+
+        <!-- Mini Stats -->
+        <div class="grid grid-cols-2 gap-4 border-t border-outline-variant/60 pt-4">
+             <div class="bg-gray-50 p-3 rounded-lg border border-outline-variant/40 text-center">
+                 <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Unique Solves</p>
+                 <p id="cf-analytics-solves" class="text-2xl font-black text-on-surface font-['Geist'] mt-1">0</p>
+             </div>
+             <div class="bg-gray-50 p-3 rounded-lg border border-outline-variant/40 text-center">
+                 <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Acceptance</p>
+                 <p id="cf-analytics-ac-rate" class="text-2xl font-black text-on-surface font-['Geist'] mt-1">0%</p>
+             </div>
+        </div>
+
+        <!-- Difficulty Distribution -->
+        <div class="border-t border-outline-variant/60 pt-4">
+            <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider mb-3 font-['Geist']">Solved Difficulty Distribution</p>
+            <div id="cf-difficulty-bars" class="space-y-2.5">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Estimates and Ranges -->
+        <div class="border-t border-outline-variant/60 pt-4 space-y-3">
+             <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider mb-1">Performance Insights</p>
+             <div class="flex items-start gap-2.5 bg-primary/5 border border-primary/10 rounded-lg p-3">
+                 <span class="material-symbols-outlined text-primary text-base mt-0.5">auto_awesome</span>
+                 <div>
+                     <p class="text-xs font-bold text-on-surface">Target Prediction</p>
+                     <p id="cf-analytics-estimate" class="text-xs text-on-surface-variant mt-0.5">Calculated Expert estimation: —</p>
+                 </div>
+             </div>
+             <div class="flex items-start gap-2.5 bg-slate-50 border border-outline-variant/50 rounded-lg p-3">
+                 <span class="material-symbols-outlined text-on-surface-variant text-base mt-0.5">info</span>
+                 <div>
+                     <p class="text-xs font-bold text-on-surface">Range & Activity</p>
+                     <p id="cf-analytics-range" class="text-xs text-on-surface-variant mt-0.5">Strongest range: —</p>
+                 </div>
+             </div>
+        </div>
+
+      </div>
+
+    </div>
   </div>
 </main>
 
+<!-- Modal: Manual Entry Logger -->
 <div id="modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-down">
     <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
       <h3 class="text-lg font-bold text-on-surface font-['Geist']">Log CF Contest</h3>
       <button onclick="closeModal()" class="material-symbols-outlined text-on-surface-variant hover:text-on-surface">close</button>
@@ -126,18 +262,303 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
   </div>
 </div>
 
+<!-- Modal: Settings Connection -->
+<div id="settings-modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-slide-down">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+      <h3 class="text-lg font-bold text-on-surface font-['Geist']">Connect Codeforces</h3>
+      <button onclick="closeSettingsModal()" class="material-symbols-outlined text-on-surface-variant hover:text-on-surface">close</button>
+    </div>
+    <form id="settings-form" class="p-6 space-y-4">
+      <div>
+        <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">Codeforces Handle</label>
+        <input id="settings-cf-handle" type="text" required class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. tourist"/>
+      </div>
+      <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-[#e68a2e] transition-all">
+        Save Connection
+      </button>
+      <p id="settings-status" class="text-center text-sm hidden"></p>
+    </form>
+  </div>
+</div>
+
 <script>
-const API_URL = 'http://localhost:5000/api/trackers/codeforces';
+const MANUAL_API_URL = 'http://localhost:5000/api/trackers/codeforces';
 
 function openModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); }
 function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); }
 
-async function fetchEntries() {
+function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); document.getElementById('settings-modal').classList.add('flex'); }
+function closeSettingsModal() { 
+    document.getElementById('settings-modal').classList.add('hidden'); 
+    document.getElementById('settings-modal').classList.remove('flex'); 
+    document.getElementById('settings-status').classList.add('hidden');
+}
+
+// ─── Setup and Status Check ──────────────────────────────────────────────────
+async function checkConnection() {
   try {
-    const res = await window.apiFetch(API_URL);
+    const statusRes = await window.apiRequest('GET', '/api/codeforces/status');
+    
+    const bannerContainer = document.getElementById('cf-banner');
+    const unconnectedBanner = document.getElementById('cf-unconnected-banner');
+    const connectBtn = document.getElementById('cf-connect-btn');
+    const manualBtn = document.getElementById('manual-log-btn');
+    const automatedTag = document.getElementById('automated-tag');
+    
+    const leftCol = document.getElementById('cf-left-col');
+    const rightCol = document.getElementById('cf-right-col');
+    const chartCard = document.getElementById('cf-chart-card');
+    
+    const actionsTh = document.getElementById('actions-th');
+    const solvedTh = document.getElementById('solved-th');
+    
+    if (statusRes.success && statusRes.data && statusRes.data.connected) {
+      const handle = statusRes.data.codeforcesHandle;
+      
+      // Update Banners and tags
+      bannerContainer.classList.remove('hidden');
+      bannerContainer.classList.add('flex');
+      unconnectedBanner.classList.add('hidden');
+      if (automatedTag) automatedTag.classList.remove('hidden');
+      
+      // Update UI column layouts
+      leftCol.className = 'lg:col-span-8 space-y-8';
+      rightCol.classList.remove('hidden');
+      chartCard.classList.remove('hidden');
+      
+      // Adjust table visibility details
+      if (actionsTh) actionsTh.classList.add('hidden'); // No manual delete on sync data
+      
+      document.getElementById('cf-banner-text').textContent = `Connected to Codeforces: @${handle}`;
+      
+      // Load automated APIs
+      await loadAutomatedData(handle);
+    } else {
+      // Unconnected State
+      bannerContainer.classList.add('hidden');
+      bannerContainer.classList.remove('flex');
+      unconnectedBanner.classList.remove('hidden');
+      if (automatedTag) automatedTag.classList.add('hidden');
+      
+      leftCol.className = 'lg:col-span-12 space-y-8';
+      rightCol.classList.add('hidden');
+      chartCard.classList.add('hidden');
+      
+      if (actionsTh) actionsTh.classList.remove('hidden');
+      
+      // Fetch manually logged entries
+      await fetchManualEntries();
+    }
+  } catch (err) {
+    console.error('Connection check failed:', err);
+    fetchManualEntries();
+  }
+}
+
+// ─── Load Automated Sync Data ────────────────────────────────────────────────
+async function loadAutomatedData(handle) {
+  try {
+    // 1. Profile
+    const profileRes = await window.apiRequest('GET', '/api/codeforces/profile');
+    if (profileRes.success && profileRes.data) {
+      const p = profileRes.data;
+      document.getElementById('stat-rating').textContent = p.rating;
+      document.getElementById('stat-peak').textContent = p.maxRating;
+      
+      const rankBadge = document.getElementById('stat-rank-badge');
+      rankBadge.textContent = p.rank;
+      rankBadge.classList.remove('hidden');
+      
+      const rankColors = {
+        newbie: 'bg-gray-400 text-white',
+        pupil: 'bg-green-600 text-white',
+        specialist: 'bg-cyan-600 text-white',
+        expert: 'bg-blue-600 text-white',
+        'candidate master': 'bg-purple-600 text-white',
+        master: 'bg-orange-600 text-white',
+        'international master': 'bg-orange-700 text-white',
+        grandmaster: 'bg-red-600 text-white',
+        'international grandmaster': 'bg-red-700 text-white',
+        'legendary grandmaster': 'bg-red-900 text-white'
+      };
+      const rankClass = rankColors[p.rank.toLowerCase()] || 'bg-slate-400 text-white';
+      rankBadge.className = `mt-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded inline-block ${rankClass}`;
+    }
+    
+    // 2. Rating History
+    const historyRes = await window.apiRequest('GET', '/api/codeforces/rating-history');
+    if (historyRes.success && historyRes.data) {
+      const history = historyRes.data;
+      document.getElementById('stat-count').textContent = history.length;
+      
+      // Render historical rating chart
+      renderRatingChart(history);
+      
+      // Render table
+      const tbody = document.getElementById('entries-table');
+      if (history.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-on-surface-variant">No sync contests found.</td></tr>';
+      } else {
+        // Sort newest first
+        const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+        tbody.innerHTML = sortedHistory.map((item) => {
+          const date = new Date(item.date).toLocaleDateString();
+          const sign = item.change >= 0 ? '+' : '';
+          const changeColor = item.change >= 0 ? 'text-green-600' : 'text-red-600';
+          const diffHtml = `<span class="text-xs font-bold ${changeColor} ml-2">${sign}${item.change}</span>`;
+          
+          return `
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 font-medium text-on-surface">${date}</td>
+              <td class="px-6 py-4 font-medium">${item.contest}</td>
+              <td class="px-6 py-4">—</td>
+              <td class="px-6 py-4 font-bold">${item.rating} ${diffHtml}</td>
+              <td class="px-6 py-4">—</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+    
+    // 3. Analytics
+    const analyticsRes = await window.apiRequest('GET', '/api/codeforces/analytics');
+    if (analyticsRes.success && analyticsRes.data) {
+      const a = analyticsRes.data;
+      
+      // Set simple values
+      document.getElementById('cf-analytics-solves').textContent = a.solvedCount;
+      document.getElementById('cf-analytics-ac-rate').textContent = `${a.acceptanceRate}%`;
+      
+      // Update DSA circle progress
+      const dsaCircle = document.getElementById('dsa-score-circle');
+      const dsaVal = document.getElementById('dsa-score-value');
+      dsaVal.textContent = a.dsaScore;
+      
+      // stroke-dasharray is 251.2 (2 * pi * 40). Calculate offset:
+      const offset = 251.2 - (a.dsaScore / 100) * 251.2;
+      dsaCircle.style.strokeDashoffset = offset;
+      
+      // Render difficulty bars
+      const barsContainer = document.getElementById('cf-difficulty-bars');
+      const ratings = Object.keys(a.difficultyDistribution).map(Number).sort((a,b) => a-b);
+      
+      if (ratings.length === 0) {
+        barsContainer.innerHTML = '<p class="text-xs text-on-surface-variant">No submission analytics found.</p>';
+      } else {
+        const maxVal = Math.max(...Object.values(a.difficultyDistribution));
+        barsContainer.innerHTML = ratings.map((rating) => {
+          const count = a.difficultyDistribution[rating];
+          const pct = Math.max(8, Math.round((count / maxVal) * 100));
+          return `
+            <div>
+              <div class="flex justify-between text-[11px] font-bold text-on-surface mb-1">
+                <span>Rating ${rating}</span>
+                <span class="text-on-surface-variant font-medium">${count} solved</span>
+              </div>
+              <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-primary rounded-full progress-animated" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      // Estimates
+      let estText = '';
+      if (a.estimatedContestsToExpert === 0) {
+        estText = 'Rank Expert reached!';
+      } else if (typeof a.estimatedContestsToExpert === 'number') {
+        estText = `Expert rank target estimated in <strong>${a.estimatedContestsToExpert}</strong> contests.`;
+      } else {
+        estText = `Expert target estimate: ${a.estimatedContestsToExpert || 'steady progress needed'}`;
+      }
+      document.getElementById('cf-analytics-estimate').innerHTML = estText;
+      
+      // Inactivity & range
+      let rangeText = `Strongest solve range: <strong>${a.strongestBucket}</strong>.`;
+      if (a.daysSinceLast1700Solve !== null) {
+        rangeText += `<br/>Last 1700+ problem solved: <strong>${a.daysSinceLast1700Solve}</strong> days ago.`;
+      }
+      document.getElementById('cf-analytics-range').innerHTML = rangeText;
+    }
+  } catch (err) {
+    console.error('Sync load failed:', err);
+  }
+}
+
+// ─── SVG Growth Chart Rendering ──────────────────────────────────────────────
+function renderRatingChart(history) {
+  const chartFill = document.getElementById('cf-chart-fill');
+  const chartLine = document.getElementById('cf-chart-line');
+  const chartPoints = document.getElementById('cf-chart-points');
+  const chartLabels = document.getElementById('cf-chart-labels');
+  
+  if (!chartLine || history.length === 0) return;
+  
+  // Sort oldest first
+  const sorted = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+  const minRating = Math.min(...sorted.map(h => h.rating));
+  const maxRating = Math.max(...sorted.map(h => h.rating));
+  const ratingRange = maxRating - minRating || 1;
+  const padding = ratingRange * 0.1; // 10% vertical padding
+  
+  const bottomBound = Math.max(0, minRating - padding);
+  const topBound = maxRating + padding;
+  const boundRange = topBound - bottomBound;
+  
+  const W = 1000;
+  const H = 200;
+  const PADDING_TOP = 20;
+  const PADDING_BOTTOM = 20;
+  const graphHeight = H - PADDING_TOP - PADDING_BOTTOM;
+  
+  const dx = W / Math.max(1, (sorted.length - 1));
+  let pathD = '';
+  let pointsHTML = '';
+  
+  sorted.forEach((item, i) => {
+    const x = i * dx;
+    const yVal = item.rating;
+    const normalizedY = (yVal - bottomBound) / boundRange;
+    const y = H - PADDING_BOTTOM - (normalizedY * graphHeight);
+    
+    if (i === 0) {
+      pathD += `M${x},${y} `;
+    } else {
+      pathD += `L${x},${y} `;
+    }
+    
+    // Add dots for each contest rating point
+    pointsHTML += `<circle cx="${x}" cy="${y}" r="3.5" fill="#FF9933" />`;
+    if (i === sorted.length - 1) {
+      pointsHTML += `<circle cx="${x}" cy="${y}" r="6.5" fill="#FF9933" class="pulse-glow" />`;
+    }
+  });
+  
+  const fillD = pathD + ` L${W},${H} L0,${H} Z`;
+  chartLine.setAttribute('d', pathD);
+  chartFill.setAttribute('d', fillD);
+  chartPoints.innerHTML = pointsHTML;
+  
+  // Set labels (date)
+  chartLabels.innerHTML = '';
+  const numLabels = Math.min(sorted.length, 5);
+  const step = Math.floor(sorted.length / numLabels) || 1;
+  for (let i = 0; i < sorted.length; i += step) {
+    const date = new Date(sorted[i].date);
+    const labelStr = date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+    chartLabels.innerHTML += `<span>${labelStr}</span>`;
+  }
+}
+
+// ─── Fetch Manual Entries ────────────────────────────────────────────────────
+async function fetchManualEntries() {
+  try {
+    const res = await window.apiFetch(MANUAL_API_URL);
     const data = await res.json();
     if (data.success) {
-      // Sort entries by date descending (latest first)
       data.data.sort((a, b) => new Date(b.date) - new Date(a.date));
       renderTable(data.data);
       updateStats(data.data);
@@ -155,7 +576,6 @@ function renderTable(entries) {
   tbody.innerHTML = entries.map((entry, index) => {
     const date = new Date(entry.date).toLocaleDateString();
     
-    // Rating diff logic if we have a previous entry
     let diffHtml = '';
     if (index < entries.length - 1) {
       const diff = entry.rating - entries[index+1].rating;
@@ -180,14 +600,22 @@ function renderTable(entries) {
 }
 
 function updateStats(entries) {
-  if (entries.length === 0) return;
+  if (entries.length === 0) {
+     document.getElementById('stat-rating').textContent = 0;
+     document.getElementById('stat-peak').textContent = 0;
+     document.getElementById('stat-count').textContent = 0;
+     document.getElementById('stat-rank-badge').classList.add('hidden');
+     return;
+  }
   const current = entries[0].rating;
   const peak = Math.max(...entries.map(e => e.rating));
   document.getElementById('stat-rating').textContent = current;
   document.getElementById('stat-peak').textContent = peak;
   document.getElementById('stat-count').textContent = entries.length;
+  document.getElementById('stat-rank-badge').classList.add('hidden');
 }
 
+// Save Manual Entry
 document.getElementById('entry-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const data = {
@@ -198,22 +626,73 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
   };
   
   try {
-    const res = await window.apiFetch(API_URL, {
+    const res = await window.apiFetch(MANUAL_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (res.ok) { closeModal(); document.getElementById('entry-form').reset(); fetchEntries(); }
+    if (res.ok) { closeModal(); document.getElementById('entry-form').reset(); checkConnection(); }
   } catch (err) { console.error(err); }
 });
 
-async function deleteEntry(id) {
-  if (!confirm('Delete?')) return;
-  try { await window.apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); fetchEntries(); } catch (err) {}
+// Save Connection Handle
+document.getElementById('settings-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const cfHandle = document.getElementById('settings-cf-handle').value.trim();
+  const statusEl = document.getElementById('settings-status');
+  
+  statusEl.classList.remove('hidden');
+  statusEl.textContent = 'Saving connection...';
+  statusEl.className = 'text-center text-sm text-on-surface-variant mt-2';
+  
+  try {
+    const res = await window.apiRequest('PUT', '/api/user/me', {
+      codeforcesHandle: cfHandle || null
+    });
+    
+    if (res.success) {
+      statusEl.textContent = '✓ Handle connected successfully!';
+      statusEl.className = 'text-center text-sm font-bold text-tertiary mt-2';
+      setTimeout(() => {
+        closeSettingsModal();
+        checkConnection();
+      }, 1500);
+    } else {
+      statusEl.textContent = `✗ Error: ${res.error || 'Failed to connect handle'}`;
+      statusEl.className = 'text-center text-sm font-bold text-error mt-2';
+    }
+  } catch (err) {
+    statusEl.textContent = '✗ Error updating settings';
+    statusEl.className = 'text-center text-sm font-bold text-error mt-2';
+  }
+});
+
+// Disconnect Handle
+async function disconnectHandle() {
+  if (!confirm('Are you sure you want to disconnect your Codeforces handle? Rating logs will revert to manual mode.')) return;
+  try {
+    const res = await window.apiRequest('PUT', '/api/user/me', {
+      codeforcesHandle: null
+    });
+    if (res.success) {
+      checkConnection();
+    }
+  } catch (err) {
+    console.error('Failed to disconnect handle:', err);
+  }
 }
 
-if (window.clerkReady) fetchEntries();
-else window.addEventListener('clerk-ready', fetchEntries);
+// Delete Manual Log
+async function deleteEntry(id) {
+  if (!confirm('Delete manual entry?')) return;
+  try { 
+    await window.apiFetch(`${MANUAL_API_URL}/${id}`, { method: 'DELETE' }); 
+    checkConnection(); 
+  } catch (err) {}
+}
+
+if (window.clerkReady) checkConnection();
+else window.addEventListener('clerk-ready', checkConnection);
 </script>
 </body>
 </html>

@@ -37,17 +37,27 @@ async function initClerk() {
     clerkReady = true;
     window.clerkReady = true;
 
-    if (window.Clerk.user) {
-      // User is signed in
-      renderUserMenu();
-      
-      // Dispatch event so other scripts fetch authenticated data
-      window.dispatchEvent(new Event('clerk-ready'));
-    } else {
-      // User is not signed in — show sign-in button but do NOT dispatch clerk-ready
-      // (no point making API calls that will 401)
-      renderSignInButton();
-    }
+    const handleAuthLoad = () => {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (window.Clerk.user) {
+        renderUserMenu();
+        window.dispatchEvent(new Event('clerk-ready'));
+      } else if (isLocalhost) {
+        console.log('🧪 Localhost dev fallback: authenticated as Dev User');
+        const authContainer = document.getElementById('auth-container');
+        if (authContainer) {
+          authContainer.innerHTML = '<div class="flex items-center gap-2"><span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">Dev Mode</span><button id="clerk-sign-in-btn" class="bg-primary text-white px-3 py-1.5 rounded-lg font-medium hover:bg-[#e68a2e] transition-all text-xs">Sign In</button></div>';
+          document.getElementById('clerk-sign-in-btn').addEventListener('click', () => {
+            try { window.Clerk.openSignIn(); } catch (err) { window.Clerk.redirectToSignIn(); }
+          });
+        }
+        window.dispatchEvent(new Event('clerk-ready'));
+      } else {
+        renderSignInButton();
+      }
+    };
+
+    handleAuthLoad();
   });
 
   script.addEventListener('error', () => {
@@ -64,12 +74,28 @@ async function initClerk() {
       });
       clerkReady = true;
       window.clerkReady = true;
-      if (window.Clerk.user) {
-        renderUserMenu();
-        window.dispatchEvent(new Event('clerk-ready'));
-      } else {
-        renderSignInButton();
-      }
+      
+      const handleAuthLoadFallback = () => {
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (window.Clerk.user) {
+          renderUserMenu();
+          window.dispatchEvent(new Event('clerk-ready'));
+        } else if (isLocalhost) {
+          console.log('🧪 Localhost dev fallback (fallback CDN): authenticated as Dev User');
+          const authContainer = document.getElementById('auth-container');
+          if (authContainer) {
+            authContainer.innerHTML = '<div class="flex items-center gap-2"><span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">Dev Mode</span><button id="clerk-sign-in-btn" class="bg-primary text-white px-3 py-1.5 rounded-lg font-medium hover:bg-[#e68a2e] transition-all text-xs">Sign In</button></div>';
+            document.getElementById('clerk-sign-in-btn').addEventListener('click', () => {
+              try { window.Clerk.redirectToSignIn(); } catch (err) { window.Clerk.redirectToSignIn(); }
+            });
+          }
+          window.dispatchEvent(new Event('clerk-ready'));
+        } else {
+          renderSignInButton();
+        }
+      };
+      
+      handleAuthLoadFallback();
     });
     document.head.appendChild(fallback);
   });

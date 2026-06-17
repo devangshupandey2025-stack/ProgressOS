@@ -38,35 +38,58 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
 </head>
 <body class="bg-background selection:bg-primary/20 selection:text-primary">
 
-<!-- ═══════════════════════ TOP NAV BAR (Simplified for brevity) ═══════════════════════ -->
 <header id="topnav" class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
   <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
-    <div class="flex justify-between w-full"><div class="flex items-center gap-8">
-      <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
-      <nav class="hidden lg:flex items-center gap-4">
-        <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
-        <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">LeetCode</a>
-      </nav>
+    <div class="flex justify-between w-full">
+      <div class="flex items-center gap-8">
+        <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+        <nav class="hidden lg:flex items-center gap-4">
+          <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
+          <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">LeetCode</a>
+        </nav>
+      </div>
+      <div id="auth-container"></div>
     </div>
   </div>
 </header>
 
-<!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
 <main class="pt-24 pb-16 px-gutter max-w-max_width mx-auto">
+  <!-- Integration Status Banner -->
+  <div id="lc-banner" class="hidden items-center justify-between p-4 bg-primary/5 border border-primary/10 rounded-xl mb-6 flex-wrap gap-4 animate-fade-in">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-xl">auto_awesome</span>
+      <span id="lc-banner-text" class="text-sm font-medium text-on-surface">Syncing real-time statistics...</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="openSettingsModal()" class="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-bold hover:bg-[#e68a2e] transition-all">Change Username</button>
+      <button onclick="disconnectHandle()" class="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg text-xs font-bold transition-all">Disconnect</button>
+    </div>
+  </div>
+
+  <div id="lc-unconnected-banner" class="hidden items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-xl mb-6 flex-wrap gap-4">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-blue-600 text-xl">info</span>
+      <span class="text-sm font-medium text-blue-800">Automate your LeetCode stats by connecting your username — total solved, difficulty breakdown, contest rating and ranking!</span>
+    </div>
+    <button onclick="openSettingsModal()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all">Connect Username</button>
+  </div>
+
   <div class="flex justify-between items-end mb-8">
     <div>
       <h1 class="text-3xl font-bold text-on-surface font-['Geist']">LeetCode Tracker</h1>
-      <p class="text-on-surface-variant mt-1">Track your problem-solving progress and topics.</p>
+      <p class="text-on-surface-variant mt-1">Track your problem-solving progress and contest performance.</p>
     </div>
-    <button onclick="openModal()" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-[#e68a2e] active:scale-95 transition-all">
-      <span class="material-symbols-outlined text-[18px] mr-1">add</span> Log Session
-    </button>
+    <div class="flex gap-3">
+      <button onclick="openModal()" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-[#e68a2e] active:scale-95 transition-all text-sm flex items-center">
+        <span class="material-symbols-outlined text-[18px] mr-1">add</span> Log Session
+      </button>
+    </div>
   </div>
 
-  <!-- Stats Cards -->
+  <!-- Stats Grid -->
   <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
     <div class="glass-card p-6 rounded-xl text-center border-b-4 border-b-primary">
-      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Rating</p>
+      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider">Contest Rating</p>
       <p id="stat-rating" class="text-3xl font-bold text-primary mt-2">-</p>
     </div>
     <div class="glass-card p-6 rounded-xl text-center">
@@ -87,8 +110,87 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
     </div>
   </div>
 
-  <!-- Data Table -->
+  <!-- Analytics Grid (hidden until connected) -->
+  <div id="analytics-panels" class="hidden space-y-6 mb-8">
+
+    <!-- Problem Distribution + Growth Trend -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="glass-card p-6 rounded-xl">
+        <h3 class="text-sm font-bold text-on-surface font-['Geist'] mb-4">Problem Distribution</h3>
+        <div id="dist-bars" class="space-y-3">
+          <div>
+            <div class="flex justify-between text-xs mb-1"><span class="text-green-600 font-bold">Easy</span><span id="dist-easy-pct" class="font-bold text-on-surface">0%</span></div>
+            <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden"><div id="dist-easy-bar" class="h-full bg-green-500 rounded-full" style="width:0%"></div></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1"><span class="text-yellow-600 font-bold">Medium</span><span id="dist-med-pct" class="font-bold text-on-surface">0%</span></div>
+            <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden"><div id="dist-med-bar" class="h-full bg-yellow-500 rounded-full" style="width:0%"></div></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs mb-1"><span class="text-red-600 font-bold">Hard</span><span id="dist-hard-pct" class="font-bold text-on-surface">0%</span></div>
+            <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden"><div id="dist-hard-bar" class="h-full bg-red-500 rounded-full" style="width:0%"></div></div>
+          </div>
+          <div class="pt-2 text-xs text-on-surface-variant">Profile: <span id="diff-profile" class="font-bold text-primary">—</span></div>
+        </div>
+      </div>
+      <div class="glass-card p-6 rounded-xl">
+        <h3 class="text-sm font-bold text-on-surface font-['Geist'] mb-4">Growth Trend</h3>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-outline-variant/50">
+            <span class="text-xs text-on-surface-variant font-medium">Monthly Growth</span>
+            <span id="trend-monthly" class="text-lg font-bold text-primary">0</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-outline-variant/50">
+            <span class="text-xs text-on-surface-variant font-medium">Weekly Average</span>
+            <span id="trend-weekly" class="text-lg font-bold text-primary">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Goal Forecast + DSA Readiness -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="glass-card p-6 rounded-xl bg-gradient-to-br from-white to-primary/5 border border-primary/10">
+        <h3 class="text-sm font-bold text-on-surface font-['Geist'] mb-2">Goal Forecast</h3>
+        <div id="forecast-content">
+          <p class="text-xs text-on-surface-variant">No goal prediction available yet. Keep syncing to build velocity data.</p>
+        </div>
+      </div>
+      <div class="glass-card p-6 rounded-xl bg-gradient-to-br from-white to-indigo-50/30">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-bold text-on-surface font-['Geist']">DSA Readiness</h3>
+          <span id="readiness-score" class="text-2xl font-black text-primary font-['Geist']">0</span>
+        </div>
+        <div class="h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
+          <div id="readiness-bar" class="h-full bg-gradient-to-r from-primary to-purple-500 rounded-full" style="width:0%"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-[10px]">
+          <div><span class="text-on-surface-variant">Solved:</span> <span id="r-solved" class="font-bold">0</span></div>
+          <div><span class="text-on-surface-variant">Rating:</span> <span id="r-rating" class="font-bold">0</span></div>
+          <div><span class="text-on-surface-variant">Hard:</span> <span id="r-hard" class="font-bold">0</span></div>
+          <div><span class="text-on-surface-variant">Consistency:</span> <span id="r-consistency" class="font-bold">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insights Panel -->
+    <div class="glass-card p-6 rounded-xl bg-gradient-to-br from-white to-orange-50/20">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-primary">auto_awesome</span>
+        <h3 class="text-sm font-bold text-on-surface font-['Geist']">AI Insights</h3>
+      </div>
+      <div id="insights-content" class="space-y-3">
+        <p class="text-xs text-on-surface-variant">Sync your profile to get personalized insights.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sessions Table -->
   <div class="glass-card rounded-xl overflow-hidden">
+    <div class="p-5 border-b border-outline-variant/65 flex justify-between items-center">
+      <h2 class="text-lg font-bold text-on-surface font-['Geist']">Manual Sessions</h2>
+      <span id="automated-tag" class="hidden px-2.5 py-0.5 bg-tertiary/10 text-tertiary border border-tertiary/20 text-xs rounded-full font-bold uppercase tracking-wide">Auto Synced</span>
+    </div>
     <table class="w-full text-left border-collapse">
       <thead>
         <tr class="bg-gray-50 border-b border-outline-variant text-xs text-on-surface-variant uppercase tracking-wider">
@@ -108,7 +210,7 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
   </div>
 </main>
 
-<!-- ═══════════════════════ MODAL ═══════════════════════ -->
+<!-- Modal: Manual Entry Logger -->
 <div id="modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
     <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
@@ -158,21 +260,164 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
   </div>
 </div>
 
+<!-- Modal: Settings Connection -->
+<div id="settings-modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+      <h3 class="text-lg font-bold text-on-surface font-['Geist']">Connect LeetCode</h3>
+      <button onclick="closeSettingsModal()" class="material-symbols-outlined text-on-surface-variant hover:text-on-surface">close</button>
+    </div>
+    <form id="settings-form" class="p-6 space-y-4">
+      <div>
+        <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">LeetCode Username</label>
+        <input id="settings-lc-username" type="text" required class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. Devangshu_Pandey"/>
+      </div>
+      <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-[#e68a2e] transition-all">
+        Save Connection
+      </button>
+      <p id="settings-status" class="text-center text-sm hidden"></p>
+    </form>
+  </div>
+</div>
+
 <script>
-const API_URL = 'http://localhost:5000/api/trackers/leetcode';
+const MANUAL_API_URL = 'http://localhost:5000/api/trackers/leetcode';
 
 function openModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('modal').classList.add('flex'); }
 function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); }
 
+function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); document.getElementById('settings-modal').classList.add('flex'); }
+function closeSettingsModal() {
+    document.getElementById('settings-modal').classList.add('hidden');
+    document.getElementById('settings-modal').classList.remove('flex');
+    document.getElementById('settings-status').classList.add('hidden');
+}
+
+// ─── Check Connection Status ─────────────────────────────────────────────────
+async function checkConnection() {
+  const banner = document.getElementById('lc-banner');
+  const unconnectedBanner = document.getElementById('lc-unconnected-banner');
+  const bannerText = document.getElementById('lc-banner-text');
+
+  const statusRes = await window.apiRequest('GET', '/api/leetcode/status');
+  if (statusRes.success && statusRes.data) {
+    const status = statusRes.data;
+    if (status.connected) {
+      banner.classList.remove('hidden');
+      banner.classList.add('flex');
+      unconnectedBanner.classList.add('hidden');
+      document.getElementById('automated-tag').classList.remove('hidden');
+      const lastSync = status.leetcodeLastSync ? `Synced: ${getTimeAgo(new Date(status.leetcodeLastSync))}` : '';
+      bannerText.textContent = `Connected as @${status.leetcodeUsername} ${lastSync}`.trim();
+      await loadAutoSyncStats();
+    } else {
+      banner.classList.add('hidden');
+      unconnectedBanner.classList.remove('hidden');
+      unconnectedBanner.classList.add('flex');
+      document.getElementById('automated-tag').classList.add('hidden');
+    }
+  }
+}
+
+// ─── Load Auto-Synced Stats ──────────────────────────────────────────────────
+async function loadAutoSyncStats() {
+  const profileRes = await window.apiRequest('GET', '/api/leetcode/profile');
+  if (profileRes.success && profileRes.data) {
+    const prof = profileRes.data;
+    document.getElementById('stat-total').textContent = prof.totalSolved;
+    document.getElementById('stat-easy').textContent = prof.easy;
+    document.getElementById('stat-medium').textContent = prof.medium;
+    document.getElementById('stat-hard').textContent = prof.hard;
+  }
+
+  const contestRes = await window.apiRequest('GET', '/api/leetcode/contest');
+  if (contestRes.success && contestRes.data) {
+    const contest = contestRes.data;
+    document.getElementById('stat-rating').textContent = contest.rating != null ? Math.round(contest.rating) : '-';
+  }
+
+  // Show analytics panels
+  document.getElementById('analytics-panels').classList.remove('hidden');
+
+  // Load Analytics
+  const analyticsRes = await window.apiRequest('GET', '/api/leetcode/analytics');
+  if (analyticsRes.success && analyticsRes.data) {
+    const a = analyticsRes.data;
+    document.getElementById('dist-easy-pct').textContent = a.problemDistribution.easyPercentage + '%';
+    document.getElementById('dist-med-pct').textContent = a.problemDistribution.mediumPercentage + '%';
+    document.getElementById('dist-hard-pct').textContent = a.problemDistribution.hardPercentage + '%';
+    document.getElementById('dist-easy-bar').style.width = a.problemDistribution.easyPercentage + '%';
+    document.getElementById('dist-med-bar').style.width = a.problemDistribution.mediumPercentage + '%';
+    document.getElementById('dist-hard-bar').style.width = a.problemDistribution.hardPercentage + '%';
+    document.getElementById('diff-profile').textContent = a.difficultyProfile;
+    document.getElementById('trend-monthly').textContent = '+' + a.monthlyGrowth;
+    document.getElementById('trend-weekly').textContent = a.weeklyAverage + '/wk';
+
+    // Goal forecast
+    if (a.goalPrediction) {
+      document.getElementById('forecast-content').innerHTML = `
+        <p class="text-xs text-on-surface-variant">On pace to reach <strong>700 solves</strong> in <strong>${a.goalPrediction.estimatedWeeks} weeks</strong></p>
+        <p class="text-xs text-on-surface-variant mt-1">Estimated completion: <strong>${a.goalPrediction.estimatedCompletion}</strong></p>
+      `;
+    } else {
+      document.getElementById('forecast-content').innerHTML = `<p class="text-xs text-on-surface-variant">Not enough velocity data yet. Sync more frequently.</p>`;
+    }
+  }
+
+  // Load Readiness
+  const readinessRes = await window.apiRequest('GET', '/api/leetcode/readiness');
+  if (readinessRes.success && readinessRes.data) {
+    const r = readinessRes.data;
+    document.getElementById('readiness-score').textContent = r.dsaReadiness;
+    document.getElementById('readiness-bar').style.width = r.dsaReadiness + '%';
+    document.getElementById('r-solved').textContent = r.breakdown.solvedCountScore;
+    document.getElementById('r-rating').textContent = r.breakdown.contestRatingScore;
+    document.getElementById('r-hard').textContent = r.breakdown.hardProblemsScore;
+    document.getElementById('r-consistency').textContent = r.breakdown.consistencyScore;
+  }
+
+  // Load Insights
+  const insightsRes = await window.apiRequest('GET', '/api/leetcode/insights');
+  if (insightsRes.success && insightsRes.data) {
+    const ins = insightsRes.data;
+    document.getElementById('insights-content').innerHTML = `
+      <div class="flex items-start gap-2.5 bg-primary/5 border border-primary/10 rounded-lg p-3">
+        <span class="material-symbols-outlined text-primary text-base mt-0.5">trending_up</span>
+        <div><p class="text-xs font-bold text-on-surface">Strongest: ${ins.strongestCategory}</p><p class="text-xs text-on-surface-variant">${ins.progressInsight}</p></div>
+      </div>
+      <div class="flex items-start gap-2.5 bg-slate-50 border border-outline-variant/50 rounded-lg p-3">
+        <span class="material-symbols-outlined text-on-surface-variant text-base mt-0.5">info</span>
+        <div><p class="text-xs font-bold text-on-surface">Recommendation</p><p class="text-xs text-on-surface-variant">${ins.recommendation}</p></div>
+      </div>
+    `;
+  }
+}
+
+function getTimeAgo(date) {
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  if (diffDays === 1) return 'Yesterday';
+  return `${diffDays} days ago`;
+}
+
+// ─── Fetch Manual Entries ────────────────────────────────────────────────────
 async function fetchEntries() {
   try {
-    const res = await window.apiFetch(API_URL);
+    const res = await window.apiFetch(MANUAL_API_URL);
     const data = await res.json();
     if (data.success) {
-      // Sort entries by date descending
       data.data.sort((a, b) => new Date(b.date) - new Date(a.date));
       renderTable(data.data);
-      updateStats(data.data);
+      // Only override stats from manual if auto-sync is not connected
+      const statusRes = await window.apiRequest('GET', '/api/leetcode/status');
+      if (!(statusRes.success && statusRes.data && statusRes.data.connected)) {
+        updateManualStats(data.data);
+      }
     }
   } catch (err) { console.error('Fetch error:', err); }
 }
@@ -183,7 +428,7 @@ function renderTable(entries) {
     tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-on-surface-variant">No sessions logged yet.</td></tr>';
     return;
   }
-  
+
   tbody.innerHTML = entries.map(entry => {
     const date = new Date(entry.date).toLocaleDateString();
     const topicsHtml = entry.topics.map(t => `<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs mr-1">${t}</span>`).join('');
@@ -205,17 +450,12 @@ function renderTable(entries) {
   }).join('');
 }
 
-function updateStats(entries) {
+function updateManualStats(entries) {
   let easy = 0, medium = 0, hard = 0;
-  // Find latest rating
   let latestRating = '-';
   for (const e of entries) {
-    if (e.rating) {
-      latestRating = e.rating;
-      break;
-    }
+    if (e.rating) { latestRating = e.rating; break; }
   }
-
   entries.forEach(e => { easy += e.easy; medium += e.medium; hard += e.hard; });
   document.getElementById('stat-rating').textContent = latestRating;
   document.getElementById('stat-total').textContent = easy + medium + hard;
@@ -224,6 +464,7 @@ function updateStats(entries) {
   document.getElementById('stat-hard').textContent = hard;
 }
 
+// ─── Save Manual Entry ──────────────────────────────────────────────────────
 document.getElementById('entry-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const easy = parseInt(document.getElementById('in-easy').value) || 0;
@@ -233,11 +474,11 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
   const contestName = document.getElementById('in-contestName').value || null;
   const rating = parseInt(document.getElementById('in-rating').value) || null;
   const rank = parseInt(document.getElementById('in-rank').value) || null;
-  
+
   const data = { easy, medium, hard, topics, contestName, rating, rank };
 
   try {
-    const res = await window.apiFetch(API_URL, {
+    const res = await window.apiFetch(MANUAL_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -250,16 +491,60 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
   } catch (err) { console.error('Save error:', err); }
 });
 
+// ─── Disconnect Handle ──────────────────────────────────────────────────────
+async function disconnectHandle() {
+  if (!confirm('Are you sure you want to disconnect your LeetCode username?')) return;
+  try {
+    const res = await window.apiRequest('PUT', '/api/user/me', { leetcodeUsername: null });
+    if (res.success) { checkConnection(); }
+  } catch (err) { console.error('Failed to disconnect:', err); }
+}
+
+// ─── Settings Form Submit ────────────────────────────────────────────────────
+document.getElementById('settings-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('settings-lc-username').value.trim();
+  const statusEl = document.getElementById('settings-status');
+  statusEl.classList.remove('hidden');
+  statusEl.textContent = 'Saving...';
+  statusEl.className = 'text-center text-sm text-on-surface-variant';
+
+  try {
+    const res = await window.apiRequest('PUT', '/api/user/me', { leetcodeUsername: username || null });
+    if (res.success) {
+      statusEl.textContent = '✓ Connected successfully!';
+      statusEl.className = 'text-center text-sm font-bold text-tertiary';
+      setTimeout(() => {
+        closeSettingsModal();
+        checkConnection();
+      }, 1500);
+    } else {
+      statusEl.textContent = `✗ Error: ${res.error || 'Failed to connect'}`;
+      statusEl.className = 'text-center text-sm font-bold text-error';
+    }
+  } catch (err) {
+    statusEl.textContent = '✗ Error updating settings';
+    statusEl.className = 'text-center text-sm font-bold text-error';
+  }
+});
+
+// ─── Delete Entry ────────────────────────────────────────────────────────────
 async function deleteEntry(id) {
   if (!confirm('Delete this entry?')) return;
   try {
-    await window.apiFetch(`${API_URL}/${id}`, { method: 'DELETE' });
+    await window.apiFetch(`${MANUAL_API_URL}/${id}`, { method: 'DELETE' });
     fetchEntries();
   } catch (err) { console.error('Delete error:', err); }
 }
 
-if (window.clerkReady) fetchEntries();
-else window.addEventListener('clerk-ready', fetchEntries);
+// ─── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  await checkConnection();
+  fetchEntries();
+}
+
+if (window.clerkReady) init();
+else window.addEventListener('clerk-ready', init);
 </script>
 </body>
 </html>

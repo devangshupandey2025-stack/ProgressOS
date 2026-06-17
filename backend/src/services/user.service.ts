@@ -46,9 +46,12 @@ export class UserService {
   }
 
   /**
-   * Update user profile fields (name, email).
+   * Update user profile fields (name, email, codeforcesHandle).
    */
-  async updateUser(userId: string, data: { name?: string; email?: string }) {
+  async updateUser(
+    userId: string,
+    data: { name?: string; email?: string; codeforcesHandle?: string | null; codeforcesLastSync?: Date | null; leetcodeUsername?: string | null; leetcodeLastSync?: Date | null }
+  ) {
     const user = await prisma.user.update({
       where: { id: userId },
       data,

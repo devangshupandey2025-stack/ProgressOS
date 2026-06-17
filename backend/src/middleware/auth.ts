@@ -4,6 +4,7 @@ import { clerkClient } from '@clerk/express';
 import { prisma } from '../config/database.js';
 import { AppError } from '../utils/AppError.js';
 import { AuthenticatedRequest } from '../types/index.js';
+import { devAuth } from './devAuth.js';
 
 /**
  * Clerk Authentication Middleware
@@ -21,6 +22,14 @@ export async function requireAuth(
   next: NextFunction
 ): Promise<void> {
   try {
+    // If running in development and no Authorization header is provided, use devAuth
+    if (process.env.NODE_ENV === 'development' && !req.headers.authorization) {
+      await devAuth(req, res, () => {});
+      if ((req as AuthenticatedRequest).dbUserId) {
+        return next();
+      }
+    }
+
     const auth = getAuth(req);
 
     if (!auth || !auth.userId) {

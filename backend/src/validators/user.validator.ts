@@ -6,6 +6,8 @@ import { z } from 'zod';
 export const updateUserSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   email: z.string().email().optional(),
-}).refine((data) => data.name || data.email, {
-  message: 'At least one field (name or email) must be provided',
+  codeforcesHandle: z.string().trim().min(1).max(50).nullable().optional(),
+  leetcodeUsername: z.string().trim().min(1).max(50).nullable().optional(),
+}).refine((data) => data.name || data.email || data.hasOwnProperty('codeforcesHandle') || data.hasOwnProperty('leetcodeUsername'), {
+  message: 'At least one field must be provided',
 });

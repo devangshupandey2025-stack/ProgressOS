@@ -28,7 +28,11 @@ model User {
   totalXP       Int        @default(0)
   currentStreak Int        @default(0)
   longestStreak Int        @default(0)
-  lastActiveAt  DateTime?
+  lastActiveAt       DateTime?
+  codeforcesHandle   String?
+  codeforcesLastSync DateTime?
+  leetcodeUsername   String?
+  leetcodeLastSync   DateTime?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -46,6 +50,8 @@ model User {
   cyber           CyberEntry[]
   gate            GATEEntry[]
   research        ResearchEntry[]
+  goals           Goal[]
+  leetCodeSnapshots LeetCodeSnapshot[]
 
   @@index([clerkId])
 }
@@ -295,4 +301,54 @@ model ResearchEntry {
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ─── Goal Tracker ───────────────────────────────────────────────────────────
+
+enum TrackerSource {
+  MANUAL
+  LEETCODE_SOLVED
+  LEETCODE_EASY_SOLVED
+  LEETCODE_MEDIUM_SOLVED
+  LEETCODE_HARD_SOLVED
+  LEETCODE_RATING
+  LEETCODE_CONTESTS
+  LEETCODE_VELOCITY
+  LEETCODE_READINESS
+  LEETCODE_MONTHLY_GROWTH
+  LEETCODE_HARD_RATIO
+  CODEFORCES_RATING
+  CODEFORCES_SOLVED
+  PROJECTS_COMPLETED
+  OPENSOURCE_PRS
+}
+
+model Goal {
+  id            String        @id @default(uuid())
+  title         String
+  target        Float
+  current       Float         @default(0)
+  unit          String        @default("%")
+  trackerSource TrackerSource @default(MANUAL)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── LeetCode Snapshots for velocity/readiness tracking ─────────────────────
+
+model LeetCodeSnapshot {
+  id            String   @id @default(uuid())
+  userId        String
+  totalSolved   Int
+  contestRating Int?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
 }

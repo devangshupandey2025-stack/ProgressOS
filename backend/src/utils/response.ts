@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { ApiResponse } from '../types';
+import { ApiResponse } from '../types/index.js';
 
 /**
  * Standardized API response helpers.
