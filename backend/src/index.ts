@@ -60,6 +60,7 @@ import insightsRoutes from './routes/insights.routes.js';
 import weeklyReviewRoutes from './routes/weekly-review.routes.js';
 import timelineRoutes from './routes/timeline.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import publicProfileRoutes from './routes/public-profile.routes.js';
 import { createTrackerRouter } from './utils/trackerFactory.js';
 
 
@@ -76,6 +77,7 @@ app.use('/api/insights', insightsRoutes);
 app.use('/api/weekly-review', weeklyReviewRoutes);
 app.use('/api/timeline', timelineRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/public/profile', publicProfileRoutes);
 
 // Register Tracker Routes using the Generic Factory
 app.use('/api/trackers/leetcode', createTrackerRouter('leetCodeEntry'));
@@ -93,6 +95,11 @@ app.use('/api/trackers/research', createTrackerRouter('researchEntry'));
 
 // Serve Frontend Static Files
 app.use(express.static(path.join(__dirname, '../../')));
+
+// Public profile route — serves the SPA page, JS reads username from URL
+app.get('/u/:username', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../../u.html'));
+});
 
 // ─── 404 Catch-All ───────────────────────────────────────────────────────────
 

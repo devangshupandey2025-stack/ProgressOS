@@ -17,12 +17,35 @@ export class ActivityService {
       },
     });
 
-    // Update user totalXP
+    // Update user totalXP and streak
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { lastActiveAt: true, currentStreak: true, longestStreak: true },
+    });
+
+    let newStreak = 1;
+    if (user?.lastActiveAt) {
+      const lastDate = new Date(user.lastActiveAt);
+      const lastDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+      if (lastDay.getTime() === today.getTime()) {
+        newStreak = user.currentStreak;
+      } else if (lastDay.getTime() === yesterday.getTime()) {
+        newStreak = user.currentStreak + 1;
+      }
+    }
+
     await prisma.user.update({
       where: { id: userId },
       data: {
         totalXP: { increment: xp },
-        lastActiveAt: new Date(),
+        lastActiveAt: now,
+        currentStreak: newStreak,
+        longestStreak: Math.max(newStreak, user?.longestStreak || 0),
       },
     });
 

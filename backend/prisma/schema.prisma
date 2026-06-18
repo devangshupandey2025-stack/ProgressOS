@@ -24,6 +24,7 @@ model User {
   id            String     @id @default(uuid())
   clerkId       String     @unique
   email         String     @unique
+  username      String?    @unique
   name          String?
   totalXP       Int        @default(0)
   currentStreak Int        @default(0)

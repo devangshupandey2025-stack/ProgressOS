@@ -50,7 +50,7 @@ export class UserService {
    */
   async updateUser(
     userId: string,
-    data: { name?: string; email?: string; codeforcesHandle?: string | null; codeforcesLastSync?: Date | null; leetcodeUsername?: string | null; leetcodeLastSync?: Date | null; githubUsername?: string | null; githubLastSync?: Date | null }
+    data: { name?: string; email?: string; username?: string | null; codeforcesHandle?: string | null; codeforcesLastSync?: Date | null; leetcodeUsername?: string | null; leetcodeLastSync?: Date | null; githubUsername?: string | null; githubLastSync?: Date | null }
   ) {
     const user = await prisma.user.update({
       where: { id: userId },

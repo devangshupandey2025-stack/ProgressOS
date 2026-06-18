@@ -1203,6 +1203,13 @@
                         class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                         placeholder="Your Email" />
                 </div>
+                <div>
+                    <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="settings-username">Public Username</label>
+                    <input id="settings-username" name="username" type="text"
+                        class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-mono"
+                        placeholder="e.g. devangshu" pattern="^[a-zA-Z0-9_-]+$" />
+                    <p class="text-[9px] text-on-surface-variant mt-1">Your public profile URL will be: <span class="font-mono text-primary" id="preview-profile-url">your-site.com/u/—</span></p>
+                </div>
                 <div class="border-t border-outline-variant pt-4">
                     <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3 font-['Geist']">Integrations</p>
                     <div>
@@ -2376,6 +2383,15 @@
             }
         }
 
+        // ─── Profile URL Preview ────────────────────────────────────────────────────
+        document.getElementById('settings-username')?.addEventListener('input', function() {
+            const preview = document.getElementById('preview-profile-url');
+            if (preview) {
+                const val = this.value.trim() || '—';
+                preview.textContent = `${window.location.origin}/u/${val}`;
+            }
+        });
+
         // ─── Market Readiness Engine ────────────────────────────────────────────────
         async function loadMarketReadiness() {
             const res = await apiRequest('GET', '/api/market-readiness');
@@ -2446,6 +2462,8 @@
             const body = {};
             if (document.getElementById('settings-name').value) body.name = document.getElementById('settings-name').value;
             if (document.getElementById('settings-email').value) body.email = document.getElementById('settings-email').value;
+            const usernameVal = document.getElementById('settings-username').value.trim();
+            if (usernameVal) body.username = usernameVal;
             const ghUsername = document.getElementById('settings-gh-username').value.trim();
             body.codeforcesHandle = cfHandle || null;
             body.leetcodeUsername = lcUsername || null;

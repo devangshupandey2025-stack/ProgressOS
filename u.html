@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Public Profile | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="js/auth.js"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        primary: "#FF9933",
+        "on-primary-container": "#FFFFFF",
+        surface: "#FFFFFF",
+        background: "#F9FAFB",
+        "outline-variant": "#E5E7EB",
+        "on-surface": "#1E293B",
+        "on-surface-variant": "#64748B",
+        secondary: "#000080",
+        tertiary: "#128807",
+        error: "#EF4444",
+      },
+      spacing: { max_width: "800px", gutter: "24px" },
+    },
+  },
+}
+</script>
+<style>
+body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); }
+</style>
+</head>
+<body class="bg-background">
+
+<main class="min-h-screen max-w-max_width mx-auto px-gutter py-12">
+  <div id="profile-content" class="hidden">
+    <!-- ═══ Header ═══ -->
+    <div class="text-center mb-10">
+      <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+        <span class="material-symbols-outlined text-4xl text-primary">person</span>
+      </div>
+      <h1 class="text-3xl font-black text-on-surface font-['Geist']" id="profile-name">—</h1>
+      <p class="text-sm text-on-surface-variant mt-1">Level <span id="profile-level">—</span></p>
+      <div class="flex items-center justify-center gap-4 mt-4 text-xs text-on-surface-variant">
+        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">local_fire_department</span> <span id="profile-streak">0</span> day streak</span>
+        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">code</span> <span id="profile-dsa">—</span> DSA</span>
+        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">terminal</span> <span id="profile-projects">—</span> Projects</span>
+      </div>
+    </div>
+
+    <!-- ═══ Market Readiness ═══ -->
+    <div class="glass-card rounded-2xl p-8 mb-6 text-center">
+      <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest mb-2">Market Readiness</p>
+      <div class="flex items-baseline justify-center gap-2">
+        <span class="text-6xl font-black text-on-surface font-['Geist']" id="profile-readiness">0</span>
+        <span class="text-xl text-on-surface-variant">/ 100</span>
+      </div>
+      <span class="inline-block mt-2 px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full" id="profile-readiness-label">—</span>
+      <div class="mt-6 space-y-3 max-w-md mx-auto" id="profile-components"></div>
+    </div>
+
+    <!-- ═══ Stats Grid ═══ -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="glass-card rounded-xl p-4 text-center">
+        <p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider">Total XP</p>
+        <p class="text-xl font-black text-on-surface font-['Geist']" id="profile-total-xp">0</p>
+      </div>
+      <div class="glass-card rounded-xl p-4 text-center">
+        <p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider">Weekly XP</p>
+        <p class="text-xl font-black text-primary font-['Geist']" id="profile-weekly-xp">0</p>
+      </div>
+      <div class="glass-card rounded-xl p-4 text-center">
+        <p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider">Level</p>
+        <p class="text-xl font-black text-on-surface font-['Geist']" id="profile-level-stat">0</p>
+      </div>
+      <div class="glass-card rounded-xl p-4 text-center">
+        <p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider">Longest Streak</p>
+        <p class="text-xl font-black text-tertiary font-['Geist']" id="profile-longest-streak">0</p>
+      </div>
+    </div>
+
+    <!-- ═══ 7-Day Heatmap ═══ -->
+    <div class="glass-card rounded-xl p-6 mb-6">
+      <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest mb-4">Activity (This Week)</p>
+      <div class="grid grid-cols-7 gap-2" id="profile-heatmap">
+        <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">M</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+        <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">T</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+        <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">W</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+        <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">T</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+        <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">F</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+        <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">S</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+        <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">S</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ Integrations ═══ -->
+    <div class="glass-card rounded-xl p-6 mb-6">
+      <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest mb-4">Connected Platforms</p>
+      <div class="flex flex-wrap gap-3" id="profile-integrations">
+        <span class="px-3 py-1.5 bg-gray-100 rounded-lg text-xs font-medium text-on-surface-variant">Loading...</span>
+      </div>
+    </div>
+
+    <!-- ═══ Footer ═══ -->
+    <div class="text-center mt-10 pb-8">
+      <p class="text-xs text-on-surface-variant">Powered by <a href="../index.html" class="text-primary font-bold no-underline">ProgressOS</a></p>
+    </div>
+  </div>
+
+  <!-- ═══ Loading / Error ═══ -->
+  <div id="profile-loading" class="text-center py-20">
+    <div class="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+    <p class="text-sm text-on-surface-variant">Loading profile...</p>
+  </div>
+  <div id="profile-error" class="hidden text-center py-20">
+    <span class="material-symbols-outlined text-5xl text-on-surface-variant/30 block mb-4">person_off</span>
+    <h2 class="text-xl font-bold text-on-surface mb-2">Profile Not Found</h2>
+    <p class="text-sm text-on-surface-variant mb-4">No ProgressOS profile exists with that username.</p>
+    <a href="../index.html" class="inline-block px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-lg no-underline">Go to Dashboard</a>
+  </div>
+</main>
+
+<script>
+async function loadPublicProfile() {
+  const params = new URLSearchParams(window.location.search);
+  const hash = window.location.hash.replace('#', '');
+  const username = params.get('username') || hash || window.location.pathname.split('/').pop();
+
+  if (!username || username === 'u.html' || username === 'u') {
+    document.getElementById('profile-loading').classList.add('hidden');
+    document.getElementById('profile-error').classList.remove('hidden');
+    return;
+  }
+
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const API_BASE = isLocalhost ? 'http://localhost:5000' : '';
+  const res = await fetch(`${API_BASE}/api/public/profile/${encodeURIComponent(username)}`);
+  const json = await res.json();
+
+  document.getElementById('profile-loading').classList.add('hidden');
+
+  if (!json.success || !json.data) {
+    document.getElementById('profile-error').classList.remove('hidden');
+    return;
+  }
+
+  const p = json.data;
+  document.getElementById('profile-content').classList.remove('hidden');
+
+  document.getElementById('profile-name').textContent = p.name || p.username;
+  document.getElementById('profile-level').textContent = p.level;
+  document.getElementById('profile-streak').textContent = p.currentStreak;
+  document.getElementById('profile-dsa').textContent = p.dsaScore;
+  document.getElementById('profile-projects').textContent = p.projectsScore;
+  document.getElementById('profile-readiness').textContent = p.marketReadiness;
+  document.getElementById('profile-readiness-label').textContent = p.marketReadinessLabel;
+  document.getElementById('profile-total-xp').textContent = p.totalXP;
+  document.getElementById('profile-weekly-xp').textContent = p.weeklyXP;
+  document.getElementById('profile-level-stat').textContent = p.level;
+  document.getElementById('profile-longest-streak').textContent = p.longestStreak;
+
+  // Components mini bars
+  const compContainer = document.getElementById('profile-components');
+  if (compContainer) {
+    // These are just visual bars showing the main scores
+    const items = [
+      { label: 'DSA', score: p.dsaScore, color: 'bg-primary' },
+      { label: 'Projects', score: p.projectsScore, color: 'bg-blue-500' },
+    ];
+    compContainer.innerHTML = items.map(item => `
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-medium text-on-surface w-16 text-right">${item.label}</span>
+        <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full rounded-full ${item.color} transition-all" style="width:${item.score}%"></div>
+        </div>
+        <span class="text-xs font-bold text-on-surface w-8">${item.score}</span>
+      </div>
+    `).join('');
+  }
+
+  // Heatmap
+  const heatmapContainer = document.getElementById('profile-heatmap');
+  if (heatmapContainer && p.heatmap?.length) {
+    const intensityColors = ['bg-gray-100', 'bg-primary/20', 'bg-primary/40', 'bg-primary/60', 'bg-primary'];
+    heatmapContainer.innerHTML = p.heatmap.map((d, i) => `
+      <div class="text-center">
+        <span class="text-[9px] text-on-surface-variant block mb-1">${d.label}</span>
+        <div class="w-full aspect-square rounded ${intensityColors[d.intensity] || 'bg-gray-100'}"></div>
+      </div>
+    `).join('');
+  }
+
+  // Integrations
+  const integContainer = document.getElementById('profile-integrations');
+  if (integContainer && p.integrations) {
+    const platforms = [
+      { label: 'LeetCode', connected: p.integrations.leetcode, color: 'text-amber-600', bg: 'bg-amber-50' },
+      { label: 'Codeforces', connected: p.integrations.codeforces, color: 'text-sky-600', bg: 'bg-sky-50' },
+      { label: 'GitHub', connected: p.integrations.github, color: 'text-gray-700', bg: 'bg-gray-100' },
+    ];
+    integContainer.innerHTML = platforms.map(pf => `
+      <span class="px-3 py-1.5 rounded-lg text-xs font-medium ${pf.connected ? pf.bg + ' ' + pf.color : 'bg-gray-50 text-on-surface-variant'} flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[14px]">${pf.connected ? 'check_circle' : 'radio_button_unchecked'}</span>
+        ${pf.label}
+      </span>
+    `).join('');
+  }
+}
+
+// Try loading from URL path /u/username or query params
+loadPublicProfile();
+</script>
+</body>
+</html>
