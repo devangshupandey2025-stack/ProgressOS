@@ -2244,6 +2244,51 @@
             }
         }
 
+        // ─── AI Coach ─────────────────────────────────────────────────────────────
+        async function loadInsights() {
+            const res = await apiRequest('GET', '/api/insights');
+            if (!res.success || !res.data) return;
+            const { insights, roiActions } = res.data;
+
+            const container = document.getElementById('ai-coach-insights');
+            if (container) {
+                if (insights?.length) {
+                    container.innerHTML = insights.map(ins => `
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-[16px] mt-0.5 ${ins.type === 'warning' ? 'text-error' : ins.type === 'achievement' ? 'text-tertiary' : 'text-primary'}">${ins.icon}</span>
+                            <div>
+                                <p class="text-sm text-on-surface font-semibold leading-relaxed">${escapeHtml(ins.message)}</p>
+                                ${ins.detail ? `<p class="text-xs text-on-surface-variant mt-0.5">${escapeHtml(ins.detail)}</p>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-on-surface-variant text-[16px] mt-0.5">info</span>
+                            <p class="text-sm text-on-surface-variant leading-relaxed">Insufficient data to provide insights. Continue logging your activities.</p>
+                        </div>`;
+                }
+            }
+
+            const roiContainer = document.getElementById('ai-coach-roi-actions');
+            if (roiContainer) {
+                if (roiActions?.length) {
+                    roiContainer.innerHTML = roiActions.map(a => `
+                        <div class="flex items-start gap-2 p-2.5 bg-primary/5 rounded-lg border border-primary/10">
+                            <span class="material-symbols-outlined text-primary text-[14px] mt-0.5">bolt</span>
+                            <div>
+                                <p class="text-xs text-on-surface font-semibold">${escapeHtml(a.action)}</p>
+                                <p class="text-[10px] text-on-surface-variant">${escapeHtml(a.impact)} · ${a.effort} effort</p>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    roiContainer.innerHTML = '<p class="text-xs text-on-surface-variant text-center">No recommendations right now.</p>';
+                }
+            }
+        }
+
         // ─── Market Readiness Engine ────────────────────────────────────────────────
         async function loadMarketReadiness() {
             const res = await apiRequest('GET', '/api/market-readiness');
@@ -2386,6 +2431,7 @@
             loadUserProfile().catch(() => console.log('Backend not connected — using static data'));
                 loadActivities().catch(() => console.log('Backend not connected — using static data'));
             loadMarketReadiness().catch(() => console.log('Backend not connected — using static data'));
+            loadInsights().catch(() => console.log('Backend not connected — using static data'));
             loadDashboard().catch(() => console.log('Backend not connected — using static data'));
             loadCodeforcesCard().catch(() => console.log('Backend not connected — using static data'));
             loadLeetCodeCard().catch(() => console.log('Backend not connected — using static data'));
