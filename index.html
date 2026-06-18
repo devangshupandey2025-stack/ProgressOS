@@ -714,7 +714,7 @@
                 <div id="activity-feed" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-7">
                     <div class="flex justify-between items-center mb-lg">
                         <h2 class="text-headline-md text-on-surface">Recent Activity</h2>
-                        <a href="#" class="text-label-sm text-primary font-bold hover:underline">View All</a>
+                        <button onclick="toggleTimeline()" class="text-label-sm text-primary font-bold hover:underline cursor-pointer">View All</button>
                     </div>
                     <div id="activity-list" class="space-y-1">
                         <!-- Populated by JS from API -->
@@ -723,6 +723,10 @@
                             No activities yet. Log your first activity to get started!
                         </div>
                     </div>
+                    <button id="view-all-timeline" onclick="toggleTimeline()"
+                        class="hidden mt-3 w-full text-center text-[11px] font-bold text-primary hover:underline py-2">
+                        View All
+                    </button>
                 </div>
 
                 <!-- ═══════════════ BOTTOM: GOALS + WEEKLY ═══════════════ -->
@@ -1397,7 +1401,6 @@
                 allActivities = res.data;
                 renderXPChart(allActivities, 30); // Default to 30 days
                 if (res.data.length > 0) {
-                    renderActivities(res.data);
                     renderSkillDistribution(res.data);
                 } else {
                     // Keep empty state in DOM
@@ -1411,34 +1414,7 @@
             }
         }
 
-        // ─── Render Activities ──────────────────────────────────────────────────────
-        function renderActivities(activities) {
-            const container = document.getElementById('activity-list');
-            const iconMap = {
-                DSA: { icon: 'code', color: 'primary', bg: 'primary/10' },
-                PROJECT: { icon: 'terminal', color: 'secondary', bg: 'secondary/10' },
-                ML: { icon: 'psychology', color: 'purple-600', bg: 'purple-100' },
-                CYBER: { icon: 'security', color: 'tertiary', bg: 'tertiary/10' },
-                ACADEMICS: { icon: 'menu_book', color: 'blue-800', bg: 'blue-100' },
-                OPEN_SOURCE: { icon: 'diversity_3', color: 'tertiary', bg: 'tertiary/10' },
-            };
-
-            container.innerHTML = activities.slice(0, 5).map(act => {
-                const cfg = iconMap[act.category] || iconMap.DSA;
-                const timeAgo = getTimeAgo(new Date(act.createdAt));
-                return `
-      <div class="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
-        <div class="w-10 h-10 rounded-xl bg-${cfg.bg} flex items-center justify-center flex-shrink-0">
-          <span class="material-symbols-outlined text-${cfg.color} text-lg">${cfg.icon}</span>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold text-on-surface truncate">${escapeHtml(act.title)}</p>
-          <p class="text-[11px] text-on-surface-variant">${act.category} • ${timeAgo}</p>
-        </div>
-        <span class="px-2.5 py-1 bg-primary/10 text-primary text-[11px] font-bold rounded-lg flex-shrink-0">+${act.xp} XP</span>
-      </div>`;
-            }).join('');
-        }
+        // ─── Render Activities (replaced by loadTimeline) ──────────────────────────
 
         // ─── Render Skill Distribution from real activities ──────────────────────────
         function renderSkillDistribution(activities) {
@@ -2281,6 +2257,77 @@
             }
         }
 
+        // ─── Unified Timeline ───────────────────────────────────────────────────────
+        let timelineShowingAll = false;
+
+        async function loadTimeline() {
+            const res = await apiRequest('GET', '/api/timeline?days=30');
+            if (!res.success || !res.data) return;
+            const { entries, grouped } = res.data;
+
+            const container = document.getElementById('activity-list');
+            if (!container) return;
+
+            const days = Object.keys(grouped).sort().reverse();
+            if (days.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-on-surface-variant text-sm">
+                        <span class="material-symbols-outlined text-3xl text-on-surface-variant/30 block mb-2">inbox</span>
+                        No activities yet. Log your first activity to get started!
+                    </div>`;
+                return;
+            }
+
+            const displayDays = timelineShowingAll ? days : days.slice(0, 3);
+
+            container.innerHTML = displayDays.map(day => {
+                const dayEntries = grouped[day];
+                const date = new Date(day + 'T00:00:00');
+                const label = getRelativeDayLabel(date);
+                return `
+                    <div class="mb-4">
+                        <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-2 px-1">${label}</p>
+                        ${dayEntries.map(e => `
+                            <div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors group">
+                                <div class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined ${e.color} text-lg">${e.icon}</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-on-surface truncate">${escapeHtml(e.title)}</p>
+                                    <p class="text-[10px] text-on-surface-variant">${escapeHtml(e.subtitle)}</p>
+                                </div>
+                                ${e.xp ? `<span class="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-lg flex-shrink-0">+${e.xp} XP</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
+
+            const viewAllBtn = document.getElementById('view-all-timeline');
+            if (viewAllBtn) {
+                viewAllBtn.textContent = timelineShowingAll ? 'Show Less' : `View All (${entries.length} events)`;
+                viewAllBtn.classList.toggle('hidden', days.length <= 3);
+            }
+        }
+
+        function getRelativeDayLabel(date) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const target = new Date(date);
+            target.setHours(0, 0, 0, 0);
+            const diff = (today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24);
+
+            if (diff === 0) return 'Today';
+            if (diff === 1) return 'Yesterday';
+            if (diff < 7) return `${Math.round(diff)} days ago`;
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function toggleTimeline() {
+            timelineShowingAll = !timelineShowingAll;
+            loadTimeline();
+        }
+
         // ─── Weekly Review ──────────────────────────────────────────────────────────
         async function loadWeeklyReview() {
             const res = await apiRequest('GET', '/api/weekly-review');
@@ -2470,6 +2517,7 @@
         function loadAllData() {
             loadUserProfile().catch(() => console.log('Backend not connected — using static data'));
                 loadActivities().catch(() => console.log('Backend not connected — using static data'));
+            loadTimeline().catch(() => console.log('Backend not connected — using static data'));
             loadMarketReadiness().catch(() => console.log('Backend not connected — using static data'));
             loadInsights().catch(() => console.log('Backend not connected — using static data'));
             loadWeeklyReview().catch(() => console.log('Backend not connected — using static data'));
