@@ -1362,16 +1362,8 @@
                 document.getElementById('hero-streak').textContent = user.currentStreak || 0;
                 document.getElementById('hero-streak-best').textContent = user.longestStreak || 0;
 
-                // XP today (from weekly XP / 7 rough estimate for now)
                 const dailyAvg = weeklyXP > 0 ? Math.round(weeklyXP / 7) : 0;
                 document.getElementById('hero-xp-today').textContent = `+${formatXP(dailyAvg)} XP/day avg`;
-
-                // Weekly summary cards
-                const weeklyHoursEl = document.querySelector('#weekly-summary .grid p.text-headline-md');
-                if (weeklyHoursEl) {
-                    // Estimate hours from XP (avg 15xp/hr)
-                    const estHours = weeklyXP > 0 ? (weeklyXP / 15).toFixed(1) : '0';
-                }
             }
         }
 
@@ -2289,6 +2281,54 @@
             }
         }
 
+        // ─── Weekly Review ──────────────────────────────────────────────────────────
+        async function loadWeeklyReview() {
+            const res = await apiRequest('GET', '/api/weekly-review');
+            if (!res.success || !res.data) return;
+            const wr = res.data;
+
+            document.getElementById('summary-hours').textContent = wr.hoursLogged;
+            document.getElementById('summary-tasks').textContent = wr.tasksCompleted;
+            document.getElementById('summary-peak').textContent = wr.peakDay;
+            document.getElementById('weekly-insight').textContent = wr.insight;
+
+            // Render heatmap
+            const heatmapContainer = document.getElementById('weekly-heatmap');
+            if (heatmapContainer && wr.dailyBreakdown) {
+                const intensityColors = ['bg-gray-100', 'bg-primary/20', 'bg-primary/40', 'bg-primary/60', 'bg-primary'];
+                heatmapContainer.innerHTML = wr.dailyBreakdown.map(d => `
+                    <div class="text-center">
+                        <span class="text-[9px] text-on-surface-variant block mb-1">${d.label}</span>
+                        <div class="w-full aspect-square rounded ${intensityColors[d.intensity]} relative group cursor-pointer">
+                            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900 text-white text-[9px] rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                ${d.xp} XP · ${d.hours}h · ${d.tasks} tasks
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Add XP stat and strongest/weakest below the heatmap
+            const summaryCard = document.getElementById('weekly-summary');
+            const existingMeta = document.getElementById('weekly-meta-section');
+            if (summaryCard && !existingMeta) {
+                const metaDiv = document.createElement('div');
+                metaDiv.id = 'weekly-meta-section';
+                metaDiv.className = 'mt-lg grid grid-cols-2 gap-3';
+                metaDiv.innerHTML = `
+                    <div class="bg-gray-50 p-3 rounded-xl border border-outline-variant/50">
+                        <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">XP Earned</p>
+                        <p class="text-lg font-bold text-on-surface mt-0.5">${wr.xpEarned}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-xl border border-outline-variant/50">
+                        <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Strongest</p>
+                        <p class="text-lg font-bold text-tertiary mt-0.5">${wr.strongestArea || 'N/A'}</p>
+                    </div>
+                `;
+                summaryCard.appendChild(metaDiv);
+            }
+        }
+
         // ─── Market Readiness Engine ────────────────────────────────────────────────
         async function loadMarketReadiness() {
             const res = await apiRequest('GET', '/api/market-readiness');
@@ -2432,6 +2472,7 @@
                 loadActivities().catch(() => console.log('Backend not connected — using static data'));
             loadMarketReadiness().catch(() => console.log('Backend not connected — using static data'));
             loadInsights().catch(() => console.log('Backend not connected — using static data'));
+            loadWeeklyReview().catch(() => console.log('Backend not connected — using static data'));
             loadDashboard().catch(() => console.log('Backend not connected — using static data'));
             loadCodeforcesCard().catch(() => console.log('Backend not connected — using static data'));
             loadLeetCodeCard().catch(() => console.log('Backend not connected — using static data'));
