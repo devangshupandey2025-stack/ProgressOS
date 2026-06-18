@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { prisma } from '../config/database.js';
+import { vitService } from '../integrations/vit/vit.service.js';
 import { AuthenticatedRequest } from '../types/index.js';
 import { sendSuccess } from '../utils/response.js';
 
@@ -39,6 +40,33 @@ router.get('/', requireAuth, async (req, res, next) => {
     
     const weeklyXP = weeklyActivities.reduce((sum, act) => sum + act.xp, 0);
 
+    // VIT Academic Card
+    let vit = null;
+    if (user.vitUsername) {
+      try {
+        const profile = await vitService.getProfile(userId);
+        const analytics = await vitService.getAnalytics(userId);
+        vit = {
+          connected: true,
+          username: user.vitUsername,
+          lastSync: user.vitLastSync?.toISOString() ?? null,
+          cgpa: profile.cgpa,
+          creditsEarned: profile.creditsEarned,
+          creditsRequired: profile.creditsRequired,
+          attendance: profile.attendance,
+          academicReadiness: analytics.academicReadiness,
+          creditsProgress: analytics.creditsProgress,
+        };
+      } catch {
+        vit = {
+          connected: true,
+          username: user.vitUsername,
+          lastSync: user.vitLastSync?.toISOString() ?? null,
+          error: 'Failed to sync VIT data',
+        };
+      }
+    }
+
     // Dashboard response
     sendSuccess(res, {
       user: {
@@ -56,7 +84,8 @@ router.get('/', requireAuth, async (req, res, next) => {
         remainingXP: nextLevelXP - currentXP
       },
       weeklyXP,
-      monthlyXP: weeklyXP * 4 // Rough estimate for now
+      monthlyXP: weeklyXP * 4,
+      vit,
     });
   } catch (error) {
     next(error);

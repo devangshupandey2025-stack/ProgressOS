@@ -87,7 +87,7 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
     <!-- ═══ 7-Day Heatmap ═══ -->
     <div class="glass-card rounded-xl p-6 mb-6">
       <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest mb-4">Activity (This Week)</p>
-      <div class="grid grid-cols-7 gap-2" id="profile-heatmap">
+      <div class="grid grid-cols-7 gap-1.5 sm:gap-2" id="profile-heatmap">
         <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">M</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
         <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">T</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
         <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">W</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
@@ -95,6 +95,17 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
         <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">F</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
         <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">S</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
         <div class="text-center"><span class="text-[9px] text-on-surface-variant block mb-1">S</span><div class="w-full aspect-square rounded bg-gray-100"></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ Achievements ═══ -->
+    <div class="glass-card rounded-xl p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">Achievements</p>
+        <span class="text-xs font-bold text-primary" id="profile-achievement-count">0</span>
+      </div>
+      <div class="grid grid-cols-5 gap-3" id="profile-achievements">
+        <p class="text-xs text-on-surface-variant col-span-full text-center">None yet.</p>
       </div>
     </div>
 
@@ -193,6 +204,24 @@ async function loadPublicProfile() {
         <div class="w-full aspect-square rounded ${intensityColors[d.intensity] || 'bg-gray-100'}"></div>
       </div>
     `).join('');
+  }
+
+  // Achievements
+  const achGrid = document.getElementById('profile-achievements');
+  const achCount = document.getElementById('profile-achievement-count');
+  if (achGrid && p.achievements) {
+    const unlocked = p.achievements.filter(a => a.unlocked);
+    achCount.textContent = `${unlocked.length} / ${p.achievements.length}`;
+    achGrid.innerHTML = p.achievements.map(a => {
+      const pct = a.progress ? Math.round((a.progress.current / a.progress.target) * 100) : 0;
+      return `
+      <div class="flex flex-col items-center gap-1 p-1.5 rounded-lg ${a.unlocked ? 'bg-primary/5 border border-primary/10' : 'bg-gray-50 border border-transparent'} text-center" title="${a.description}">
+        <span class="material-symbols-outlined text-lg ${a.unlocked ? 'text-primary' : 'text-on-surface-variant/20'}">${a.icon}</span>
+        <p class="text-[7px] font-semibold ${a.unlocked ? 'text-on-surface' : 'text-on-surface-variant/30'} leading-tight">${a.title}</p>
+        ${a.unlocked ? '<span class="text-[7px] text-tertiary font-bold">✓</span>' : ''}
+        ${a.progress ? `<div class="w-full h-1 bg-gray-200 rounded-full overflow-hidden"><div class="h-full bg-primary/40 rounded-full" style="width:${pct}%"></div></div>` : ''}
+      </div>`;
+    }).join('');
   }
 
   // Integrations

@@ -15,6 +15,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   CLERK_SECRET_KEY: z.string().min(1, 'CLERK_SECRET_KEY is required'),
   CLERK_PUBLISHABLE_KEY: z.string().optional(),
+  VIT_ENCRYPTION_KEY: z.string().default('dev-fallback-key-change-in-production'),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Progress Report | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="js/auth.js"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: { primary: "#FF9933", secondary: "#000080", tertiary: "#128807", "on-surface": "#1E293B", "on-surface-variant": "#64748B", "outline-variant": "#E5E7EB" },
+      spacing: { max_width: "900px", gutter: "24px" },
+    },
+  },
+}
+</script>
+<style>
+body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); }
+@media print {
+  body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print { display: none !important; }
+  .glass-card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+  @page { margin: 0.5in; }
+}
+</style>
+</head>
+<body class="bg-background">
+<main class="max-w-max_width mx-auto px-gutter py-8">
+  <!-- ═══ Controls ═══ -->
+  <div class="no-print flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-2xl font-black text-on-surface font-['Geist']">Progress Report</h1>
+      <p class="text-sm text-on-surface-variant">A summary of your engineering growth</p>
+    </div>
+    <button onclick="window.print()" class="px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-lg flex items-center gap-2 cursor-pointer">
+      <span class="material-symbols-outlined text-lg">print</span> Export PDF
+    </button>
+  </div>
+
+  <!-- ═══ Header ═══ -->
+  <div class="glass-card rounded-2xl p-8 mb-6">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <span class="material-symbols-outlined text-3xl text-primary">person</span>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-on-surface" id="report-name">—</h2>
+        <p class="text-sm text-on-surface-variant" id="report-username">—</p>
+        <p class="text-xs text-on-surface-variant mt-0.5">Generated <span id="report-date">today</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Quick Stats ═══ -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="glass-card rounded-xl p-4 text-center"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider">Level</p><p class="text-2xl font-black text-on-surface font-['Geist']" id="r-level">—</p></div>
+    <div class="glass-card rounded-xl p-4 text-center"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider">Total XP</p><p class="text-2xl font-black text-on-surface font-['Geist']" id="r-total-xp">—</p></div>
+    <div class="glass-card rounded-xl p-4 text-center"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider">Market Readiness</p><p class="text-2xl font-black text-primary font-['Geist']" id="r-readiness">—</p></div>
+    <div class="glass-card rounded-xl p-4 text-center"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider">Longest Streak</p><p class="text-2xl font-black text-tertiary font-['Geist']" id="r-streak">—</p></div>
+  </div>
+
+  <!-- ═══ Section: DSA ═══ -->
+  <div class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary">code</span>
+      <h3 class="text-sm font-bold text-on-surface">DSA & Competitive Programming</h3>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="report-dsa">
+      <p class="text-xs text-on-surface-variant col-span-full">Loading...</p>
+    </div>
+  </div>
+
+  <!-- ═══ Section: Projects ═══ -->
+  <div class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary">terminal</span>
+      <h3 class="text-sm font-bold text-on-surface">Projects & Open Source</h3>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="report-projects">
+      <p class="text-xs text-on-surface-variant col-span-full">Loading...</p>
+    </div>
+  </div>
+
+  <!-- ═══ Section: Achievements ═══ -->
+  <div class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary">emoji_events</span>
+      <h3 class="text-sm font-bold text-on-surface">Achievements</h3>
+    </div>
+    <div class="grid grid-cols-6 gap-3" id="report-achievements">
+      <p class="text-xs text-on-surface-variant col-span-full">Loading...</p>
+    </div>
+  </div>
+
+  <!-- ═══ Section: Activity ═══ -->
+  <div class="glass-card rounded-xl p-6 mb-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary">bar_chart</span>
+      <h3 class="text-sm font-bold text-on-surface">Recent Activity</h3>
+    </div>
+    <div class="space-y-2" id="report-activity">
+      <p class="text-xs text-on-surface-variant">Loading...</p>
+    </div>
+  </div>
+
+  <!-- ═══ Footer ═══ -->
+  <div class="text-center mt-8 pb-8 text-xs text-on-surface-variant">
+    Generated by <a href="../index.html" class="text-primary font-bold no-underline">ProgressOS</a>
+  </div>
+</main>
+
+<script>
+async function loadReport() {
+  const [userRes, readinessRes, insightsRes, weeklyRes, achievementsRes, timelineRes] = await Promise.all([
+    window.apiRequest('GET', '/api/user/me'),
+    window.apiRequest('GET', '/api/market-readiness'),
+    window.apiRequest('GET', '/api/insights'),
+    window.apiRequest('GET', '/api/weekly-review'),
+    window.apiRequest('GET', '/api/achievements'),
+    window.apiRequest('GET', '/api/timeline?days=14'),
+  ]);
+
+  const user = userRes.data || {};
+  const mr = readinessRes.data || {};
+  const wr = weeklyRes.data || {};
+  const achievements = achievementsRes.data || [];
+  const timeline = timelineRes.data || {};
+
+  document.getElementById('report-date').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('report-name').textContent = user.name || 'User';
+  document.getElementById('report-username').textContent = user.username ? `@${user.username}` : '';
+  document.getElementById('r-level').textContent = Math.floor((user.totalXP || 0) / 1000) + 1;
+  document.getElementById('r-total-xp').textContent = user.totalXP || 0;
+  document.getElementById('r-readiness').textContent = mr.overall || 0;
+  document.getElementById('r-streak').textContent = user.longestStreak || 0;
+
+  // DSA Section
+  const dsaEl = document.getElementById('report-dsa');
+  if (dsaEl) {
+    const dsa = mr.components?.find(c => c.label === 'DSA');
+    const leetcode = mr.components?.find(c => c.label === 'LeetCode');
+    dsaEl.innerHTML = `
+      <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">DSA Score</p><p class="text-lg font-black text-on-surface">${dsa?.score || '—'}/100</p></div>
+      <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Weekly Average</p><p class="text-lg font-black text-on-surface">${wr.problemsSolved !== null ? wr.problemsSolved + ' solved' : '—'}</p></div>
+      <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Projects Score</p><p class="text-lg font-black text-on-surface">${mr.components?.find(c => c.label === 'Projects')?.score || '—'}/100</p></div>
+    `;
+  }
+
+  // Projects Section
+  const projEl = document.getElementById('report-projects');
+  if (projEl) {
+    const oss = mr.components?.find(c => c.label === 'Open Source');
+    projEl.innerHTML = `
+      <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Commits (30d)</p><p class="text-lg font-black text-on-surface">${wr.commits !== null ? wr.commits : '—'}</p></div>
+      <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Projects</p><p class="text-lg font-black text-on-surface">${wr.projectsWorkedOn !== null ? wr.projectsWorkedOn : '—'}</p></div>
+      <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Open Source</p><p class="text-lg font-black text-on-surface">${oss?.score || '—'}/100</p></div>
+    `;
+  }
+
+  // Achievements
+  const achEl = document.getElementById('report-achievements');
+  if (achEl) {
+    const unlocked = achievements.filter(a => a.unlocked);
+    achEl.innerHTML = unlocked.length
+      ? unlocked.map(a => `
+          <div class="flex flex-col items-center gap-1 p-2 bg-primary/5 rounded-xl text-center">
+            <span class="material-symbols-outlined text-xl text-primary">${a.icon}</span>
+            <p class="text-[8px] font-semibold text-on-surface leading-tight">${a.title}</p>
+          </div>
+        `).join('')
+      : '<p class="text-xs text-on-surface-variant col-span-full text-center">No achievements yet.</p>';
+  }
+
+  // Activity
+  const actEl = document.getElementById('report-activity');
+  if (actEl && timeline.entries?.length) {
+    actEl.innerHTML = timeline.entries.slice(0, 10).map(e => `
+      <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+        <span class="material-symbols-outlined text-lg ${e.color || 'text-on-surface-variant'}">${e.icon}</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-semibold text-on-surface truncate">${e.title}</p>
+          <p class="text-[10px] text-on-surface-variant">${e.subtitle}</p>
+        </div>
+        ${e.xp ? `<span class="text-[10px] font-bold text-primary">+${e.xp} XP</span>` : ''}
+      </div>
+    `).join('');
+  } else {
+    actEl.innerHTML = '<p class="text-xs text-on-surface-variant">No recent activity.</p>';
+  }
+}
+
+if (window.clerkReady) loadReport();
+else window.addEventListener('clerk-ready', loadReport);
+</script>
+</body>
+</html>

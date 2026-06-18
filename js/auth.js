@@ -162,30 +162,32 @@ async function apiFetch(endpoint, options = {}) {
   return response;
 }
 
-// Global API Request Helper
-window.apiRequest = async function(method, path, body = null) {
-  // Automatically use relative path in production (Vercel) and localhost:5000 in dev
+// Global API Request Helper with retry
+window.apiRequest = async function(method, path, body = null, retries = 2) {
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const API_BASE = isLocalhost ? 'http://localhost:5000' : '';
-  // If path already starts with http, don't prepend base
   const fullUrl = path.startsWith('http') ? path : `${API_BASE}${path}`;
   
   const opts = {
       method,
-      headers: {
-          'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
   };
-  if (body) {
-      opts.body = JSON.stringify(body);
-  }
-  try {
+  if (body) opts.body = JSON.stringify(body);
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
       const res = await window.apiFetch(fullUrl, opts);
       const data = await res.json();
       return data;
-  } catch (err) {
+    } catch (err) {
+      if (attempt < retries) {
+        const delay = Math.min(1000 * Math.pow(2, attempt), 4000);
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
       console.error(`API Error [${method} ${path}]:`, err);
       return { success: false, error: err.message };
+    }
   }
 }
 

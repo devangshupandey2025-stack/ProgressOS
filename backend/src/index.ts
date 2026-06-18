@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
 import { clerkMiddleware } from './middleware/auth.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -26,6 +27,28 @@ app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Clerk middleware — must be applied before any route that uses requireAuth
 app.use(clerkMiddleware());
+
+// ─── Rate Limiting ───────────────────────────────────────────────────────────
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many requests, please try again later.' },
+});
+
+app.use('/api/', apiLimiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many authentication attempts, please try again later.' },
+});
+
+app.use('/api/user/', authLimiter);
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 
@@ -61,6 +84,8 @@ import weeklyReviewRoutes from './routes/weekly-review.routes.js';
 import timelineRoutes from './routes/timeline.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import publicProfileRoutes from './routes/public-profile.routes.js';
+import achievementsRoutes from './routes/achievements.routes.js';
+import vitRoutes from './integrations/vit/vit.routes.js';
 import { createTrackerRouter } from './utils/trackerFactory.js';
 
 
@@ -78,6 +103,8 @@ app.use('/api/weekly-review', weeklyReviewRoutes);
 app.use('/api/timeline', timelineRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/public/profile', publicProfileRoutes);
+app.use('/api/achievements', achievementsRoutes);
+app.use('/api/vit', vitRoutes);
 
 // Register Tracker Routes using the Generic Factory
 app.use('/api/trackers/leetcode', createTrackerRouter('leetCodeEntry'));
@@ -93,8 +120,27 @@ app.use('/api/trackers/cyber', createTrackerRouter('cyberEntry'));
 app.use('/api/trackers/gate', createTrackerRouter('gATEEntry'));
 app.use('/api/trackers/research', createTrackerRouter('researchEntry'));
 
-// Serve Frontend Static Files
-app.use(express.static(path.join(__dirname, '../../')));
+// Serve Frontend Static Files with caching
+app.use(express.static(path.join(__dirname, '../../'), {
+  maxAge: '1h',
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  },
+}));
+
+// Landing page at /
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../../landing.html'));
+});
+
+// Dashboard at /app
+app.get('/app', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../../index.html'));
+});
 
 // Public profile route — serves the SPA page, JS reads username from URL
 app.get('/u/:username', (_req, res) => {

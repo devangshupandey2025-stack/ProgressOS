@@ -5,6 +5,7 @@ import { getCodeforcesRating, getCodeforcesSolved } from './codeforces.metric.js
 import { getProjectsCompleted } from './project.metric.js';
 import { getOpenSourcePRs } from './opensource.metric.js';
 import { getGitHubRepositories, getGitHubProjects, getGitHubActivity, getGitHubCommits, getGitHubReadiness } from './github.metric.js';
+import { getVitCgpa, getVitCredits, getVitAttendance, getVitReadiness } from './vit.metric.js';
 
 export * from './types.js';
 
@@ -32,6 +33,10 @@ export class MetricRegistry {
     GITHUB_ACTIVITY: getGitHubActivity,
     GITHUB_COMMITS: getGitHubCommits,
     GITHUB_READINESS: getGitHubReadiness,
+    VIT_CGPA: getVitCgpa,
+    VIT_CREDITS: getVitCredits,
+    VIT_ATTENDANCE: getVitAttendance,
+    VIT_READINESS: getVitReadiness,
   };
 
   static async resolve(source: TrackerSource, userId: string, target?: number): Promise<MetricResult> {

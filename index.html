@@ -29,6 +29,7 @@
                         "secondary": "#000080",
                         "tertiary": "#128807",
                         "error": "#EF4444",
+                        "warning": "#F59E0B",
                         "navy": "#000080",
                         "navy-dark": "#00004d",
                         "saffron": "#FF9933",
@@ -67,6 +68,7 @@
                         "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.04em", "fontWeight": "700" }],
                         "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
                         "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
                         "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
                         "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
                         "label-sm": ["12px", { "lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "500" }],
@@ -512,10 +514,10 @@
     </header>
 
     <!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
-    <main class="pt-24 pb-24 lg:pb-16 px-gutter max-w-max_width mx-auto">
+    <main class="pt-24 pb-24 lg:pb-16 px-gutter max-w-max_width mx-auto break-words">
 
         <!-- ═══════════════ FEATURE 1: HERO CARDS ═══════════════ -->
-        <section id="hero-section" class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+        <section id="hero-section" class="grid grid-cols-1 sm:grid-cols-3 gap-lg mb-xl">
 
             <!-- Card 1: Level Progress -->
             <div
@@ -529,7 +531,7 @@
                                 style="font-variation-settings:'FILL' 1;">military_tech</span>
                         </div>
                     </div>
-                    <h3 id="hero-level" class="text-display-lg text-primary font-bold mt-1">Level 1</h3>
+                    <h3 id="hero-level" class="text-2xl sm:text-display-lg text-primary font-bold mt-1">Level 1</h3>
                     <p class="text-label-sm text-tertiary font-semibold mt-1">
                         <span class="material-symbols-outlined text-[14px] align-middle">arrow_upward</span>
                         <span id="hero-xp-today">+0 XP Today</span>
@@ -562,7 +564,7 @@
                                 style="font-variation-settings:'FILL' 1;">bolt</span>
                         </div>
                     </div>
-                    <h3 id="hero-total-xp" class="text-display-lg text-on-surface font-bold mt-1">0</h3>
+                    <h3 id="hero-total-xp" class="text-2xl sm:text-display-lg text-on-surface font-bold mt-1">0</h3>
                 </div>
                 <div class="mt-2 grid grid-cols-3 gap-2">
                     <div class="bg-gray-50 rounded-lg p-2 text-center border border-outline-variant/50">
@@ -592,7 +594,7 @@
                                 style="font-variation-settings:'FILL' 1;">local_fire_department</span>
                         </div>
                     </div>
-                    <h3 class="text-display-lg text-tertiary font-bold mt-1"><span id="hero-streak">0</span> Days</h3>
+                    <h3 class="text-2xl sm:text-display-lg text-tertiary font-bold mt-1"><span id="hero-streak">0</span> Days</h3>
                     <p class="text-label-sm text-on-surface-variant mt-1">Personal Best: <span id="hero-streak-best"
                             class="text-tertiary font-bold">0</span></p>
                 </div>
@@ -634,7 +636,7 @@
                                 </div>
                                 <h2 class="text-headline-md text-white mb-1">Market Readiness</h2>
                                 <div class="flex items-baseline gap-2 my-4">
-                                    <span id="readiness-score" class="text-[72px] font-bold leading-none">0</span>
+                                    <span id="readiness-score" class="text-4xl sm:text-[72px] font-bold leading-none">0</span>
                                     <span class="text-2xl font-bold text-white/40">/ 100</span>
                                 </div>
                                 <p class="text-sm text-white/60">
@@ -676,9 +678,9 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-lg">
                         <div>
                             <h2 class="text-headline-md text-on-surface">XP Velocity</h2>
-                            <p class="text-body-sm text-on-surface-variant">Velocity tracking for the last 30 days</p>
+                            <p class="text-sm text-on-surface-variant">Velocity tracking for the last 30 days</p>
                         </div>
-                        <div class="flex items-center gap-2 flex-wrap">
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                             <button
                                 class="px-3 py-1 text-[11px] font-bold rounded-lg border border-outline-variant text-on-surface-variant hover:bg-gray-50 transition-colors"
                                 onclick="setChartRange('7d')">7D</button>
@@ -692,7 +694,11 @@
                                 Full Analytics →</a>
                         </div>
                     </div>
-                    <div class="relative h-[260px] w-full flex items-end">
+                    <div class="relative h-[260px] w-full flex items-end" id="xp-chart-wrapper">
+                        <div id="xp-chart-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center z-10 hidden">
+                            <span class="material-symbols-outlined text-3xl text-on-surface-variant/30 block mb-2">show_chart</span>
+                            <p class="text-sm text-on-surface-variant">Log activities to see your XP growth over time.</p>
+                        </div>
                         <svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 200">
                             <defs>
                                 <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -783,9 +789,23 @@
                                 style="font-variation-settings:'FILL' 1;">auto_awesome</span>
                             <div>
                                 <p class="text-sm font-bold text-on-surface">Weekly AI Insight</p>
-                                <p class="text-body-sm text-on-surface-variant mt-1" id="weekly-insight">Not enough data to generate an insight for this week.</p>
+                                <p class="text-sm text-on-surface-variant mt-1" id="weekly-insight">Not enough data to generate an insight for this week.</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════ ACHIEVEMENTS ═══════════════ -->
+                <div id="achievements-card" class="glass-card p-lg rounded-xl animate-fade-in-up stagger-8">
+                    <div class="flex items-center justify-between mb-lg">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-xl">emoji_events</span>
+                            <h2 class="text-headline-md text-on-surface">Achievements</h2>
+                        </div>
+                        <span class="text-[11px] font-bold text-primary" id="achievement-count">0 / 20</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2" id="achievement-grid">
+                        <p class="text-xs text-on-surface-variant text-center col-span-full py-4">Loading...</p>
                     </div>
                 </div>
 
@@ -795,7 +815,7 @@
             <div class="lg:col-span-4 space-y-lg">
 
                 <!-- ═══════════════ CODEFORCES INTEGRATION CARD ═══════════════ -->
-                <div id="cf-dashboard-card" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-4 bg-gradient-to-br from-white to-sky-50/20">
+                <div id="cf-dashboard-card" class="glass-card p-lg rounded-xl animate-fade-in-up stagger-4 bg-gradient-to-br from-white to-sky-50/20">
                     <div class="flex items-center justify-between mb-lg">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary text-xl">military_tech</span>
@@ -845,7 +865,7 @@
                 </div>
 
                 <!-- ═══════════════ LEETCODE INTEGRATION CARD ═══════════════ -->
-                <div id="lc-dashboard-card" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-4 bg-gradient-to-br from-white to-amber-50/20">
+                <div id="lc-dashboard-card" class="glass-card p-lg rounded-xl animate-fade-in-up stagger-4 bg-gradient-to-br from-white to-amber-50/20">
                     <div class="flex items-center justify-between mb-lg">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary text-xl">code</span>
@@ -930,7 +950,7 @@
                 </div>
 
                 <!-- ═══════════════ GITHUB INTEGRATION CARD ═══════════════ -->
-                <div id="gh-dashboard-card" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-4 bg-gradient-to-br from-white to-gray-50/20">
+                <div id="gh-dashboard-card" class="glass-card p-lg rounded-xl animate-fade-in-up stagger-4 bg-gradient-to-br from-white to-gray-50/20">
                     <div class="flex items-center justify-between mb-lg">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary text-xl">code_blocks</span>
@@ -991,8 +1011,67 @@
                     </div>
                 </div>
 
+                <!-- ═══════════════ VIT ACADEMIC INTEGRATION ═══════════════ -->
+                <div id="vit-dashboard-card" class="glass-card p-lg rounded-xl animate-fade-in-up stagger-4 bg-gradient-to-br from-white to-indigo-50/20">
+                    <div class="flex items-center justify-between mb-lg">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-xl">school</span>
+                            <h2 class="text-headline-md text-on-surface font-semibold font-['Geist'] leading-none">VIT Academics</h2>
+                        </div>
+                        <span id="vit-card-sync-time" class="text-[10px] text-on-surface-variant italic hidden">Synced: —</span>
+                    </div>
+
+                    <div id="vit-card-unconnected" class="py-4 text-center">
+                        <span class="material-symbols-outlined text-3xl text-on-surface-variant/30 block mb-2">school</span>
+                        <p class="text-sm text-on-surface-variant mb-4">Connect your VIT account to sync CGPA, credits, and attendance from UniCC.</p>
+                        <button onclick="openSettingsModal()" class="w-full py-2.5 bg-primary/10 hover:bg-primary/15 text-primary rounded-lg text-sm font-bold transition-all hover:scale-[1.01] active:scale-[0.99]">
+                            Connect VIT Account
+                        </button>
+                    </div>
+
+                    <div id="vit-card-connected" class="hidden space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p id="vit-card-username" class="text-sm font-bold text-on-surface">@vitusername</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span id="vit-card-status" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-white bg-primary">Synced</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p id="vit-card-cgpa" class="text-3xl font-extrabold text-on-surface font-['Geist'] leading-none">0.0</p>
+                                <p class="text-[10px] text-on-surface-variant font-medium mt-1">CGPA</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-indigo-50/50 border border-indigo-100 rounded-lg p-3 text-center">
+                                <p id="vit-card-credits" class="text-lg font-bold text-indigo-600">0 / 0</p>
+                                <p class="text-[9px] text-indigo-700 font-medium uppercase tracking-wider">Credits</p>
+                            </div>
+                            <div class="bg-emerald-50/50 border border-emerald-100 rounded-lg p-3 text-center">
+                                <p id="vit-card-attendance" class="text-lg font-bold text-emerald-600">0%</p>
+                                <p class="text-[9px] text-emerald-700 font-medium uppercase tracking-wider">Attendance</p>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-outline-variant/60 pt-3">
+                            <div class="flex justify-between text-xs mb-2">
+                                <span class="text-on-surface-variant font-medium">Academic Readiness</span>
+                                <span id="vit-card-readiness" class="font-bold text-primary">0 / 100</span>
+                            </div>
+                            <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div id="vit-card-readiness-bar" class="h-full bg-gradient-to-r from-primary to-indigo-500 rounded-full progress-animated" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-on-surface-variant mt-1.5">
+                                <span id="vit-card-goal-status">Set a goal to track progress</span>
+                                <button onclick="openSettingsModal()" class="text-primary font-bold hover:underline">Manage</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ═══════════════ FEATURE 3: DAILY FOCUS SYSTEM ═══════════════ -->
-                <div id="daily-focus" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-5">
+                <div id="daily-focus" class="glass-card p-lg rounded-xl animate-fade-in-up stagger-5">
                     <div class="flex justify-between items-center mb-lg">
                         <h2 class="text-headline-md text-on-surface">Daily Focus</h2>
                         <div class="flex items-center gap-2">
@@ -1017,49 +1096,35 @@
                 </div>
 
                 <!-- ═══════════════ SKILL DISTRIBUTION ═══════════════ -->
-                <div id="skill-distribution" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-6">
+                <div id="skill-distribution" class="glass-card p-lg rounded-xl animate-fade-in-up stagger-6">
                     <h2 class="text-headline-md text-on-surface mb-lg">Skill Distribution</h2>
-                    <div class="relative w-40 h-40 mx-auto mb-lg">
-                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F3F4F6" stroke-width="10" />
-                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#FF9933" stroke-width="10"
-                                stroke-dasharray="251.2" stroke-dashoffset="150.72" />
-                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#000080" stroke-width="10"
-                                stroke-dasharray="251.2" stroke-dashoffset="175.84" transform="rotate(144 50 50)" />
-                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#128807" stroke-width="10"
-                                stroke-dasharray="251.2" stroke-dashoffset="200.96" transform="rotate(252 50 50)" />
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center flex-col">
-                            <span class="text-xl font-bold text-on-surface">6</span>
-                            <span
-                                class="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Domains</span>
-                        </div>
+                    <div id="skill-distribution-empty" class="text-center py-8">
+                        <span class="material-symbols-outlined text-3xl text-on-surface-variant/30 block mb-2">donut_small</span>
+                        <p class="text-sm text-on-surface-variant">Log activities to see your skill breakdown.</p>
                     </div>
-                    <div class="grid grid-cols-2 gap-y-2.5 gap-x-4">
-                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
-                                class="w-2.5 h-2.5 rounded-full bg-primary"></span><span>DSA</span><span
-                                class="ml-auto text-on-surface-variant">40%</span></div>
-                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
-                                class="w-2.5 h-2.5 rounded-full bg-secondary"></span><span>Projects</span><span
-                                class="ml-auto text-on-surface-variant">25%</span></div>
-                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
-                                class="w-2.5 h-2.5 rounded-full bg-tertiary"></span><span>Cyber</span><span
-                                class="ml-auto text-on-surface-variant">15%</span></div>
-                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
-                                class="w-2.5 h-2.5 rounded-full bg-purple-500"></span><span>ML</span><span
-                                class="ml-auto text-on-surface-variant">10%</span></div>
-                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
-                                class="w-2.5 h-2.5 rounded-full bg-blue-800"></span><span>Academic</span><span
-                                class="ml-auto text-on-surface-variant">7%</span></div>
-                        <div class="flex items-center gap-2 text-label-sm text-on-surface"><span
-                                class="w-2.5 h-2.5 rounded-full bg-error"></span><span>Open Source</span><span
-                                class="ml-auto text-on-surface-variant">3%</span></div>
+                    <div id="skill-distribution-chart" class="hidden">
+                        <div class="relative w-40 h-40 mx-auto mb-lg">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F3F4F6" stroke-width="10" />
+                                <circle id="sd-arc-1" cx="50" cy="50" r="40" fill="transparent" stroke="#FF9933" stroke-width="10" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                                <circle id="sd-arc-2" cx="50" cy="50" r="40" fill="transparent" stroke="#000080" stroke-width="10" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                                <circle id="sd-arc-3" cx="50" cy="50" r="40" fill="transparent" stroke="#128807" stroke-width="10" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                                <circle id="sd-arc-4" cx="50" cy="50" r="40" fill="transparent" stroke="#8B5CF6" stroke-width="10" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                                <circle id="sd-arc-5" cx="50" cy="50" r="40" fill="transparent" stroke="#1E40AF" stroke-width="10" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                                <circle id="sd-arc-6" cx="50" cy="50" r="40" fill="transparent" stroke="#EF4444" stroke-width="10" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                <span class="text-xl font-bold text-on-surface" id="sd-domain-count">0</span>
+                                <span class="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Domains</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-y-2.5 gap-x-4" id="sd-labels"></div>
                     </div>
                 </div>
 
                 <!-- ═══════════════ FEATURE 5: AI COACHING PANEL ═══════════════ -->
                 <div id="ai-coach"
-                    class="glass-card p-xl rounded-xl animate-fade-in-up stagger-7 bg-gradient-to-br from-white to-orange-50/30">
+                    class="glass-card p-lg rounded-xl animate-fade-in-up stagger-7 bg-gradient-to-br from-white to-orange-50/30">
                     <div class="flex items-center gap-2 mb-lg">
                         <span class="material-symbols-outlined text-primary text-xl"
                             style="font-variation-settings:'FILL' 1;">auto_awesome</span>
@@ -1081,7 +1146,7 @@
                 </div>
 
                 <!-- ═══════════════ FEATURE 7: RECOMMENDATIONS ENGINE ═══════════════ -->
-                <div id="recommendations" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-8">
+                <div id="recommendations" class="glass-card p-lg rounded-xl animate-fade-in-up stagger-8">
                     <div class="flex items-center gap-2 mb-lg">
                         <span class="material-symbols-outlined text-primary text-xl">recommend</span>
                         <h2 class="text-headline-md text-on-surface">Recommended Next</h2>
@@ -1229,6 +1294,21 @@
                         <input id="settings-gh-username" name="githubUsername" type="text"
                             class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                             placeholder="e.g. devangshu-pandey" />
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-outline-variant/50">
+                        <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-3">VIT Academic (UniCC)</p>
+                        <div class="mt-3">
+                            <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="settings-vit-username">VIT Username</label>
+                            <input id="settings-vit-username" name="vitUsername" type="text"
+                                class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                placeholder="e.g. 21BCE1234" />
+                        </div>
+                        <div class="mt-3">
+                            <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="settings-vit-password">VIT Password</label>
+                            <input id="settings-vit-password" name="vitPassword" type="password"
+                                class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                placeholder="VIT account password" />
+                        </div>
                     </div>
                 </div>
                 <button type="submit"
@@ -1427,34 +1507,59 @@
         function renderSkillDistribution(activities) {
             const catXP = {};
             let totalXP = 0;
+            const empty = document.getElementById('skill-distribution-empty');
+            const chart = document.getElementById('skill-distribution-chart');
+
+            if (!activities || activities.length === 0) {
+                if (empty) empty.classList.remove('hidden');
+                if (chart) chart.classList.add('hidden');
+                return;
+            }
+
             activities.forEach(act => {
                 catXP[act.category] = (catXP[act.category] || 0) + act.xp;
                 totalXP += act.xp;
             });
 
+            if (empty) empty.classList.add('hidden');
+            if (chart) chart.classList.remove('hidden');
+
             const colorMap = {
                 DSA: 'bg-primary', PROJECT: 'bg-secondary', ML: 'bg-purple-500',
                 CYBER: 'bg-tertiary', ACADEMICS: 'bg-blue-800', OPEN_SOURCE: 'bg-error'
             };
+            const strokeMap = ['#FF9933', '#000080', '#128807', '#8B5CF6', '#1E40AF', '#EF4444'];
 
-            const legend = document.querySelector('#skill-distribution .grid.grid-cols-2');
-            if (legend && totalXP > 0) {
-                legend.innerHTML = Object.entries(catXP)
+            const labels = document.getElementById('sd-labels');
+            if (labels) {
+                labels.innerHTML = Object.entries(catXP)
                     .sort((a, b) => b[1] - a[1])
-                    .map(([cat, xp]) => {
+                    .map(([cat, xp], i) => {
                         const pct = Math.round((xp / totalXP) * 100);
                         const color = colorMap[cat] || 'bg-gray-400';
                         return `<div class="flex items-center gap-2 text-label-sm text-on-surface">
                             <span class="w-2.5 h-2.5 rounded-full ${color}"></span>
-                            <span>${cat}</span>
+                            <span>${cat.replace(/_/g, ' ')}</span>
                             <span class="ml-auto text-on-surface-variant">${pct}%</span>
                         </div>`;
                     }).join('');
-
-                // Update donut center count
-                const domainCount = document.querySelector('#skill-distribution .absolute .text-xl');
-                if (domainCount) domainCount.textContent = Object.keys(catXP).length;
             }
+
+            document.getElementById('sd-domain-count').textContent = Object.keys(catXP).length;
+
+            const sorted = Object.entries(catXP).sort((a, b) => b[1] - a[1]);
+            const circumference = 251.2;
+            let offset = 0;
+            sorted.forEach(([cat, xp], i) => {
+                const arc = document.getElementById(`sd-arc-${i + 1}`);
+                if (arc) {
+                    const pct = xp / totalXP;
+                    const dash = circumference * pct;
+                    offset += dash;
+                    arc.setAttribute('stroke-dasharray', `${dash} ${circumference - dash}`);
+                    arc.setAttribute('stroke-dashoffset', circumference - offset + dash);
+                }
+            });
         }
 
         // ─── Log Activity ───────────────────────────────────────────────────────────
@@ -1668,8 +1773,11 @@
                 dataPoints.push({ ts, val: currentCumulative });
             });
             
-            // If no data, just show flat line
-            if (dataPoints.length > 0 && dataPoints[dataPoints.length-1].val > 0) {
+            const emptyOverlay = document.getElementById('xp-chart-empty');
+            if (dataPoints.length === 0 || dataPoints[dataPoints.length-1].val === 0) {
+                if (emptyOverlay) emptyOverlay.classList.remove('hidden');
+            } else {
+                if (emptyOverlay) emptyOverlay.classList.add('hidden');
                 maxCumulative = dataPoints[dataPoints.length-1].val;
             }
 
@@ -2219,10 +2327,56 @@
             }
         }
 
+        // ─── VIT Academic Card ───────────────────────────────────────────────────
+        async function loadVitCard() {
+            const unconnectedEl = document.getElementById('vit-card-unconnected');
+            const connectedEl = document.getElementById('vit-card-connected');
+            if (!unconnectedEl || !connectedEl) return;
+
+            const res = await apiRequest('GET', '/api/vit/status');
+            if (!res.success || !res.data?.connected) {
+                unconnectedEl.classList.remove('hidden');
+                connectedEl.classList.add('hidden');
+                return;
+            }
+
+            unconnectedEl.classList.add('hidden');
+            connectedEl.classList.remove('hidden');
+
+            document.getElementById('vit-card-username').textContent = `@${res.data.vitUsername}`;
+            const syncTimeEl = document.getElementById('vit-card-sync-time');
+            if (res.data.vitLastSync) {
+                syncTimeEl.classList.remove('hidden');
+                syncTimeEl.textContent = `Synced: ${getTimeAgo(new Date(res.data.vitLastSync))}`;
+            }
+
+            const analyticsRes = await apiRequest('GET', '/api/vit/analytics');
+            if (analyticsRes.success && analyticsRes.data) {
+                const d = analyticsRes.data;
+                document.getElementById('vit-card-cgpa').textContent = d.cgpa.toFixed(2);
+                const profRes = await apiRequest('GET', '/api/vit/profile');
+                const creditsStr = profRes.success && profRes.data
+                    ? `${profRes.data.creditsEarned} / ${profRes.data.creditsRequired}`
+                    : '— / —';
+                document.getElementById('vit-card-credits').textContent = creditsStr;
+                document.getElementById('vit-card-attendance').textContent = `${d.attendance.toFixed(1)}%`;
+                document.getElementById('vit-card-readiness').textContent = `${d.academicReadiness} / 100`;
+                document.getElementById('vit-card-readiness-bar').style.width = `${d.academicReadiness}%`;
+                document.getElementById('vit-card-goal-status').textContent =
+                    d.academicReadiness >= 80 ? '🌟 Excellent academic standing!'
+                    : d.academicReadiness >= 60 ? '👍 Good — room for improvement'
+                    : '📈 Focus on academics to improve readiness';
+            }
+        }
+
         // ─── AI Coach ─────────────────────────────────────────────────────────────
         async function loadInsights() {
             const res = await apiRequest('GET', '/api/insights');
-            if (!res.success || !res.data) return;
+            if (!res.success || !res.data) {
+                const container = document.getElementById('ai-coach-insights');
+                if (container) container.innerHTML = '<div class="flex items-start gap-3"><span class="material-symbols-outlined text-on-surface-variant text-[16px] mt-0.5">info</span><p class="text-sm text-on-surface-variant">Log activities to unlock AI-powered insights.</p></div>';
+                return;
+            }
             const { insights, roiActions } = res.data;
 
             const container = document.getElementById('ai-coach-insights');
@@ -2448,6 +2602,33 @@
             }
         }
 
+        // ─── Achievements ───────────────────────────────────────────────────────────
+        async function loadAchievements() {
+            const res = await apiRequest('GET', '/api/achievements');
+            const grid = document.getElementById('achievement-grid');
+            if (!res.success || !res.data) {
+                if (grid) grid.innerHTML = '<p class="text-xs text-on-surface-variant text-center col-span-full py-4">Connect integrations and log activities to earn achievements.</p>';
+                return;
+            }
+            const achievements = res.data;
+            const unlocked = achievements.filter(a => a.unlocked);
+
+            document.getElementById('achievement-count').textContent = `${unlocked.length} / ${achievements.length}`;
+
+            if (grid) {
+                grid.innerHTML = achievements.map(a => {
+                    const pct = a.progress ? Math.round((a.progress.current / a.progress.target) * 100) : 0;
+                    return `
+                    <div class="flex flex-col items-center gap-1 p-2 rounded-xl ${a.unlocked ? 'bg-primary/5 border border-primary/10' : 'bg-gray-50 border border-transparent'} text-center group relative cursor-default" title="${escapeHtml(a.description)}">
+                        <span class="material-symbols-outlined text-xl ${a.unlocked ? 'text-primary' : 'text-on-surface-variant/20'}">${a.icon}</span>
+                        <p class="text-[7px] font-semibold ${a.unlocked ? 'text-on-surface' : 'text-on-surface-variant/40'} leading-tight">${escapeHtml(a.title)}</p>
+                        ${a.unlocked ? '<span class="text-[8px] text-tertiary font-bold -mt-0.5">✓</span>' : ''}
+                        ${a.progress ? `<div class="w-full h-1 bg-gray-200 rounded-full overflow-hidden -mt-0.5"><div class="h-full bg-primary/40 rounded-full" style="width:${pct}%"></div></div><span class="text-[6px] text-on-surface-variant -mt-0.5">${a.progress.current}/${a.progress.target}</span>` : ''}
+                    </div>`;
+                }).join('');
+            }
+        }
+
         // ─── Settings Form Submit ────────────────────────────────────────────────────
         document.getElementById('settings-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -2465,13 +2646,25 @@
             const usernameVal = document.getElementById('settings-username').value.trim();
             if (usernameVal) body.username = usernameVal;
             const ghUsername = document.getElementById('settings-gh-username').value.trim();
+            const vitUsername = document.getElementById('settings-vit-username').value.trim();
+            const vitPassword = document.getElementById('settings-vit-password').value;
             body.codeforcesHandle = cfHandle || null;
             body.leetcodeUsername = lcUsername || null;
             body.githubUsername = ghUsername || null;
 
             const res = await apiRequest('PUT', '/api/user/me', body);
+            let vitSuccess = true;
+            if (vitUsername && vitPassword) {
+                const vitRes = await apiRequest('POST', '/api/vit/connect', { username: vitUsername, password: vitPassword });
+                if (!vitRes.success) {
+                    vitSuccess = false;
+                    statusEl.textContent = `⚠ VIT connect failed: ${vitRes.error || 'Check credentials'}`;
+                    statusEl.className = 'text-center text-sm font-bold text-warning';
+                }
+                document.getElementById('settings-vit-password').value = '';
+            }
 
-            if (res.success) {
+            if (res.success && vitSuccess) {
                 statusEl.textContent = '✓ Settings saved successfully!';
                 statusEl.className = 'text-center text-sm font-bold text-tertiary';
                 setTimeout(() => {
@@ -2479,6 +2672,15 @@
                     loadCodeforcesCard();
                     loadLeetCodeCard();
                     loadGitHubCard();
+                    loadVitCard();
+                }, 1500);
+            } else if (res.success) {
+                setTimeout(() => {
+                    closeSettingsModal();
+                    loadCodeforcesCard();
+                    loadLeetCodeCard();
+                    loadGitHubCard();
+                    loadVitCard();
                 }, 1500);
             } else {
                 statusEl.textContent = `✗ Error: ${res.error || 'Failed to save settings'}`;
@@ -2538,11 +2740,13 @@
             loadTimeline().catch(() => console.log('Backend not connected — using static data'));
             loadMarketReadiness().catch(() => console.log('Backend not connected — using static data'));
             loadInsights().catch(() => console.log('Backend not connected — using static data'));
+            loadAchievements().catch(() => console.log('Backend not connected — using static data'));
             loadWeeklyReview().catch(() => console.log('Backend not connected — using static data'));
             loadDashboard().catch(() => console.log('Backend not connected — using static data'));
             loadCodeforcesCard().catch(() => console.log('Backend not connected — using static data'));
             loadLeetCodeCard().catch(() => console.log('Backend not connected — using static data'));
             loadGitHubCard().catch(() => console.log('Backend not connected — using static data'));
+            loadVitCard().catch(() => console.log('Backend not connected — using static data'));
             loadGoals().catch(() => console.log('Backend not connected — using static data'));
         }
 

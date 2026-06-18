@@ -1,6 +1,7 @@
 import { prisma } from '../config/database.js';
 import { marketReadinessService } from './market-readiness.service.js';
 import { weeklyReviewService } from './weekly-review.service.js';
+import { achievementsService } from './achievements.service.js';
 import { AppError } from '../utils/AppError.js';
 
 export interface PublicProfileResponse {
@@ -15,13 +16,20 @@ export interface PublicProfileResponse {
   longestStreak: number;
   weeklyXP: number;
   totalXP: number;
-  achievements: number;
+  achievements: AchievementItem[];
   heatmap: { label: string; intensity: number }[];
   integrations: {
     leetcode: boolean;
     codeforces: boolean;
     github: boolean;
   };
+}
+
+interface AchievementItem {
+  id: string;
+  title: string;
+  icon: string;
+  unlocked: boolean;
 }
 
 export class PublicProfileService {
@@ -71,6 +79,8 @@ export class PublicProfileService {
       if (projComp) projectsScore = projComp.score;
     } catch {}
 
+    const allAchievements = await achievementsService.getAll(user.id);
+
     return {
       username: user.username || user.name || 'anonymous',
       name: user.name,
@@ -83,7 +93,7 @@ export class PublicProfileService {
       longestStreak: user.longestStreak,
       weeklyXP,
       totalXP: user.totalXP,
-      achievements: 0,
+      achievements: allAchievements.map(a => ({ id: a.id, title: a.title, icon: a.icon, unlocked: a.unlocked })),
       heatmap,
       integrations: {
         leetcode: !!user.leetcodeUsername,

@@ -100,6 +100,43 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
     </button>
   </div>
 
+  <div id="vit-courses-section" class="hidden mb-6">
+    <div class="glass-card rounded-xl overflow-hidden border-l-4 border-l-tertiary">
+      <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
+        <span class="material-symbols-outlined text-tertiary text-base">sync</span>
+        <span class="text-xs font-bold text-tertiary uppercase tracking-wider">VIT Enrolled Courses</span>
+        <span id="vit-courses-count" class="ml-auto text-xs text-gray-500"></span>
+      </div>
+      <div id="vit-courses-loading" class="px-6 py-8 text-center text-gray-400 text-sm">
+        <div class="animate-pulse space-y-2">
+          <div class="h-3 bg-gray-200 rounded w-1/3 mx-auto"></div>
+          <div class="h-3 bg-gray-200 rounded w-1/4 mx-auto"></div>
+        </div>
+        <p class="mt-3">Loading your enrolled courses...</p>
+      </div>
+      <div id="vit-courses-empty" class="hidden px-6 py-8 text-center text-gray-400 text-sm">
+        No courses found from VIT sync.
+      </div>
+      <div id="vit-courses-error" class="hidden px-6 py-8 text-center text-red-400 text-sm">
+        Failed to load courses from VIT.
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="text-xs text-gray-500 uppercase tracking-wider">
+              <th class="px-6 py-3 font-medium">Course</th>
+              <th class="px-6 py-3 font-medium">Code</th>
+              <th class="px-6 py-3 font-medium">Attendance</th>
+              <th class="px-6 py-3 font-medium">Credits</th>
+              <th class="px-6 py-3 font-medium">Faculty</th>
+            </tr>
+          </thead>
+          <tbody id="vit-courses-table" class="text-sm divide-y divide-gray-200"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div class="glass-card rounded-xl overflow-hidden">
     <table class="w-full text-left border-collapse">
       <thead>
@@ -186,6 +223,55 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
   }
 
 
+  async function loadVitCourses() {
+    try {
+      const statusRes = await apiRequest('GET', '/api/vit/status');
+      if (!statusRes.success || !statusRes.data.connected) return;
+
+      const section = document.getElementById('vit-courses-section');
+      section.classList.remove('hidden');
+
+      const coursesRes = await apiRequest('GET', '/api/vit/courses');
+
+      document.getElementById('vit-courses-loading').classList.add('hidden');
+
+      if (!coursesRes.success) {
+        document.getElementById('vit-courses-error').classList.remove('hidden');
+        return;
+      }
+
+      if (!coursesRes.data || !coursesRes.data.length) {
+        document.getElementById('vit-courses-empty').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('vit-courses-count').textContent = `${coursesRes.data.length} courses`;
+
+      const tbody = document.getElementById('vit-courses-table');
+      tbody.innerHTML = coursesRes.data.map(c => {
+        const attPct = parseFloat(c.attendancePercentage) || 
+          (c.totalClasses > 0 ? ((c.attendedClasses / c.totalClasses) * 100) : 0);
+        const attColor = attPct >= 75 ? 'text-green-600' : attPct >= 65 ? 'text-yellow-600' : 'text-red-600';
+        return `
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-3 font-medium text-gray-900">${c.courseTitle}</td>
+            <td class="px-6 py-3 text-gray-600 text-xs">${c.courseCode}</td>
+            <td class="px-6 py-3 font-bold ${attColor}">${attPct.toFixed(1)}%</td>
+            <td class="px-6 py-3">${c.credits || '-'}</td>
+            <td class="px-6 py-3 text-gray-500 text-xs max-w-[150px] truncate">${c.faculty || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error('VIT courses load failed:', e);
+      document.getElementById('vit-courses-loading').classList.add('hidden');
+      const section = document.getElementById('vit-courses-section');
+      if (!section.classList.contains('hidden')) {
+        document.getElementById('vit-courses-error').classList.remove('hidden');
+      }
+    }
+  }
+
   async function loadData() {
     if (!window.clerkReady) return;
     try {
@@ -244,8 +330,13 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
     }
   }
 
-  window.addEventListener('clerk-ready', loadData);
-  if (window.clerkReady) loadData();
+  async function init() {
+    await loadVitCourses();
+    loadData();
+  }
+
+  window.addEventListener('clerk-ready', init);
+  if (window.clerkReady) init();
     
 </script>
 <!-- Mobile Bottom Nav -->
