@@ -59,6 +59,7 @@ import marketReadinessRoutes from './routes/market-readiness.routes.js';
 import insightsRoutes from './routes/insights.routes.js';
 import weeklyReviewRoutes from './routes/weekly-review.routes.js';
 import timelineRoutes from './routes/timeline.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
 import { createTrackerRouter } from './utils/trackerFactory.js';
 
 
@@ -74,6 +75,7 @@ app.use('/api/market-readiness', marketReadinessRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/weekly-review', weeklyReviewRoutes);
 app.use('/api/timeline', timelineRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Register Tracker Routes using the Generic Factory
 app.use('/api/trackers/leetcode', createTrackerRouter('leetCodeEntry'));
