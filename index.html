@@ -508,6 +508,12 @@
                     <span class="material-symbols-outlined text-[16px] lg:mr-1 align-middle">add</span>
                     <span class="hidden lg:inline">Log Activity</span>
                 </button>
+                <button id="btn-career-report"
+                    class="bg-secondary text-white lg:px-4 lg:py-2 p-2 rounded-lg font-label-md text-sm hover:bg-[#0000b3] active:scale-95 transition-all shadow-sm hover:shadow-md ml-1"
+                    onclick="downloadCareerReport()">
+                    <span class="material-symbols-outlined text-[16px] lg:mr-1 align-middle">download</span>
+                    <span class="hidden lg:inline">Career Report</span>
+                </button>
                 <div id="auth-container"></div>
             </div>
         </div>
@@ -1926,7 +1932,81 @@
             }
         });
 
-        // ─── Settings Modal ───────────────────────────────────�        // Handle add goal form submit
+        // ─── Settings Modal ─────────────────────────────────────────────────────────
+        async function updateCommandPaletteGoals() {
+            try {
+                const res = await window.apiFetch('http://localhost:5000/api/goals');
+                const data = await res.json();
+                if (data.success) {
+                    const container = document.getElementById('cmd-goals-container');
+                    const goals = data.data;
+
+                    if (!goals || goals.length === 0) {
+                        container.innerHTML = '<p class="text-[11px] text-on-surface-variant px-4 py-2">No active goals</p>';
+                        return;
+                    }
+
+                    container.innerHTML = goals.slice(0, 3).map(goal => {
+                        const pct = goal.target > 0 ? Math.min(100, Math.round((goal.current / goal.target) * 100)) : 0;
+                        return `
+                            <div class="px-4 py-2 hover:bg-gray-50 rounded-lg cursor-pointer" onclick="closeCommandPalette(); openEditGoalModal('${goal.id}')">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[13px] font-medium text-on-surface truncate pr-2">${goal.title}</span>
+                                    <span class="text-[11px] font-bold text-primary">${pct}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                                    <div class="bg-primary h-1.5 rounded-full" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error("Failed to load goals for command palette", error);
+            }
+        }
+        
+        async function downloadCareerReport() {
+            const btn = document.getElementById('btn-career-report');
+            const icon = btn.querySelector('.material-symbols-outlined');
+            const text = btn.querySelector('span:not(.material-symbols-outlined)');
+            
+            const origIcon = icon.textContent;
+            const origText = text.textContent;
+            
+            icon.textContent = 'hourglass_empty';
+            text.textContent = 'Generating...';
+            btn.disabled = true;
+            btn.classList.add('opacity-70');
+            
+            try {
+                const res = await window.apiFetch('http://localhost:5000/api/reports/career', {
+                    method: 'GET'
+                });
+                
+                if (!res.ok) throw new Error('Failed to generate report');
+                
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ProgressOS-Career-Snapshot.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error(err);
+                alert('Error generating Career Report. Please try again.');
+            } finally {
+                icon.textContent = origIcon;
+                text.textContent = origText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-70');
+            }
+        }
+        
+        // Handle add goal form submit
         document.getElementById('add-goal-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const title = document.getElementById('goal-title').value;
