@@ -3,6 +3,7 @@ import { prisma } from '../config/database.js';
 import { MetricRegistry } from '../metrics/index.js';
 import { marketReadinessService } from './market-readiness.service.js';
 import { achievementsService } from './achievements.service.js';
+import { gitHubService } from '../integrations/github/github.service.js';
 import { TrackerSource } from '@prisma/client';
 
 export class ReportService {
@@ -21,7 +22,7 @@ export class ReportService {
           codeforcesMetric,
           projectsCountMetric,
           githubActivityMetric,
-          goals,
+          rawGoals,
           achievementsData,
           projects
         ] = await Promise.all([
@@ -37,12 +38,39 @@ export class ReportService {
           prisma.projectEntry.findMany({ where: { userId }, select: { techStack: true } })
         ]);
 
-        // Calculate top skills
+        // Resolve goals dynamically
+        const goals = await Promise.all(rawGoals.map(async (g) => {
+          let actualCurrent = g.current;
+          if (g.trackerSource !== 'MANUAL') {
+             const m = await MetricRegistry.resolve(g.trackerSource, userId).catch(() => ({ current: 0 }));
+             actualCurrent = m.current;
+          }
+          return { ...g, current: actualCurrent };
+        }));
+
+        // Fetch top project
+        let topProjectName = 'N/A';
+        let topProjectActivity = '';
+        if (user.githubUsername) {
+          try {
+            const ghAnalytics = await gitHubService.getAnalytics(userId, user.githubUsername);
+            if (ghAnalytics.topProjects && ghAnalytics.topProjects.length > 0) {
+              topProjectName = ghAnalytics.topProjects[0].name;
+              topProjectActivity = `Quality Score: ${ghAnalytics.topProjects[0].score}/100`;
+            }
+          } catch {}
+        }
+
+        // Calculate top skills (ignoring generic languages)
+        const IGNORED_SKILLS = new Set(['html', 'css', 'html5', 'css3', 'markdown', 'scss', 'sass', 'less']);
         const skillCounts: Record<string, number> = {};
         projects.forEach(p => {
           if (Array.isArray(p.techStack)) {
             p.techStack.forEach(t => {
-              skillCounts[t] = (skillCounts[t] || 0) + 1;
+              const cleaned = t.trim();
+              if (!IGNORED_SKILLS.has(cleaned.toLowerCase())) {
+                skillCounts[cleaned] = (skillCounts[cleaned] || 0) + 1;
+              }
             });
           }
         });
@@ -84,8 +112,19 @@ export class ReportService {
         
         // Align Market readiness to right
         doc.font('Helvetica-Bold').fontSize(14).fillColor(primaryColor).text(`Market Readiness: ${readinessData.overall} / 100`, { align: 'right' });
+        doc.moveDown(1);
         
-        doc.moveDown(1.5);
+        // Career Highlights
+        doc.font('Helvetica-Bold').fontSize(12).fillColor(textColor).text('Career Highlights');
+        doc.moveDown(0.3);
+        doc.font('Helvetica').fontSize(10).fillColor(secondaryColor);
+        doc.text(`• ${leetcodeMetric.current} LeetCode Problems Solved`);
+        doc.text(`• Codeforces Rating: ${codeforcesMetric.current > 0 ? codeforcesMetric.current : 'Unrated'}`);
+        if (cgpaMetric.current > 0) doc.text(`• ${cgpaMetric.current} CGPA`);
+        if (githubActivityMetric.current > 0) doc.text(`• ${githubActivityMetric.current} Active GitHub Projects`);
+        else doc.text(`• ${projectsCountMetric.current} Completed Projects`);
+        
+        doc.moveDown(1);
         doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#E5E7EB');
         doc.moveDown(1.5);
 
@@ -112,6 +151,7 @@ export class ReportService {
             Object.entries(data).forEach(([k, v]) => {
               doc.font('Helvetica-Bold').fillColor(textColor).text(`${k}: `, { continued: true });
               doc.font('Helvetica').fillColor(secondaryColor).text(`${v}`);
+              doc.moveDown(0.2);
             });
           }
           
@@ -133,10 +173,15 @@ export class ReportService {
         }, true);
 
         // 5. Projects & Activity
-        drawSection('Projects', {
+        const projData: Record<string, any> = {
           'Completed Projects': projectsCountMetric.current,
           'GitHub Active Projects': githubActivityMetric.current
-        }, true);
+        };
+        if (topProjectName !== 'N/A') {
+           projData['Top Project'] = topProjectName;
+           projData['Latest Activity'] = topProjectActivity;
+        }
+        drawSection('Projects', projData, true);
 
         // 6. Skills
         doc.font('Helvetica-Bold').fontSize(14).fillColor(textColor).text('Top Skills');
@@ -159,6 +204,7 @@ export class ReportService {
             const pct = g.target > 0 ? Math.min(100, Math.round((g.current / g.target) * 100)) : 0;
             doc.font('Helvetica-Bold').fontSize(11).fillColor(textColor).text(g.title, { continued: true });
             doc.font('Helvetica').fillColor(primaryColor).text(`  ${pct}%`);
+            doc.moveDown(0.2);
           });
         } else {
           doc.font('Helvetica').fontSize(11).fillColor(secondaryColor).text('No active goals.');
@@ -172,7 +218,8 @@ export class ReportService {
         doc.moveDown(0.5);
         if (unlockedAchievements.length > 0) {
           unlockedAchievements.forEach(a => {
-            doc.font('Helvetica-Bold').fontSize(11).fillColor(textColor).text(`★ ${a.title}`);
+            doc.font('Helvetica-Bold').fontSize(11).fillColor(textColor).text(`• ${a.title}`);
+            doc.moveDown(0.2);
           });
         } else {
           doc.font('Helvetica').fontSize(11).fillColor(secondaryColor).text('Keep building to unlock achievements!');
@@ -181,7 +228,7 @@ export class ReportService {
         doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#E5E7EB');
         
         // 9. Footer (Public URL)
-        doc.moveDown(3);
+        doc.moveDown(2);
         const usernameLabel = user.username ? user.username : user.id;
         doc.font('Helvetica').fontSize(10).fillColor('#94a3b8').text('Generated by ProgressOS', { align: 'center' });
         doc.moveDown(0.2);

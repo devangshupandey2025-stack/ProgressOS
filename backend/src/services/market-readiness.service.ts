@@ -73,7 +73,7 @@ export class MarketReadinessService {
     if (user.codeforcesHandle) {
       try {
         const cfAnalytics = await codeforcesService.getAnalytics(userId, user.codeforcesHandle);
-        dsaScore = Math.round((dsaScore + cfAnalytics.dsaScore) / 2);
+        dsaScore = Math.max(dsaScore, cfAnalytics.dsaScore);
       } catch {}
     }
 
