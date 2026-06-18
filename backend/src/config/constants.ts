@@ -17,7 +17,7 @@ export const XP_RATES: Record<Category, number> = {
  * XP required per level.
  * Level = floor(totalXP / XP_PER_LEVEL) + 1
  */
-export const XP_PER_LEVEL = 100;
+export const XP_PER_LEVEL = 1000;
 
 /**
  * Calculate XP from hours and category.

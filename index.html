@@ -628,9 +628,9 @@
                                 <div class="flex items-center gap-3 mb-4">
                                     <span class="text-label-sm text-white/60 uppercase tracking-widest">Career
                                         Score</span>
-                                    <span
-                                        class="px-2 py-0.5 bg-primary text-white text-[9px] font-bold rounded-full tracking-wider uppercase">Top
-                                        Performer</span>
+                                    <span id="readiness-label"
+                                        class="px-2 py-0.5 bg-primary text-white text-[9px] font-bold rounded-full tracking-wider uppercase">—
+                                    </span>
                                 </div>
                                 <h2 class="text-headline-md text-white mb-1">Market Readiness</h2>
                                 <div class="flex items-baseline gap-2 my-4">
@@ -643,12 +643,11 @@
                                     <span id="readiness-growth">Calculating...</span>
                                 </p>
                             </div>
-                            <!-- Right: Score Composition -->
+                            <!-- Right: Score Composition (5 components) -->
                             <div class="flex-1 space-y-3" id="readiness-bars">
                                 <p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">Score
                                     Composition</p>
-                                <!-- Populated by JS from activity data -->
-                                <p class="text-xs text-white/40">Sign in and log activities to see your score breakdown.</p>
+                                <p class="text-xs text-white/40">Connect integrations to see your breakdown.</p>
                             </div>
                         </div>
                         <!-- Why This Score + Recommended Action -->
@@ -666,7 +665,7 @@
                             <div class="bg-white/5 border border-white/10 rounded-xl p-4">
                                 <p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">
                                     Recommended Action</p>
-                                <p class="text-sm text-white/90 font-medium" id="readiness-action">Keep logging activities consistently to receive tailored recommendations.</p>
+                                <p id="readiness-action" class="text-sm text-white/90 font-medium">Keep logging activities consistently to receive tailored recommendations.</p>
                             </div>
                         </div>
                     </div>
@@ -1367,15 +1366,6 @@
                 const dailyAvg = weeklyXP > 0 ? Math.round(weeklyXP / 7) : 0;
                 document.getElementById('hero-xp-today').textContent = `+${formatXP(dailyAvg)} XP/day avg`;
 
-                // Market Readiness: compute from totalXP (simple heuristic)
-                const readiness = Math.min(100, Math.round(totalXP / 100));
-                document.getElementById('readiness-score').textContent = readiness;
-                if (weeklyXP > 0) {
-                    document.getElementById('readiness-growth').textContent = `+${formatXP(weeklyXP)} XP this week`;
-                } else {
-                    document.getElementById('readiness-growth').textContent = 'Log activities to build your score';
-                }
-
                 // Weekly summary cards
                 const weeklyHoursEl = document.querySelector('#weekly-summary .grid p.text-headline-md');
                 if (weeklyHoursEl) {
@@ -1417,7 +1407,6 @@
                 if (res.data.length > 0) {
                     renderActivities(res.data);
                     renderSkillDistribution(res.data);
-                    renderReadinessBars(res.data);
                 } else {
                     // Keep empty state in DOM
                     const container = document.getElementById('activity-list');
@@ -1492,40 +1481,6 @@
                 if (domainCount) domainCount.textContent = Object.keys(catXP).length;
             }
         }
-
-        // ─── Render Market Readiness Bars from real activities ───────────────────────
-        function renderReadinessBars(activities) {
-            const catXP = {};
-            let maxCatXP = 1;
-            activities.forEach(act => {
-                catXP[act.category] = (catXP[act.category] || 0) + act.xp;
-            });
-            Object.values(catXP).forEach(v => { if (v > maxCatXP) maxCatXP = v; });
-
-            const barsContainer = document.getElementById('readiness-bars');
-            if (!barsContainer) return;
-
-            const barColors = ['bg-primary', 'bg-white', 'bg-white/80', 'bg-primary/70', 'bg-primary/60', 'bg-primary/40'];
-            const entries = Object.entries(catXP).sort((a, b) => b[1] - a[1]);
-
-            if (entries.length === 0) return;
-
-            // Keep the heading, replace rest
-            barsContainer.innerHTML = `<p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">Score Composition</p>` +
-                entries.map(([cat, xp], i) => {
-                    const pct = Math.round((xp / maxCatXP) * 100);
-                    const color = barColors[i % barColors.length];
-                    return `<div>
-                        <div class="flex justify-between text-xs text-white/80 mb-1">
-                            <span>${cat}</span><span class="font-bold">${xp}</span>
-                        </div>
-                        <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                            <div class="h-full ${color} rounded-full" style="width:${pct}%"></div>
-                        </div>
-                    </div>`;
-                }).join('');
-        }
-
 
         // ─── Log Activity ───────────────────────────────────────────────────────────
         document.getElementById('log-activity-form').addEventListener('submit', async (e) => {
@@ -2289,6 +2244,62 @@
             }
         }
 
+        // ─── Market Readiness Engine ────────────────────────────────────────────────
+        async function loadMarketReadiness() {
+            const res = await apiRequest('GET', '/api/market-readiness');
+            if (!res.success || !res.data) return;
+            const mr = res.data;
+
+            document.getElementById('readiness-score').textContent = mr.overall;
+            document.getElementById('readiness-label').textContent = mr.label;
+
+            const growthEl = document.getElementById('readiness-growth');
+            const weeklyRes = await apiRequest('GET', '/api/dashboard');
+            if (weeklyRes.success && weeklyRes.data?.weeklyXP > 0) {
+                growthEl.textContent = `+${formatXP(weeklyRes.data.weeklyXP)} XP this week`;
+            } else {
+                growthEl.textContent = 'Log activities to build your score';
+            }
+
+            // Render component bars
+            const barsContainer = document.getElementById('readiness-bars');
+            if (barsContainer) {
+                barsContainer.innerHTML = `<p class="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-3">Score Composition</p>`
+                    + mr.components.map(c => `
+                    <div>
+                        <div class="flex justify-between text-xs text-white/80 mb-1">
+                            <span>${c.label}</span>
+                            <span class="font-bold">${c.score}<span class="font-normal text-white/40">/100</span></span>
+                        </div>
+                        <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-700 ${c.color}" style="width:${c.score}%"></div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render reasons
+            const reasonsList = document.getElementById('readiness-reasons');
+            if (reasonsList && mr.reasons?.length) {
+                reasonsList.innerHTML = mr.reasons.map(r => `
+                    <li class="flex items-start gap-2">
+                        <span class="material-symbols-outlined text-white/50 text-[14px] mt-0.5">info</span>
+                        ${escapeHtml(r)}
+                    </li>
+                `).join('');
+            }
+
+            // Render recommendations
+            const actionEl = document.getElementById('readiness-action');
+            if (actionEl && mr.recommendations?.length) {
+                const top = mr.recommendations[0];
+                actionEl.innerHTML = `
+                    <span class="font-bold text-primary text-xs block mb-1">${top.priority === 'high' ? '🚀 ' : ''}${escapeHtml(top.action)}</span>
+                    <span class="text-white/50 text-[11px] block">${escapeHtml(top.impact)}</span>
+                `;
+            }
+        }
+
         // ─── Settings Form Submit ────────────────────────────────────────────────────
         document.getElementById('settings-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -2373,7 +2384,8 @@
         // ─── Load Data After Clerk Auth Ready ───────────────────────────────────────
         function loadAllData() {
             loadUserProfile().catch(() => console.log('Backend not connected — using static data'));
-            loadActivities().catch(() => console.log('Backend not connected — using static data'));
+                loadActivities().catch(() => console.log('Backend not connected — using static data'));
+            loadMarketReadiness().catch(() => console.log('Backend not connected — using static data'));
             loadDashboard().catch(() => console.log('Backend not connected — using static data'));
             loadCodeforcesCard().catch(() => console.log('Backend not connected — using static data'));
             loadLeetCodeCard().catch(() => console.log('Backend not connected — using static data'));
