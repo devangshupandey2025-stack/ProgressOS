@@ -54,6 +54,7 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import goalRoutes from './routes/goal.routes.js';
 import codeforcesIntegrationRoutes from './integrations/codeforces/codeforces.routes.js';
 import leetcodeIntegrationRoutes from './integrations/leetcode/leetcode.routes.js';
+import githubIntegrationRoutes from './integrations/github/github.routes.js';
 import { createTrackerRouter } from './utils/trackerFactory.js';
 
 
@@ -63,6 +64,7 @@ app.use('/api/activities', activityRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/codeforces', codeforcesIntegrationRoutes);
 app.use('/api/leetcode', leetcodeIntegrationRoutes);
+app.use('/api/github', githubIntegrationRoutes);
 app.use('/api/goals', goalRoutes);
 
 // Register Tracker Routes using the Generic Factory

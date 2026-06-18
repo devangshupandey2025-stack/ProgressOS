@@ -4,6 +4,7 @@ import { getLeetCodeSolved, getLeetCodeEasySolved, getLeetCodeMediumSolved, getL
 import { getCodeforcesRating, getCodeforcesSolved } from './codeforces.metric.js';
 import { getProjectsCompleted } from './project.metric.js';
 import { getOpenSourcePRs } from './opensource.metric.js';
+import { getGitHubRepositories, getGitHubProjects, getGitHubActivity, getGitHubCommits, getGitHubReadiness } from './github.metric.js';
 
 export * from './types.js';
 
@@ -26,6 +27,11 @@ export class MetricRegistry {
     CODEFORCES_SOLVED: getCodeforcesSolved,
     PROJECTS_COMPLETED: getProjectsCompleted,
     OPENSOURCE_PRS: getOpenSourcePRs,
+    GITHUB_REPOSITORIES: getGitHubRepositories,
+    GITHUB_PROJECTS: getGitHubProjects,
+    GITHUB_ACTIVITY: getGitHubActivity,
+    GITHUB_COMMITS: getGitHubCommits,
+    GITHUB_READINESS: getGitHubReadiness,
   };
 
   static async resolve(source: TrackerSource, userId: string, target?: number): Promise<MetricResult> {

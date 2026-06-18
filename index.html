@@ -251,6 +251,96 @@
         .progress-animated {
             transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        /* Bottom Nav */
+        .bottom-nav {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid #E5E7EB;
+        }
+
+        .bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 6px 0;
+            color: #94a3b8;
+            transition: color 0.2s;
+            text-decoration: none;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .bottom-nav .nav-item.active {
+            color: #FF9933;
+        }
+
+        .bottom-nav .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 2.5px;
+            background: #FF9933;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .bottom-nav .nav-item span {
+            font-size: 22px;
+        }
+
+        .bottom-nav .nav-item .nav-label {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .bottom-nav .nav-item.fab {
+            position: relative;
+            top: -8px;
+        }
+
+        .bottom-nav .nav-item.fab span {
+            background: #FF9933;
+            color: white;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(255, 153, 51, 0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .bottom-nav .nav-item.fab:active span {
+            transform: scale(0.92);
+            box-shadow: 0 2px 6px rgba(255, 153, 51, 0.25);
+        }
+
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .bottom-nav {
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+            }
+        }
+
+        /* Mobile search trigger icon only */
+        #search-trigger-mobile {
+            display: none;
+        }
+
+        @media (max-width: 1023px) {
+            #search-trigger-mobile {
+                display: flex;
+            }
+            #search-trigger {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -259,7 +349,7 @@
     <!-- ═══════════════════════ COMMAND PALETTE (⌘K / Ctrl+K) ═══════════════════════ -->
     <div id="cmd-palette" class="fixed inset-0 z-[100] hidden cmd-overlay flex items-start justify-center pt-[15vh]">
         <div
-            class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[560px] overflow-hidden animate-slide-down">
+            class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[560px] mx-4 lg:mx-0 overflow-hidden animate-slide-down">
             <div class="flex items-center gap-3 px-5 py-4 border-b border-outline-variant">
                 <span class="material-symbols-outlined text-on-surface-variant text-xl">search</span>
                 <input id="cmd-input" type="text" placeholder="Search goals, activities, projects, trackers..."
@@ -394,24 +484,27 @@
                         href="#">History</a>
                 </nav>
             </div>
-            <div class="flex items-center gap-3">
-                <!-- Feature 8: Search Trigger -->
+            <div class="flex items-center gap-1.5 lg:gap-3">
+                <!-- Search Trigger - mobile (icon only) / desktop (full) -->
                 <button id="search-trigger"
-                    class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-outline-variant text-sm text-on-surface-variant hover:border-primary/40 hover:text-primary transition-all"
+                    class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-outline-variant text-sm text-on-surface-variant hover:border-primary/40 hover:text-primary transition-all"
                     onclick="openCommandPalette()">
                     <span class="material-symbols-outlined text-[16px]">search</span>
                     <span class="text-[13px]">Search</span>
                     <kbd
                         class="text-[10px] font-bold bg-gray-100 px-1.5 py-0.5 rounded ml-2 border border-outline-variant">⌘K</kbd>
                 </button>
+                <button id="search-trigger-mobile" onclick="openCommandPalette()"
+                    class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all active:scale-95 p-1.5 rounded-lg hover:bg-gray-50">search</button>
                 <button id="btn-notifications"
                     class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all active:scale-95 p-1.5 rounded-lg hover:bg-gray-50">notifications</button>
                 <button id="btn-settings" onclick="openSettingsModal()"
                     class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-all active:scale-95 p-1.5 rounded-lg hover:bg-gray-50">settings</button>
                 <button id="btn-log-activity"
-                    class="bg-primary text-white px-4 py-2 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-95 transition-all shadow-sm hover:shadow-md"
+                    class="bg-primary text-white lg:px-4 lg:py-2 p-2 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-95 transition-all shadow-sm hover:shadow-md"
                     onclick="openLogActivityModal()">
-                    <span class="material-symbols-outlined text-[16px] mr-1 align-middle">add</span>Log Activity
+                    <span class="material-symbols-outlined text-[16px] lg:mr-1 align-middle">add</span>
+                    <span class="hidden lg:inline">Log Activity</span>
                 </button>
                 <div id="auth-container"></div>
             </div>
@@ -419,7 +512,7 @@
     </header>
 
     <!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
-    <main class="pt-24 pb-16 px-gutter max-w-max_width mx-auto">
+    <main class="pt-24 pb-24 lg:pb-16 px-gutter max-w-max_width mx-auto">
 
         <!-- ═══════════════ FEATURE 1: HERO CARDS ═══════════════ -->
         <section id="hero-section" class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
@@ -581,12 +674,12 @@
 
                 <!-- ═══════════════ XP VELOCITY CHART ═══════════════ -->
                 <div id="xp-velocity" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-5">
-                    <div class="flex justify-between items-center mb-lg">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-lg">
                         <div>
                             <h2 class="text-headline-md text-on-surface">XP Velocity</h2>
                             <p class="text-body-sm text-on-surface-variant">Velocity tracking for the last 30 days</p>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <button
                                 class="px-3 py-1 text-[11px] font-bold rounded-lg border border-outline-variant text-on-surface-variant hover:bg-gray-50 transition-colors"
                                 onclick="setChartRange('7d')">7D</button>
@@ -596,7 +689,7 @@
                                 class="px-3 py-1 text-[11px] font-bold rounded-lg border border-outline-variant text-on-surface-variant hover:bg-gray-50 transition-colors"
                                 onclick="setChartRange('90d')">90D</button>
                             <div
-                                class="bg-primary/10 text-primary px-3 py-1 rounded-full text-label-sm font-bold border border-primary/20 ml-2">
+                                class="bg-primary/10 text-primary px-3 py-1 rounded-full text-label-sm font-bold border border-primary/20">
                                 <span id="chart-growth-badge">— Growth</span></div>
                         </div>
                     </div>
@@ -833,6 +926,68 @@
                     </div>
                 </div>
 
+                <!-- ═══════════════ GITHUB INTEGRATION CARD ═══════════════ -->
+                <div id="gh-dashboard-card" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-4 bg-gradient-to-br from-white to-gray-50/20">
+                    <div class="flex items-center justify-between mb-lg">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-xl">code_blocks</span>
+                            <h2 class="text-headline-md text-on-surface font-semibold font-['Geist'] leading-none">GitHub</h2>
+                        </div>
+                        <a href="trackers/github.html" class="text-xs text-primary font-bold hover:underline flex items-center gap-0.5">
+                            Tracker <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+                        </a>
+                    </div>
+
+                    <div id="gh-card-unconnected" class="py-4 text-center">
+                        <p class="text-sm text-on-surface-variant mb-4">Connect your GitHub username to track repositories, commits, and project readiness.</p>
+                        <button onclick="openSettingsModal()" class="w-full py-2.5 bg-primary/10 hover:bg-primary/15 text-primary rounded-lg text-sm font-bold transition-all hover:scale-[1.01] active:scale-[0.99]">
+                            Connect Account
+                        </button>
+                    </div>
+
+                    <div id="gh-card-connected" class="hidden space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p id="gh-card-username" class="text-sm font-bold text-on-surface">@username</p>
+                                <div class="flex items-center gap-2 mt-1.5">
+                                    <span id="gh-card-repos" class="text-xs text-on-surface-variant font-medium">0 repositories</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p id="gh-card-commits" class="text-3xl font-extrabold text-on-surface font-['Geist'] leading-none">0</p>
+                                <p class="text-[10px] text-on-surface-variant font-medium mt-1">Commits / 30d</p>
+                            </div>
+                        </div>
+
+                        <!-- Active Projects + Stars -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-gray-50 border border-outline-variant/50 rounded-lg p-2.5 text-center">
+                                <p id="gh-card-active" class="text-lg font-bold text-primary">0</p>
+                                <p class="text-[9px] text-on-surface-variant font-medium uppercase tracking-wider">Active Projects</p>
+                            </div>
+                            <div class="bg-gray-50 border border-outline-variant/50 rounded-lg p-2.5 text-center">
+                                <p id="gh-card-stars" class="text-lg font-bold text-secondary">0</p>
+                                <p class="text-[9px] text-on-surface-variant font-medium uppercase tracking-wider">Stars</p>
+                            </div>
+                        </div>
+
+                        <!-- Project Readiness -->
+                        <div class="border-t border-outline-variant/60 pt-3">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-on-surface-variant font-medium">Project Readiness</span>
+                                <span id="gh-card-readiness" class="font-bold text-primary">0/100</span>
+                            </div>
+                            <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div id="gh-card-readiness-bar" class="h-full bg-gradient-to-r from-primary to-purple-500 rounded-full progress-animated" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-on-surface-variant mt-1.5">
+                                <span id="gh-card-active-days">0 active days</span>
+                                <span id="gh-card-sync-time" class="italic">Not synced</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ═══════════════ FEATURE 3: DAILY FOCUS SYSTEM ═══════════════ -->
                 <div id="daily-focus" class="glass-card p-xl rounded-xl animate-fade-in-up stagger-5">
                     <div class="flex justify-between items-center mb-lg">
@@ -939,7 +1094,7 @@
 
     <!-- ═══════════════════════ FOOTER ═══════════════════════ -->
     <footer
-        class="max-w-max_width mx-auto px-gutter py-xl border-t border-outline-variant flex justify-between items-center text-label-sm text-on-surface-variant">
+        class="max-w-max_width mx-auto px-gutter py-xl pb-28 lg:pb-xl border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center text-label-sm text-on-surface-variant gap-4">
         <p>© 2025 ProgressOS. Built for engineering growth.</p>
         <div class="flex gap-6">
             <a class="hover:text-primary transition-colors" href="#">Docs</a>
@@ -948,10 +1103,34 @@
         </div>
     </footer>
 
+    <!-- ═══════════════════════ MOBILE BOTTOM NAV ═══════════════════════ -->
+    <nav id="bottom-nav"
+        class="bottom-nav fixed bottom-0 left-0 w-full z-50 lg:hidden grid grid-cols-5 px-2">
+        <a href="#" class="nav-item active" data-nav="dashboard">
+            <span class="material-symbols-outlined">home</span>
+            <span class="nav-label">Home</span>
+        </a>
+        <a href="#" class="nav-item" data-nav="trackers" id="bottom-nav-trackers">
+            <span class="material-symbols-outlined">grid_view</span>
+            <span class="nav-label">Trackers</span>
+        </a>
+        <button class="nav-item fab" onclick="openLogActivityModal()">
+            <span class="material-symbols-outlined">add</span>
+        </button>
+        <a href="#" class="nav-item" data-nav="analytics">
+            <span class="material-symbols-outlined">bar_chart</span>
+            <span class="nav-label">Analytics</span>
+        </a>
+        <a href="#" class="nav-item" data-nav="history">
+            <span class="material-symbols-outlined">history</span>
+            <span class="nav-label">History</span>
+        </a>
+    </nav>
+
     <!-- ═══════════════════════ LOG ACTIVITY MODAL ═══════════════════════ -->
     <div id="log-activity-modal" class="fixed inset-0 z-[100] hidden cmd-overlay flex items-center justify-center">
         <div
-            class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[480px] overflow-hidden animate-slide-down">
+            class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[480px] mx-4 lg:mx-0 overflow-hidden animate-slide-down">
             <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
                 <h3 class="text-headline-md text-on-surface font-bold">Log Activity</h3>
                 <button
@@ -1002,7 +1181,7 @@
 
     <!-- ═══════════════════════ SETTINGS MODAL ═══════════════════════ -->
     <div id="settings-modal" class="fixed inset-0 z-[100] hidden cmd-overlay flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[480px] overflow-hidden animate-slide-down">
+        <div class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[480px] mx-4 lg:mx-0 overflow-hidden animate-slide-down">
             <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
                 <h3 class="text-headline-md text-on-surface font-bold font-['Geist']">Settings & Integrations</h3>
                 <button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors"
@@ -1035,6 +1214,12 @@
                             class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                             placeholder="e.g. Devangshu_Pandey" />
                     </div>
+                    <div class="mt-3">
+                        <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="settings-gh-username">GitHub Username</label>
+                        <input id="settings-gh-username" name="githubUsername" type="text"
+                            class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                            placeholder="e.g. devangshu-pandey" />
+                    </div>
                 </div>
                 <button type="submit"
                     class="w-full bg-primary text-white py-3 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-[0.98] transition-all shadow-sm hover:shadow-md">
@@ -1046,7 +1231,7 @@
     </div>
     <!-- ═══════════════════════ ADD GOAL MODAL ═══════════════════════ -->
     <div id="add-goal-modal" class="fixed inset-0 z-[100] hidden cmd-overlay flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[480px] overflow-hidden animate-slide-down">
+        <div class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[480px] mx-4 lg:mx-0 overflow-hidden animate-slide-down">
             <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
                 <h3 class="text-headline-md text-on-surface font-bold font-['Geist']">Add New Goal</h3>
                 <button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors"
@@ -1072,6 +1257,13 @@
                         <optgroup label="Codeforces">
                             <option value="CODEFORCES_RATING">Codeforces Rating</option>
                             <option value="CODEFORCES_SOLVED">Codeforces Solved</option>
+                        </optgroup>
+                        <optgroup label="GitHub">
+                            <option value="GITHUB_REPOSITORIES">GitHub Repositories</option>
+                            <option value="GITHUB_PROJECTS">GitHub Active Projects</option>
+                            <option value="GITHUB_ACTIVITY">GitHub Active Days</option>
+                            <option value="GITHUB_COMMITS">GitHub Commits / Month</option>
+                            <option value="GITHUB_READINESS">GitHub Project Readiness</option>
                         </optgroup>
                         <optgroup label="Career">
                             <option value="PROJECTS_COMPLETED">Projects Completed</option>
@@ -1677,7 +1869,12 @@
                             CODEFORCES_RATING: 'rating',
                             CODEFORCES_SOLVED: 'problems',
                             PROJECTS_COMPLETED: 'projects',
-                            OPENSOURCE_PRS: 'PRs'
+                            OPENSOURCE_PRS: 'PRs',
+                            GITHUB_REPOSITORIES: 'repos',
+                            GITHUB_PROJECTS: 'projects',
+                            GITHUB_ACTIVITY: 'days',
+                            GITHUB_COMMITS: 'commits',
+                            GITHUB_READINESS: 'points'
                         };
                         unitInput.value = units[source] || '';
                     }
@@ -1736,7 +1933,12 @@
                 CODEFORCES_RATING: 'Codeforces Rating',
                 CODEFORCES_SOLVED: 'Codeforces Solved',
                 PROJECTS_COMPLETED: 'Projects Completed',
-                OPENSOURCE_PRS: 'Open Source PRs'
+                OPENSOURCE_PRS: 'Open Source PRs',
+                GITHUB_REPOSITORIES: 'GitHub Repositories',
+                GITHUB_PROJECTS: 'GitHub Active Projects',
+                GITHUB_ACTIVITY: 'GitHub Active Days',
+                GITHUB_COMMITS: 'GitHub Commits',
+                GITHUB_READINESS: 'GitHub Project Readiness'
             };
             return labels[source] || source;
         }
@@ -2032,6 +2234,61 @@
             }
         }
 
+        // ─── GitHub Dashboard Widget ────────────────────────────────────────────────
+        async function loadGitHubCard() {
+            const unconnectedEl = document.getElementById('gh-card-unconnected');
+            const connectedEl = document.getElementById('gh-card-connected');
+            const cardEl = document.getElementById('gh-dashboard-card');
+            if (!cardEl) return;
+
+            const statusRes = await apiRequest('GET', '/api/github/status');
+            if (statusRes.success && statusRes.data && statusRes.data.connected) {
+                const username = statusRes.data.githubUsername;
+                const lastSyncStr = statusRes.data.githubLastSync;
+
+                unconnectedEl.classList.add('hidden');
+                connectedEl.classList.remove('hidden');
+
+                document.getElementById('gh-card-username').textContent = `@${username}`;
+
+                // Fetch repos + activity in parallel
+                const [reposRes, activityRes] = await Promise.all([
+                    apiRequest('GET', '/api/github/repositories'),
+                    apiRequest('GET', '/api/github/activity')
+                ]);
+
+                const repoCount = reposRes.success && reposRes.data ? reposRes.data.length : 0;
+                document.getElementById('gh-card-repos').textContent = `${repoCount} repositories`;
+
+                if (activityRes.success && activityRes.data) {
+                    const act = activityRes.data;
+                    document.getElementById('gh-card-commits').textContent = act.commitsLast30Days;
+                    document.getElementById('gh-card-active').textContent = act.activeProjects;
+                    document.getElementById('gh-card-stars').textContent = act.totalStars;
+                    document.getElementById('gh-card-active-days').textContent = `${act.activeDays} active days`;
+                }
+
+                // Fetch analytics for readiness
+                const analyticsRes = await apiRequest('GET', '/api/github/analytics');
+                if (analyticsRes.success && analyticsRes.data) {
+                    const anal = analyticsRes.data;
+                    document.getElementById('gh-card-readiness').textContent = `${anal.projectReadiness}/100`;
+                    document.getElementById('gh-card-readiness-bar').style.width = `${anal.projectReadiness}%`;
+                }
+
+                // Sync time
+                if (lastSyncStr) {
+                    const syncTime = new Date(lastSyncStr);
+                    document.getElementById('gh-card-sync-time').textContent = `Synced: ${getTimeAgo(syncTime)}`;
+                } else {
+                    document.getElementById('gh-card-sync-time').textContent = 'Synced: just now';
+                }
+            } else {
+                unconnectedEl.classList.remove('hidden');
+                connectedEl.classList.add('hidden');
+            }
+        }
+
         // ─── Settings Form Submit ────────────────────────────────────────────────────
         document.getElementById('settings-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -2046,8 +2303,10 @@
             const body = {};
             if (document.getElementById('settings-name').value) body.name = document.getElementById('settings-name').value;
             if (document.getElementById('settings-email').value) body.email = document.getElementById('settings-email').value;
+            const ghUsername = document.getElementById('settings-gh-username').value.trim();
             body.codeforcesHandle = cfHandle || null;
             body.leetcodeUsername = lcUsername || null;
+            body.githubUsername = ghUsername || null;
 
             const res = await apiRequest('PUT', '/api/user/me', body);
 
@@ -2058,11 +2317,57 @@
                     closeSettingsModal();
                     loadCodeforcesCard();
                     loadLeetCodeCard();
+                    loadGitHubCard();
                 }, 1500);
             } else {
                 statusEl.textContent = `✗ Error: ${res.error || 'Failed to save settings'}`;
                 statusEl.className = 'text-center text-sm font-bold text-error';
             }
+        });
+
+        // ─── Bottom Nav Interaction ────────────────────────────────────────────────
+        document.querySelectorAll('.bottom-nav .nav-item[data-nav]').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const nav = this.dataset.nav;
+                document.querySelectorAll('.bottom-nav .nav-item[data-nav]').forEach(n => n.classList.remove('active'));
+                this.classList.add('active');
+
+                if (nav === 'dashboard') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (nav === 'trackers') {
+                    openCommandPalette();
+                } else if (nav === 'analytics') {
+                    document.getElementById('xp-velocity')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else if (nav === 'history') {
+                    document.getElementById('activity-feed')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Update active nav item on scroll
+        let navScrollTimeout;
+        window.addEventListener('scroll', () => {
+            clearTimeout(navScrollTimeout);
+            navScrollTimeout = setTimeout(() => {
+                const sections = [
+                    { id: 'hero-section', nav: 'dashboard' },
+                    { id: 'market-readiness', nav: 'dashboard' },
+                    { id: 'xp-velocity', nav: 'analytics' },
+                    { id: 'activity-feed', nav: 'history' },
+                ];
+                const scrollY = window.scrollY + 120;
+                let activeNav = 'dashboard';
+                for (const s of sections) {
+                    const el = document.getElementById(s.id);
+                    if (el && el.offsetTop <= scrollY) {
+                        activeNav = s.nav;
+                    }
+                }
+                document.querySelectorAll('.bottom-nav .nav-item[data-nav]').forEach(n => {
+                    n.classList.toggle('active', n.dataset.nav === activeNav);
+                });
+            }, 50);
         });
 
         // ─── Load Data After Clerk Auth Ready ───────────────────────────────────────
@@ -2072,6 +2377,7 @@
             loadDashboard().catch(() => console.log('Backend not connected — using static data'));
             loadCodeforcesCard().catch(() => console.log('Backend not connected — using static data'));
             loadLeetCodeCard().catch(() => console.log('Backend not connected — using static data'));
+            loadGitHubCard().catch(() => console.log('Backend not connected — using static data'));
             loadGoals().catch(() => console.log('Backend not connected — using static data'));
         }
 
