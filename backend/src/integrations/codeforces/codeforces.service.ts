@@ -364,7 +364,7 @@ export class CodeforcesService {
           }
         }
 
-        return unique.slice(0, 20);
+        return unique.slice(0, 5);
       } catch (error) {
         if (error instanceof AppError) throw error;
         throw AppError.badRequest(error instanceof Error ? error.message : 'Failed to fetch recent blog posts');
