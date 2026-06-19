@@ -10,7 +10,9 @@ import {
   CacheEntry,
   CFSubmission,
   CFAnalyticsResponse,
-  CFRecentSolve
+  CFRecentSolve,
+  CFRecentAction,
+  CFBlogPostResponse
 } from './codeforces.types.js';
 
 export class CodeforcesService {
@@ -317,6 +319,55 @@ export class CodeforcesService {
       } catch (error) {
         if (error instanceof AppError) throw error;
         throw AppError.badRequest(error instanceof Error ? error.message : 'Failed to calculate Codeforces analytics');
+      }
+    });
+  }
+
+  /**
+   * Get recent blog posts from Codeforces.
+   */
+  async getRecentBlogPosts(): Promise<CFBlogPostResponse[]> {
+    const cacheKey = 'recent_blog_posts';
+    return this.getOrFetch(cacheKey, async () => {
+      try {
+        const url = 'https://codeforces.com/api/recentActions?maxCount=100';
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw AppError.badRequest(`Codeforces API returned HTTP ${response.status}`);
+        }
+
+        const data = (await response.json()) as CFApiResponse<CFRecentAction[]>;
+        if (data.status !== 'OK') {
+          throw AppError.notFound(data.comment || 'Failed to fetch Codeforces recent actions');
+        }
+
+        const blogPosts: CFBlogPostResponse[] = data.result
+          .filter((action) => action.blogEntry)
+          .map((action) => ({
+            id: action.blogEntry!.id,
+            title: action.blogEntry!.title,
+            authorHandle: action.blogEntry!.authorHandle,
+            creationTimeSeconds: action.blogEntry!.creationTimeSeconds,
+            tags: action.blogEntry!.tags,
+            rating: action.blogEntry!.rating,
+            url: `https://codeforces.com/blog/entry/${action.blogEntry!.id}`,
+          }));
+
+        // Deduplicate by blog entry id (newest first)
+        const seen = new Set<number>();
+        const unique: CFBlogPostResponse[] = [];
+        for (const post of blogPosts) {
+          if (!seen.has(post.id)) {
+            seen.add(post.id);
+            unique.push(post);
+          }
+        }
+
+        return unique.slice(0, 20);
+      } catch (error) {
+        if (error instanceof AppError) throw error;
+        throw AppError.badRequest(error instanceof Error ? error.message : 'Failed to fetch recent blog posts');
       }
     });
   }

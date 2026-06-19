@@ -45,4 +45,14 @@ router.get(
   (req, res, next) => codeforcesController.getAnalytics(req as AuthenticatedRequest, res, next)
 );
 
+/**
+ * GET /api/codeforces/recent-blog-posts
+ * Get recent blog entries from Codeforces
+ */
+router.get(
+  '/recent-blog-posts',
+  requireAuth,
+  (req, res, next) => codeforcesController.getRecentBlogPosts(req as AuthenticatedRequest, res, next)
+);
+
 export default router;

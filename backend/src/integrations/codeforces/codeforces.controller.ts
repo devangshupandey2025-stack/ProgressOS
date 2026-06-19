@@ -83,6 +83,23 @@ export class CodeforcesController {
   }
 
   /**
+   * GET /api/codeforces/recent-blog-posts
+   * Returns recent blog entries from Codeforces.
+   */
+  async getRecentBlogPosts(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const posts = await codeforcesService.getRecentBlogPosts();
+      sendSuccess(res, posts);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * GET /api/codeforces/analytics
    * Returns analytics and predictions for the connected Codeforces profile.
    */

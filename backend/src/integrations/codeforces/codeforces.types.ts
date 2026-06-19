@@ -149,3 +149,50 @@ export interface CFAnalyticsResponse {
   estimatedContestsToExpert: number | string | null;
   dsaScore: number;
 }
+
+/**
+ * Raw Codeforces Blog Entry from API (inside recentActions)
+ */
+export interface CFBlogEntry {
+  id: number;
+  originalLocale: string;
+  creationTimeSeconds: number;
+  authorHandle: string;
+  title: string;
+  content: string;
+  tags: string[];
+  rating: number;
+  locale: string;
+  modifiedTimeSeconds: number;
+  allowViewHistory: boolean;
+}
+
+/**
+ * Raw Codeforces Recent Action from API (recentActions)
+ */
+export interface CFRecentAction {
+  timeSeconds: number;
+  blogEntry?: CFBlogEntry;
+  comment?: {
+    id: number;
+    creationTimeSeconds: number;
+    commentatorHandle: string;
+    locale: string;
+    text: string;
+    parentCommentId?: number;
+    rating: number;
+  };
+}
+
+/**
+ * Custom formatted response for GET /api/codeforces/recent-blog-posts
+ */
+export interface CFBlogPostResponse {
+  id: number;
+  title: string;
+  authorHandle: string;
+  creationTimeSeconds: number;
+  tags: string[];
+  rating: number;
+  url: string;
+}
