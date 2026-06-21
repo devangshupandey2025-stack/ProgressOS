@@ -1,24 +1,37 @@
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../utils/AppError.js';
+import { Category } from '@prisma/client';
+import { calculateXP } from '../../config/constants.js';
 import {
   GHUserInfo, GHRepository, GHEvent,
   GHProfileResponse, GHRepositorySummary,
   GHActivityResponse, GHAnalyticsResponse,
-  GHStatusResponse, CacheEntry
+  GHStatusResponse, GHSyncResponse, CacheEntry
 } from './github.types.js';
 
 export class GitHubService {
   private cache = new Map<string, CacheEntry<any>>();
   private readonly CACHE_TTL_MS = 5 * 60 * 1000;
 
-  private async getOrFetch<T>(cacheKey: string, fetchFn: () => Promise<T>): Promise<T> {
-    const cached = this.cache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {
-      return cached.data;
+  private async getOrFetch<T>(cacheKey: string, fetchFn: () => Promise<T>, force = false): Promise<T> {
+    if (!force) {
+      const cached = this.cache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {
+        return cached.data;
+      }
     }
     const data = await fetchFn();
     this.cache.set(cacheKey, { data, timestamp: Date.now() });
     return data;
+  }
+
+  private clearUserCache(userId: string): void {
+    const prefix = `gh_${userId}_`;
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key);
+      }
+    }
   }
 
   private async updateSyncTime(userId: string): Promise<void> {
@@ -32,14 +45,20 @@ export class GitHubService {
     }
   }
 
-  private async fetchGitHub<T>(url: string): Promise<T> {
-    const response = await fetch(url, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' },
-    });
+  private async fetchGitHub<T>(url: string, token?: string | null): Promise<T> {
+    const headers: Record<string, string> = { 'Accept': 'application/vnd.github.v3+json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       if (response.status === 403) {
-        throw AppError.badRequest('GitHub API rate limit exceeded. Try again later.');
+        throw AppError.badRequest('GitHub API rate limit exceeded. Try again later or add a GitHub token in settings.');
+      }
+      if (response.status === 401) {
+        throw AppError.badRequest('GitHub token is invalid. Update it in settings.');
       }
       if (response.status === 404) {
         throw AppError.notFound('GitHub user not found');
@@ -50,11 +69,21 @@ export class GitHubService {
     return response.json() as Promise<T>;
   }
 
+  private async getUserToken(userId: string): Promise<string | null> {
+    try {
+      const u = await prisma.user.findUnique({ where: { id: userId }, select: { githubToken: true } });
+      return u?.githubToken || null;
+    } catch {
+      return null;
+    }
+  }
+
   async getProfile(userId: string, username: string): Promise<GHProfileResponse> {
     const cacheKey = `gh_profile_${userId}_${username.toLowerCase()}`;
     return this.getOrFetch(cacheKey, async () => {
       try {
-        const user = await this.fetchGitHub<GHUserInfo>(`https://api.github.com/users/${encodeURIComponent(username)}`);
+        const token = await this.getUserToken(userId);
+        const user = await this.fetchGitHub<GHUserInfo>(`https://api.github.com/users/${encodeURIComponent(username)}`, token);
 
         const profile: GHProfileResponse = {
           username: user.login,
@@ -78,8 +107,9 @@ export class GitHubService {
     const cacheKey = `gh_repos_${userId}_${username.toLowerCase()}`;
     return this.getOrFetch(cacheKey, async () => {
       try {
+        const token = await this.getUserToken(userId);
         const repos = await this.fetchGitHub<GHRepository[]>(
-          `https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=pushed`
+          `https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=pushed`, token
         );
 
         const now = new Date();
@@ -140,8 +170,9 @@ export class GitHubService {
         let activeDays = 0;
 
         try {
+          const token = await this.getUserToken(userId);
           const events = await this.fetchGitHub<GHEvent[]>(
-            `https://api.github.com/users/${encodeURIComponent(username)}/events?per_page=100`
+            `https://api.github.com/users/${encodeURIComponent(username)}/events?per_page=100`, token
           );
 
           const activeDates = new Set<string>();
@@ -260,6 +291,141 @@ export class GitHubService {
         throw AppError.badRequest(error instanceof Error ? error.message : 'Failed to calculate GitHub analytics');
       }
     });
+  }
+
+  private async getGitHubConfig(userId: string): Promise<{ username: string; token: string | null }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { githubUsername: true, githubToken: true },
+    });
+    if (!user) throw AppError.notFound('User not found');
+    if (!user.githubUsername) throw AppError.badRequest('GitHub username not connected');
+    return { username: user.githubUsername, token: user.githubToken };
+  }
+
+  async sync(userId: string): Promise<GHSyncResponse> {
+    const { username, token } = await this.getGitHubConfig(userId);
+
+    this.clearUserCache(userId);
+
+    const repos = await this.fetchGitHub<GHRepository[]>(
+      `https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=pushed`,
+      token
+    );
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { githubLastSync: true },
+    });
+    const sinceDate = user?.githubLastSync || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    let commitsFound = 0;
+    try {
+      const events = await this.fetchGitHub<GHEvent[]>(
+        `https://api.github.com/users/${encodeURIComponent(username)}/events?per_page=100`,
+        token
+      );
+
+      const syncThreshold = new Date(sinceDate.getTime() - 60 * 1000);
+
+      const newCommits: string[] = [];
+      for (const event of events) {
+        if (event.type === 'PushEvent' && new Date(event.created_at) > syncThreshold) {
+          const commits = event.payload.commits?.filter(c => c.distinct).map(c => c.message) || [];
+          newCommits.push(...commits);
+        }
+      }
+      commitsFound = newCommits.length;
+    } catch {
+      const activeRepos = repos.filter(r => new Date(r.pushed_at) > sinceDate).length;
+      commitsFound = Math.round(activeRepos * 2.5);
+    }
+
+    let activityCreated = false;
+    if (commitsFound > 0) {
+      const hours = Math.max(0.5, Math.min(4, Math.round(commitsFound / 2 * 10) / 10));
+      const xp = calculateXP(Category.OPEN_SOURCE, hours);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const existing = await prisma.activity.findFirst({
+        where: {
+          userId,
+          title: { startsWith: 'GitHub Sync' },
+          createdAt: { gte: today, lt: tomorrow },
+        },
+      });
+
+      if (existing) {
+        await prisma.activity.update({
+          where: { id: existing.id },
+          data: {
+            title: `GitHub Sync: ${commitsFound} commits`,
+            hours,
+            xp,
+          },
+        });
+      } else {
+        await prisma.activity.create({
+          data: {
+            userId,
+            title: `GitHub Sync: ${commitsFound} commits`,
+            category: Category.OPEN_SOURCE,
+            hours,
+            xp,
+          },
+        });
+
+        const now = new Date();
+        const lastDate = user?.githubLastSync;
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterdayStart = new Date(todayStart);
+        yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+        let streakDelta = 0;
+        if (!lastDate || lastDate < yesterdayStart) {
+          streakDelta = 1;
+        } else if (lastDate >= yesterdayStart && lastDate < todayStart) {
+          const u = await prisma.user.findUnique({ where: { id: userId }, select: { currentStreak: true, longestStreak: true } });
+          if (u) {
+            streakDelta = u.currentStreak + 1;
+            const longestStreak = Math.max(streakDelta, u.longestStreak);
+            await prisma.user.update({
+              where: { id: userId },
+              data: { totalXP: { increment: xp }, lastActiveAt: now, currentStreak: streakDelta, longestStreak },
+            });
+          }
+        } else {
+          streakDelta = -1;
+        }
+
+        if (streakDelta < 0) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { totalXP: { increment: xp } },
+          });
+        }
+      }
+      activityCreated = true;
+    }
+
+    const nonForkRepos = repos.filter(r => !r.fork);
+    const totalStars = nonForkRepos.reduce((s, r) => s + r.stargazers_count, 0);
+    await this.storeSnapshot(userId, nonForkRepos.length, totalStars, commitsFound);
+    await this.updateSyncTime(userId);
+
+    this.clearUserCache(userId);
+
+    return {
+      synced: true,
+      activityCreated,
+      commitsFound,
+      activityTitle: activityCreated ? `GitHub Sync: ${commitsFound} commits` : undefined,
+      activityXP: activityCreated ? calculateXP(Category.OPEN_SOURCE, Math.max(0.5, Math.min(4, Math.round(commitsFound / 2 * 10) / 10))) : undefined,
+    };
   }
 
   async getStatus(userId: string): Promise<GHStatusResponse> {

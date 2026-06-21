@@ -10,5 +10,6 @@ router.get('/profile', requireAuth, (req, res, next) => gitHubController.getProf
 router.get('/repositories', requireAuth, (req, res, next) => gitHubController.getRepositories(req as AuthenticatedRequest, res, next));
 router.get('/activity', requireAuth, (req, res, next) => gitHubController.getActivity(req as AuthenticatedRequest, res, next));
 router.get('/analytics', requireAuth, (req, res, next) => gitHubController.getAnalytics(req as AuthenticatedRequest, res, next));
+router.post('/sync', requireAuth, (req, res, next) => gitHubController.sync(req as AuthenticatedRequest, res, next));
 
 export default router;

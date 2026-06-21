@@ -197,9 +197,15 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
 
     <!-- Insights Panel -->
     <div class="glass-card p-6 rounded-xl bg-gradient-to-br from-white to-green-50/20">
-      <div class="flex items-center gap-2 mb-4">
-        <span class="material-symbols-outlined text-primary">auto_awesome</span>
-        <h3 class="text-sm font-bold text-on-surface font-['Geist']">Engineering Insights</h3>
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">auto_awesome</span>
+          <h3 class="text-sm font-bold text-on-surface font-['Geist']">Engineering Insights</h3>
+        </div>
+        <button id="gh-sync-btn" onclick="syncGitHub()" class="flex items-center gap-1 px-2.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-[11px] font-bold transition-all active:scale-95">
+          <span class="material-symbols-outlined text-[14px]">sync</span>
+          Sync
+        </button>
       </div>
       <div id="insights-content" class="space-y-3">
         <p class="text-xs text-on-surface-variant">Sync your GitHub profile to get personalized engineering insights.</p>
@@ -359,16 +365,18 @@ function renderRepoList(repos) {
 document.getElementById('settings-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const username = document.getElementById('settings-gh-username').value.trim();
+  const token = document.getElementById('settings-gh-token').value.trim() || null;
   const statusEl = document.getElementById('settings-status');
   statusEl.classList.remove('hidden');
   statusEl.textContent = 'Saving...';
   statusEl.className = 'text-center text-sm text-on-surface-variant';
 
   try {
-    const res = await window.apiRequest('PUT', '/api/user/me', { githubUsername: username || null });
+    const res = await window.apiRequest('PUT', '/api/user/me', { githubUsername: username || null, githubToken: token });
     if (res.success) {
       statusEl.textContent = '✓ Connected successfully!';
       statusEl.className = 'text-center text-sm font-bold text-tertiary';
+      document.getElementById('settings-gh-token').value = '';
       setTimeout(() => {
         closeSettingsModal();
         loadGitHubData();
@@ -384,6 +392,30 @@ document.getElementById('settings-form')?.addEventListener('submit', async (e) =
 });
 
 // ─── Init ────────────────────────────────────────────────────────────────────
+async function syncGitHub() {
+  const btn = document.getElementById('gh-sync-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="material-symbols-outlined text-[14px] animate-spin">sync</span> Syncing...';
+
+  try {
+    const res = await window.apiRequest('POST', '/api/github/sync');
+    if (res.success) {
+      await loadGitHubData();
+      btn.innerHTML = '<span class="material-symbols-outlined text-[14px]">check</span> Synced';
+      setTimeout(() => {
+        btn.innerHTML = '<span class="material-symbols-outlined text-[14px]">sync</span> Sync';
+        btn.disabled = false;
+      }, 3000);
+    } else {
+      btn.innerHTML = '<span class="material-symbols-outlined text-[14px]">error</span> Failed';
+      btn.disabled = false;
+    }
+  } catch {
+    btn.innerHTML = '<span class="material-symbols-outlined text-[14px]">error</span> Error';
+    btn.disabled = false;
+  }
+}
+
 async function init() {
   await loadGitHubData();
 }
@@ -403,6 +435,10 @@ else window.addEventListener('clerk-ready', init);
       <div>
         <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">GitHub Username</label>
         <input id="settings-gh-username" type="text" required class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. devangshu-pandey"/>
+      </div>
+      <div>
+        <label class="text-xs text-on-surface-variant uppercase tracking-wider block mb-1.5">Personal Access Token <span class="text-[9px] font-normal normal-case">(optional — for higher rate limits)</span></label>
+        <input id="settings-gh-token" type="password" class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 outline-none" placeholder="ghp_..."/>
       </div>
       <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-[#e68a2e] transition-all">
         Save Connection

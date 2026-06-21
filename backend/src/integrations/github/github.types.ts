@@ -82,6 +82,14 @@ export interface GHStatusResponse {
   githubLastSync: string | null;
 }
 
+export interface GHSyncResponse {
+  synced: boolean;
+  activityCreated: boolean;
+  commitsFound: number;
+  activityTitle?: string;
+  activityXP?: number;
+}
+
 export interface CacheEntry<T> {
   data: T;
   timestamp: number;

@@ -76,6 +76,16 @@ export class GitHubController {
       next(error);
     }
   }
+
+  async sync(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const userId = req.dbUserId!;
+      const result = await gitHubService.sync(userId);
+      sendSuccess(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const gitHubController = new GitHubController();

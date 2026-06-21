@@ -10,7 +10,8 @@ export const updateUserSchema = z.object({
   codeforcesHandle: z.string().trim().min(1).max(50).nullable().optional(),
   leetcodeUsername: z.string().trim().min(1).max(50).nullable().optional(),
   githubUsername: z.string().trim().min(1).max(50).nullable().optional(),
+  githubToken: z.string().trim().max(255).nullable().optional(),
   vitUsername: z.string().trim().min(1).max(50).nullable().optional(),
-}).refine((data) => data.name || data.email || data.hasOwnProperty('username') || data.hasOwnProperty('codeforcesHandle') || data.hasOwnProperty('leetcodeUsername') || data.hasOwnProperty('githubUsername') || data.hasOwnProperty('vitUsername'), {
+}).refine((data) => data.name || data.email || data.hasOwnProperty('username') || data.hasOwnProperty('codeforcesHandle') || data.hasOwnProperty('leetcodeUsername') || data.hasOwnProperty('githubUsername') || data.hasOwnProperty('githubToken') || data.hasOwnProperty('vitUsername'), {
   message: 'At least one field must be provided',
 });
