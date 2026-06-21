@@ -191,8 +191,18 @@ window.apiRequest = async function(method, path, body = null, retries = 2) {
   }
 }
 
+// Register Service Worker for PWA
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+}
+
 // Start initialization
-window.addEventListener('DOMContentLoaded', initClerk);
+window.addEventListener('DOMContentLoaded', () => {
+  initClerk();
+  registerSW();
+});
 
 // Expose apiFetch globally
 window.apiFetch = apiFetch;
