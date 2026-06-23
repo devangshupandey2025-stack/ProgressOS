@@ -1,4 +1,4 @@
-const CACHE = 'progressos-v1';
+const CACHE = 'progressos-v2';
 
 const PRECACHE_URLS = [
   '/',
@@ -40,6 +40,20 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) {
     event.respondWith(
       fetch(request).catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // HTML: network-first for fresh content
+  if (url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '/app') {
+    event.respondWith(
+      fetch(request).then((response) => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(request))
     );
     return;
   }
