@@ -262,12 +262,51 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
       const content = btn.nextElementSibling;
       content.classList.toggle('hidden');
     }
-    // Persist syllabus checkbox state
+
+    const SYLLABUS_API = '/api/gate/syllabus';
+
+    function getTopicKey(cb) {
+      const section = cb.closest('.syllabus-section').querySelector('button').textContent.trim().split(':')[0].trim();
+      const label = cb.closest('label').textContent.trim();
+      return section + '|' + label;
+    }
+
+    function getSectionName(cb) {
+      return cb.closest('.syllabus-section').querySelector('button').textContent.trim().split(':')[0].trim();
+    }
+
+    function getTopicLabel(cb) {
+      return cb.closest('label').textContent.trim();
+    }
+
+    async function loadSyllabusProgress() {
+      if (!window.clerkReady) return;
+      try {
+        const res = await apiRequest('GET', SYLLABUS_API);
+        if (!res.success) return;
+        const map = {};
+        res.data.forEach(p => map[p.topicKey] = p.completed);
+        document.querySelectorAll('.syllabus-check').forEach(cb => {
+          const key = getTopicKey(cb);
+          if (key in map) cb.checked = map[key];
+        });
+      } catch (e) { /* ignore */ }
+    }
+
     document.querySelectorAll('.syllabus-check').forEach(cb => {
-      const key = 'gate_syllabus_' + cb.closest('label').innerText.trim().slice(0, 40);
-      cb.checked = localStorage.getItem(key) === 'true';
-      cb.addEventListener('change', () => localStorage.setItem(key, cb.checked));
+      cb.addEventListener('change', async () => {
+        try {
+          await apiRequest('PUT', SYLLABUS_API + '/' + encodeURIComponent(getTopicKey(cb)), {
+            section: getSectionName(cb),
+            topicLabel: getTopicLabel(cb),
+            completed: cb.checked
+          });
+        } catch (e) { /* ignore */ }
+      });
     });
+
+    window.addEventListener('clerk-ready', loadSyllabusProgress);
+    if (window.clerkReady) loadSyllabusProgress();
   </script>
 </main>
 

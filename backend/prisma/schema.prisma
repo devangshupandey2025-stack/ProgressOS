@@ -56,6 +56,7 @@ model User {
   aiml            AIMLEntry[]
   cyber           CyberEntry[]
   gate            GATEEntry[]
+  gateSyllabusProgress GATESyllabusProgress[]
   research        ResearchEntry[]
   goals           Goal[]
   leetCodeSnapshots LeetCodeSnapshot[]
@@ -291,6 +292,21 @@ model GATEEntry {
   userId             String
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+// ─── GATE Syllabus Progress ─────────────────────────────────────────────────
+
+model GATESyllabusProgress {
+  id         String   @id @default(uuid())
+  topicKey   String
+  section    String
+  topicLabel String
+  completed  Boolean  @default(false)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicKey])
   @@index([userId])
 }
 

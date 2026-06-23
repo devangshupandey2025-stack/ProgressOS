@@ -89,6 +89,7 @@ import achievementsRoutes from './routes/achievements.routes.js';
 import vitRoutes from './integrations/vit/vit.routes.js';
 import reportRoutes from './routes/report.routes.js';
 import { createTrackerRouter } from './utils/trackerFactory.js';
+import gateSyllabusRoutes from './routes/gateSyllabus.routes.js';
 
 
 
@@ -121,6 +122,7 @@ app.use('/api/trackers/nptel', createTrackerRouter('nPTELEntry'));
 app.use('/api/trackers/aiml', createTrackerRouter('aIMLEntry'));
 app.use('/api/trackers/cyber', createTrackerRouter('cyberEntry'));
 app.use('/api/trackers/gate', createTrackerRouter('gATEEntry'));
+app.use('/api/gate/syllabus', gateSyllabusRoutes);
 app.use('/api/trackers/research', createTrackerRouter('researchEntry'));
 
 // Serve Frontend Static Files with caching
