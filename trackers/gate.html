@@ -123,6 +123,152 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
       </tbody>
     </table>
   </div>
+
+  <!-- Syllabus Section -->
+  <div class="mt-8 glass-card rounded-xl p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold text-gray-900 font-['Geist']">GATE 2026 Syllabus</h2>
+      <span class="text-xs text-gray-500">IIT Guwahati — CS &amp; IT</span>
+    </div>
+    <div class="space-y-6" id="syllabus-container">
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 1: Engineering Mathematics
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Discrete Mathematics (Propositional & first order logic, Sets, relations, functions, partial orders, lattices, Monoids, Groups, Graphs, Combinatorics)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Linear Algebra (Matrices, determinants, system of linear equations, eigenvalues & eigenvectors, LU decomposition)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Calculus (Limits, continuity, differentiability, Maxima & minima, Mean value theorem, Integration)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Probability & Statistics (Random variables, distributions, Mean, median, mode, std dev, Conditional probability, Bayes theorem)</label>
+        </div>
+      </div>
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 2: Digital Logic
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Boolean algebra, Combinational & sequential circuits, Minimization</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Number representations & computer arithmetic (fixed & floating point)</label>
+        </div>
+      </div>
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 3: Computer Organization and Architecture
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Machine instructions & addressing modes, ALU, data-path & control unit</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Instruction pipelining, pipeline hazards</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Memory hierarchy (cache, main memory, secondary storage)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> I/O interface (interrupt & DMA mode)</label>
+        </div>
+      </div>
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 4: Programming and Data Structures
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Programming in C, Recursion</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Arrays, stacks, queues, linked lists</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Trees, binary search trees, binary heaps, graphs</label>
+        </div>
+      </div>
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 5: Algorithms
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Searching, sorting, hashing, Asymptotic complexity</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Algorithm design: greedy, dynamic programming, divide-and-conquer</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Graph traversals, minimum spanning trees, shortest paths</label>
+        </div>
+      </div>
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 6: Theory of Computation
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Regular expressions & finite automata</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Context-free grammars & push-down automata</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Regular & context-free languages, pumping lemma</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Turing machines & undecidability</label>
+        </div>
+      </div>
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 7: Compiler Design
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Lexical analysis, parsing, syntax-directed translation</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Runtime environments, Intermediate code generation</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Local optimization, Data flow analysis (constant prop, liveness, CSE)</label>
+        </div>
+      </div>
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 8: Operating System
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> System calls, processes, threads, IPC, concurrency & synchronization</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Deadlock, CPU & I/O scheduling</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Memory management & virtual memory, File systems</label>
+        </div>
+      </div>
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 9: Databases
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> ER-model, Relational model (relational algebra, tuple calculus, SQL)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Integrity constraints, normal forms</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> File organization, indexing (B & B+ trees)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Transactions & concurrency control</label>
+        </div>
+      </div>
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          Section 10: Computer Networks
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Layering (OSI & TCP/IP), Packet, circuit & virtual-circuit switching</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Data link layer (framing, error detection, MAC, Ethernet bridging)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Routing protocols (shortest path, flooding, distance vector, link state)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> IP addressing (IPv4, CIDR, ARP, DHCP, ICMP, NAT)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Transport layer (flow/congestion control, UDP, TCP, sockets)</label>
+          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Application layer protocols (DNS, SMTP, HTTP, FTP, Email)</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .syllabus-section button .material-symbols-outlined { transition: transform 0.2s; }
+    .syllabus-section.open button .material-symbols-outlined { transform: rotate(90deg); }
+    .syllabus-check:checked { accent-color: #FF9933; }
+    .syllabus-check:checked + span { text-decoration: line-through; opacity: 0.5; }
+  </style>
+  <script>
+    function toggleSection(btn) {
+      btn.parentElement.classList.toggle('open');
+      const content = btn.nextElementSibling;
+      content.classList.toggle('hidden');
+    }
+    // Persist syllabus checkbox state
+    document.querySelectorAll('.syllabus-check').forEach(cb => {
+      const key = 'gate_syllabus_' + cb.closest('label').innerText.trim().slice(0, 40);
+      cb.checked = localStorage.getItem(key) === 'true';
+      cb.addEventListener('change', () => localStorage.setItem(key, cb.checked));
+    });
+  </script>
 </main>
 
 <div id="modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
