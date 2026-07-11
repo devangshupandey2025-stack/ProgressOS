@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="theme-color" content="#FF9933"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="ProgressOS"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-512.svg"/>
+<title>Resume Profiles | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = { theme: { extend: { colors: { primary: "#FF9933", "on-surface": "#1E293B", "on-surface-variant": "#64748B", secondary: "#000080", tertiary: "#128807", error: "#EF4444" }, spacing: { "max_width": "1440px", "gutter": "24px" } } } }
+</script>
+<style>
+body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: all 0.3s ease; }
+.glass-card:hover { border-color: #D1D5DB; box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 4px 6px -2px rgb(0 0 0 / 0.04); transform: translateY(-2px); }
+.bottom-nav { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid #E5E7EB; }
+.bottom-nav .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; color: #94a3b8; transition: color 0.2s; text-decoration: none; position: relative; -webkit-tap-highlight-color: transparent; }
+.bottom-nav .nav-item.active { color: #FF9933; }
+.bottom-nav .nav-item.active::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 2.5px; background: #FF9933; border-radius: 0 0 4px 4px; }
+.bottom-nav .nav-item span { font-size: 22px; }
+.bottom-nav .nav-item .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; }
+@supports (padding-bottom: env(safe-area-inset-bottom)) { .bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); } }
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in-up { animation: fade-in-up 0.4s ease-out both; }
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.cmd-overlay { background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+@keyframes slide-down { from { opacity: 0; transform: translateY(-20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.animate-slide-down { animation: slide-down 0.25s ease-out; }
+</style>
+<script src="../js/auth.js"></script>
+</head>
+<body class="bg-background selection:bg-primary/20 selection:text-primary">
+
+<header id="topnav" class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
+  <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
+    <div class="flex justify-between w-full">
+      <div class="flex items-center gap-8">
+        <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+        <nav class="hidden lg:flex items-center gap-4">
+          <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
+          <a href="index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Career Studio</a>
+          <a href="profile.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Profile</a>
+          <a href="photos.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Photos</a>
+          <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">Resume Profiles</a>
+          <a href="snapshot.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Snapshot</a>
+        </nav>
+      </div>
+      <div id="auth-container"></div>
+    </div>
+  </div>
+</header>
+
+<main class="pt-24 pb-24 lg:pb-16 px-gutter max-w-max_width mx-auto">
+
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">arrow_back</a>
+      <div>
+        <h1 class="text-2xl font-bold text-on-surface font-['Geist']">Resume Profiles</h1>
+        <p class="text-sm text-on-surface-variant">Manage multiple role-specific resumes.</p>
+      </div>
+    </div>
+    <div>
+      <button onclick="openCreateModal()"
+        class="bg-primary text-white px-4 py-2 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        New Resume Profile
+      </button>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="status" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
+
+  <!-- Profile Grid -->
+  <div id="profiles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Loading skeleton -->
+    <div id="loading-skeleton" class="col-span-full">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="animate-pulse"><div class="h-48 bg-gray-200 rounded-xl"></div></div>
+        <div class="animate-pulse"><div class="h-48 bg-gray-200 rounded-xl"></div></div>
+        <div class="animate-pulse"><div class="h-48 bg-gray-200 rounded-xl"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div id="empty-state" class="hidden text-center py-16">
+    <span class="material-symbols-outlined text-5xl text-on-surface-variant/20 block mb-3" style="font-variation-settings:'FILL' 1;">description</span>
+    <p class="text-base font-bold text-on-surface font-['Geist']">No Resume Profiles Yet</p>
+    <p class="text-sm text-on-surface-variant mt-1">Create your first role-specific resume profile.</p>
+    <button onclick="openCreateModal()"
+      class="mt-4 bg-primary text-white px-4 py-2 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-95 transition-all inline-flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[18px]">add</span>
+      Create Resume Profile
+    </button>
+  </div>
+
+  <!-- Powered by Career Snapshot -->
+  <div id="snapshot-notice" class="glass-card rounded-xl p-5 hidden">
+    <div class="flex items-start gap-3">
+      <span class="material-symbols-outlined text-secondary text-xl">timeline</span>
+      <div class="flex-1">
+        <h3 class="text-sm font-bold text-on-surface font-['Geist']">Powered by Career Snapshot</h3>
+        <p class="text-xs text-on-surface-variant mt-0.5">Your resume profiles automatically reference the latest data from your Career Snapshot.</p>
+        <div class="flex flex-wrap gap-1.5 mt-3">
+          <span class="px-2 py-0.5 bg-tertiary/10 text-tertiary text-[10px] font-bold rounded-full flex items-center gap-0.5"><span class="text-[12px]">check_circle</span>Projects</span>
+          <span class="px-2 py-0.5 bg-tertiary/10 text-tertiary text-[10px] font-bold rounded-full flex items-center gap-0.5"><span class="text-[12px]">check_circle</span>Skills</span>
+          <span class="px-2 py-0.5 bg-tertiary/10 text-tertiary text-[10px] font-bold rounded-full flex items-center gap-0.5"><span class="text-[12px]">check_circle</span>GitHub</span>
+          <span class="px-2 py-0.5 bg-tertiary/10 text-tertiary text-[10px] font-bold rounded-full flex items-center gap-0.5"><span class="text-[12px]">check_circle</span>LeetCode</span>
+          <span class="px-2 py-0.5 bg-tertiary/10 text-tertiary text-[10px] font-bold rounded-full flex items-center gap-0.5"><span class="text-[12px]">check_circle</span>Codeforces</span>
+          <span class="px-2 py-0.5 bg-tertiary/10 text-tertiary text-[10px] font-bold rounded-full flex items-center gap-0.5"><span class="text-[12px]">check_circle</span>Academics</span>
+        </div>
+        <a href="snapshot.html" class="inline-flex items-center gap-1 mt-3 text-xs font-bold text-primary hover:underline">
+          View Snapshot <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Create / Edit Modal -->
+<div id="profile-modal" class="fixed inset-0 z-[100] hidden cmd-overlay flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-[520px] mx-4 lg:mx-0 overflow-hidden animate-slide-down">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+      <h3 id="modal-title" class="text-headline-md text-on-surface font-bold">Create Resume Profile</h3>
+      <button onclick="closeModal()" class="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors">close</button>
+    </div>
+    <form id="profile-form" class="p-6 space-y-4">
+      <input type="hidden" id="field-edit-id" value="" />
+
+      <div>
+        <label class="text-xs text-on-surface-variant uppercase tracking-wider font-bold block mb-1.5" for="field-name">Resume Name *</label>
+        <input id="field-name" type="text" required
+          class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          placeholder="e.g. Software Engineer" />
+      </div>
+
+      <div>
+        <label class="text-xs text-on-surface-variant uppercase tracking-wider font-bold block mb-1.5" for="field-targetRole">Target Role *</label>
+        <input id="field-targetRole" type="text" required
+          class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          placeholder="e.g. Software Engineer Intern" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs text-on-surface-variant uppercase tracking-wider font-bold block mb-1.5" for="field-template">Template</label>
+          <select id="field-template"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+            <option value="modern">Modern</option>
+            <option value="minimal">Minimal</option>
+            <option value="classic">Classic</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-on-surface-variant uppercase tracking-wider font-bold block mb-1.5" for="field-pageSize">Page Size</label>
+          <select id="field-pageSize"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+            <option value="a4">A4</option>
+            <option value="letter">Letter</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-xs text-on-surface-variant uppercase tracking-wider font-bold block mb-1.5" for="field-photoId">Photo</label>
+        <select id="field-photoId"
+          class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+          <option value="">No photo</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="text-xs text-on-surface-variant uppercase tracking-wider font-bold block mb-1.5" for="field-description">Description <span class="font-normal normal-case tracking-normal">(optional)</span></label>
+        <textarea id="field-description" rows="2"
+          class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
+          placeholder="Focused on backend internships."></textarea>
+      </div>
+
+      <div class="bg-gray-50 border border-outline-variant rounded-lg p-3">
+        <p class="text-xs text-on-surface-variant uppercase tracking-wider font-bold mb-1">Professional Summary</p>
+        <p class="text-[11px] text-on-surface-variant/70">Coming in Phase 6 (AI)</p>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" onclick="closeModal()"
+          class="px-4 py-2 text-sm font-bold text-on-surface-variant hover:text-on-surface transition-colors">Cancel</button>
+        <button type="submit"
+          class="bg-primary text-white px-5 py-2 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-[0.98] transition-all shadow-sm">Save</button>
+      </div>
+      <p id="form-status" class="text-center text-sm hidden"></p>
+    </form>
+  </div>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav fixed bottom-0 left-0 w-full z-50 lg:hidden grid grid-cols-5 px-2">
+  <a href="../index.html" class="nav-item" data-nav="home">
+    <span class="material-symbols-outlined">home</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a href="index.html" class="nav-item" data-nav="studio">
+    <span class="material-symbols-outlined">badge</span>
+    <span class="nav-label">Studio</span>
+  </a>
+  <a href="profile.html" class="nav-item" data-nav="profile">
+    <span class="material-symbols-outlined">edit</span>
+    <span class="nav-label">Profile</span>
+  </a>
+  <a href="photos.html" class="nav-item" data-nav="photos">
+    <span class="material-symbols-outlined">photo_library</span>
+    <span class="nav-label">Photos</span>
+  </a>
+  <a href="resume-profiles.html" class="nav-item active" data-nav="resumes">
+    <span class="material-symbols-outlined">description</span>
+    <span class="nav-label">Resumes</span>
+  </a>
+</nav>
+
+<script>
+let photosCache = [];
+
+function showStatus(text, isError) {
+  const el = document.getElementById('status');
+  el.classList.remove('hidden');
+  el.textContent = text;
+  el.className = 'mb-4 p-3 rounded-lg text-sm font-bold ' + (isError ? 'text-error bg-error/5 border border-error/20' : 'text-tertiary bg-tertiary/5 border border-tertiary/20');
+  setTimeout(() => { el.classList.add('hidden'); }, 3000);
+}
+
+async function loadProfiles() {
+  document.getElementById('loading-skeleton').classList.remove('hidden');
+  document.getElementById('empty-state').classList.add('hidden');
+  try {
+    const res = await window.apiRequest('GET', '/api/career-studio/resume-profiles');
+    if (res.success) {
+      renderProfiles(res.data || []);
+    }
+  } catch (err) {
+    console.error('Failed to load resume profiles:', err);
+    document.getElementById('loading-skeleton').classList.add('hidden');
+  }
+}
+
+async function loadPhotos() {
+  try {
+    const res = await window.apiRequest('GET', '/api/career-studio/photos');
+    if (res.success) {
+      photosCache = res.data || [];
+      const sel = document.getElementById('field-photoId');
+      sel.innerHTML = '<option value="">No photo</option>' + photosCache.map(p =>
+        `<option value="${p.id}">${p.fileName}</option>`
+      ).join('');
+    }
+  } catch (err) {
+    console.error('Failed to load photos:', err);
+  }
+}
+
+function renderProfiles(profiles) {
+  document.getElementById('loading-skeleton').classList.add('hidden');
+  const grid = document.getElementById('profiles-grid');
+  const empty = document.getElementById('empty-state');
+  const notice = document.getElementById('snapshot-notice');
+
+  if (profiles.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    notice.classList.add('hidden');
+    return;
+  }
+
+  empty.classList.add('hidden');
+  notice.classList.remove('hidden');
+  grid.innerHTML = profiles.map((p, i) => {
+    const comp = p.completion || { percentage: 0, checks: [] };
+    const doneChecks = comp.checks.filter(c => c.done);
+    const totalChecks = comp.checks.length;
+    const stagger = Math.min(i % 6 + 1, 5);
+
+    return `
+      <div class="glass-card rounded-xl p-5 animate-fade-in-up stagger-${stagger} relative">
+        ${p.isDefault ? '<span class="absolute top-3 right-3 px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full shadow-sm">Default</span>' : ''}
+        <div class="mb-3">
+          <h3 class="text-lg font-bold text-on-surface font-['Geist']">${escHtml(p.name)}</h3>
+          <p class="text-xs text-on-surface-variant uppercase tracking-wider font-bold mt-2">Target Role</p>
+          <p class="text-sm text-on-surface">${escHtml(p.targetRole)}</p>
+        </div>
+
+        <div class="mb-3">
+          <div class="flex items-center gap-1.5 mb-1">
+            <div class="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-primary rounded-full" style="width:${comp.percentage}%"></div>
+            </div>
+            <span class="text-[10px] font-bold text-on-surface-variant">${comp.percentage}%</span>
+          </div>
+          <p class="text-[10px] text-on-surface-variant">
+            ${doneChecks.map(c => `<span class="text-tertiary">\u2713</span> ${c.label}`).join(' \u00B7 ')}
+            ${doneChecks.length < totalChecks ? ' \u00B7 ' + comp.checks.filter(c => !c.done).map(c => `<span class="text-on-surface-variant/50">\u25CB</span> ${c.label}`).join(' \u00B7 ') : ''}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 mb-4">
+          <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">${capitalize(p.template)}</span>
+          <span class="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full">${p.pageSize.toUpperCase()}</span>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 border-t border-outline-variant pt-3">
+          <button onclick="openEditModal('${p.id}')" class="flex-1 px-2 py-1.5 bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-on-surface rounded-lg transition-all">Edit</button>
+          <button onclick="cloneProfile('${p.id}')" class="flex-1 px-2 py-1.5 bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-on-surface rounded-lg transition-all">Clone</button>
+          <button onclick="deleteProfile('${p.id}')" class="flex-1 px-2 py-1.5 bg-red-50 hover:bg-red-100 text-[11px] font-bold text-error rounded-lg transition-all">Delete</button>
+          ${!p.isDefault ? `<button onclick="setDefault('${p.id}')" class="flex-1 px-2 py-1.5 bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-on-surface rounded-lg transition-all">Set Default</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+}
+
+function openCreateModal() {
+  document.getElementById('modal-title').textContent = 'Create Resume Profile';
+  document.getElementById('field-edit-id').value = '';
+  document.getElementById('field-name').value = '';
+  document.getElementById('field-targetRole').value = '';
+  document.getElementById('field-template').value = 'modern';
+  document.getElementById('field-pageSize').value = 'a4';
+  document.getElementById('field-photoId').value = '';
+  document.getElementById('field-description').value = '';
+  document.getElementById('form-status').classList.add('hidden');
+  document.getElementById('profile-modal').classList.remove('hidden');
+  document.getElementById('profile-modal').classList.add('flex');
+}
+
+async function openEditModal(id) {
+  document.getElementById('modal-title').textContent = 'Edit Resume Profile';
+  document.getElementById('form-status').classList.add('hidden');
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${id}`);
+    if (res.success && res.data) {
+      const p = res.data;
+      document.getElementById('field-edit-id').value = p.id;
+      document.getElementById('field-name').value = p.name || '';
+      document.getElementById('field-targetRole').value = p.targetRole || '';
+      document.getElementById('field-template').value = p.template || 'modern';
+      document.getElementById('field-pageSize').value = p.pageSize || 'a4';
+      document.getElementById('field-photoId').value = p.photoId || '';
+      document.getElementById('field-description').value = p.description || '';
+      document.getElementById('profile-modal').classList.remove('hidden');
+      document.getElementById('profile-modal').classList.add('flex');
+    }
+  } catch (err) {
+    showStatus('Failed to load profile details', true);
+  }
+}
+
+function closeModal() {
+  const modal = document.getElementById('profile-modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+document.getElementById('profile-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('profile-modal')) closeModal();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+
+document.getElementById('profile-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const statusEl = document.getElementById('form-status');
+  statusEl.classList.remove('hidden');
+  statusEl.textContent = 'Saving...';
+  statusEl.className = 'text-center text-sm text-on-surface-variant';
+
+  const editId = document.getElementById('field-edit-id').value;
+  const payload = {
+    name: document.getElementById('field-name').value.trim(),
+    targetRole: document.getElementById('field-targetRole').value.trim(),
+    template: document.getElementById('field-template').value,
+    pageSize: document.getElementById('field-pageSize').value,
+    photoId: document.getElementById('field-photoId').value || null,
+    description: document.getElementById('field-description').value.trim() || null,
+  };
+
+  try {
+    const isEdit = !!editId;
+    const method = isEdit ? 'PUT' : 'POST';
+    const url = isEdit ? `/api/career-studio/resume-profiles/${editId}` : '/api/career-studio/resume-profiles';
+    const res = await window.apiRequest(method, url, payload);
+
+    if (res.success) {
+      statusEl.textContent = isEdit ? 'Resume profile updated!' : 'Resume profile created!';
+      statusEl.className = 'text-center text-sm font-bold text-tertiary';
+      closeModal();
+      showStatus(isEdit ? 'Resume profile updated successfully' : 'Resume profile created successfully', false);
+      loadProfiles();
+    } else {
+      statusEl.textContent = 'Error: ' + (res.error || 'Failed to save');
+      statusEl.className = 'text-center text-sm font-bold text-error';
+    }
+  } catch (err) {
+    statusEl.textContent = 'Error: ' + err.message;
+    statusEl.className = 'text-center text-sm font-bold text-error';
+  }
+});
+
+async function cloneProfile(id) {
+  try {
+    const res = await window.apiRequest('POST', `/api/career-studio/resume-profiles/${id}/clone`);
+    if (res.success) {
+      showStatus('Resume profile cloned successfully', false);
+      loadProfiles();
+    } else {
+      showStatus(res.error || 'Failed to clone', true);
+    }
+  } catch (err) {
+    showStatus('Error: ' + err.message, true);
+  }
+}
+
+async function deleteProfile(id) {
+  if (!confirm('Delete this resume profile? This cannot be undone.')) return;
+  try {
+    const res = await window.apiRequest('DELETE', `/api/career-studio/resume-profiles/${id}`);
+    if (res.success) {
+      showStatus('Resume profile deleted', false);
+      loadProfiles();
+    } else {
+      showStatus(res.error || 'Failed to delete', true);
+    }
+  } catch (err) {
+    showStatus('Error: ' + err.message, true);
+  }
+}
+
+async function setDefault(id) {
+  try {
+    const res = await window.apiRequest('PUT', `/api/career-studio/resume-profiles/${id}/default`);
+    if (res.success) {
+      showStatus('Default resume profile updated', false);
+      loadProfiles();
+    } else {
+      showStatus(res.error || 'Failed to set default', true);
+    }
+  } catch (err) {
+    showStatus('Error: ' + err.message, true);
+  }
+}
+
+async function init() {
+  await Promise.all([loadProfiles(), loadPhotos()]);
+}
+
+if (window.clerkReady) init();
+else window.addEventListener('clerk-ready', init);
+</script>
+
+</body>
+</html>

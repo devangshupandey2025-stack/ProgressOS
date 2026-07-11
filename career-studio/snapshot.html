@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="theme-color" content="#FF9933"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="ProgressOS"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-512.svg"/>
+<title>Career Snapshot | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = { theme: { extend: { colors: { primary: "#FF9933", "on-surface": "#1E293B", "on-surface-variant": "#64748B", secondary: "#000080", tertiary: "#128807", error: "#EF4444" }, spacing: { "max_width": "1440px", "gutter": "24px" } } } }
+</script>
+<style>
+body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: all 0.3s ease; }
+.glass-card:hover { border-color: #D1D5DB; box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 4px 6px -2px rgb(0 0 0 / 0.04); }
+.bottom-nav { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid #E5E7EB; }
+.bottom-nav .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; color: #94a3b8; transition: color 0.2s; text-decoration: none; position: relative; -webkit-tap-highlight-color: transparent; }
+.bottom-nav .nav-item.active { color: #FF9933; }
+.bottom-nav .nav-item.active::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 2.5px; background: #FF9933; border-radius: 0 0 4px 4px; }
+.bottom-nav .nav-item span { font-size: 22px; }
+.bottom-nav .nav-item .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; }
+@supports (padding-bottom: env(safe-area-inset-bottom)) { .bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); } }
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in-up { animation: fade-in-up 0.4s ease-out both; }
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+</style>
+<script src="../js/auth.js"></script>
+</head>
+<body class="bg-background selection:bg-primary/20 selection:text-primary">
+
+<header id="topnav" class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
+  <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
+    <div class="flex justify-between w-full">
+      <div class="flex items-center gap-8">
+        <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+        <nav class="hidden lg:flex items-center gap-4">
+          <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
+          <a href="index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Career Studio</a>
+          <a href="profile.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Profile</a>
+          <a href="photos.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Photos</a>
+          <a href="resume-profiles.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Resume Profiles</a>
+          <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">Snapshot</a>
+        </nav>
+      </div>
+      <div id="auth-container"></div>
+    </div>
+  </div>
+</header>
+
+<main class="pt-24 pb-24 lg:pb-16 px-gutter max-w-max_width mx-auto">
+
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">arrow_back</a>
+      <div>
+        <h1 class="text-2xl font-bold text-on-surface font-['Geist']">Career Snapshot</h1>
+        <p class="text-sm text-on-surface-variant">Your professional profile, resume profiles, and platform data — synced in one snapshot.</p>
+      </div>
+    </div>
+    <div>
+      <button onclick="downloadPdf()" id="btn-download-pdf"
+        class="bg-secondary text-white px-4 py-2 rounded-lg font-label-md text-sm hover:bg-[#0000b3] active:scale-95 transition-all shadow-sm hover:shadow-md flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[18px]">download</span>
+        Download PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="status" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
+
+  <!-- Data Sources -->
+  <div class="glass-card rounded-xl p-4 mb-6 animate-fade-in-up stagger-1">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="material-symbols-outlined text-primary text-lg">source</span>
+      <h2 class="text-sm font-bold text-on-surface font-['Geist']">Data Sources</h2>
+      <span class="text-[10px] text-on-surface-variant ml-auto" id="snapshot-timestamp">Loading...</span>
+    </div>
+    <div class="flex flex-wrap gap-2" id="data-sources">
+      <span class="px-2.5 py-1 bg-primary/10 text-primary text-[11px] font-bold rounded-full flex items-center gap-1"><span class="text-[14px]">badge</span>Professional Profile</span>
+      <span class="px-2.5 py-1 bg-primary/10 text-primary text-[11px] font-bold rounded-full flex items-center gap-1"><span class="text-[14px]">description</span>Resume Profiles</span>
+      <span class="px-2.5 py-1 bg-gray-100 text-[11px] font-bold text-on-surface-variant rounded-full flex items-center gap-1"><span class="text-tertiary text-[14px]">check_circle</span>GitHub</span>
+      <span class="px-2.5 py-1 bg-gray-100 text-[11px] font-bold text-on-surface-variant rounded-full flex items-center gap-1"><span class="text-tertiary text-[14px]">check_circle</span>LeetCode</span>
+      <span class="px-2.5 py-1 bg-gray-100 text-[11px] font-bold text-on-surface-variant rounded-full flex items-center gap-1"><span class="text-tertiary text-[14px]">check_circle</span>Codeforces</span>
+      <span class="px-2.5 py-1 bg-gray-100 text-[11px] font-bold text-on-surface-variant rounded-full flex items-center gap-1"><span class="text-tertiary text-[14px]">check_circle</span>Projects</span>
+      <span class="px-2.5 py-1 bg-gray-100 text-[11px] font-bold text-on-surface-variant rounded-full flex items-center gap-1"><span class="text-tertiary text-[14px]">check_circle</span>Skills</span>
+      <span class="px-2.5 py-1 bg-gray-100 text-[11px] font-bold text-on-surface-variant rounded-full flex items-center gap-1"><span class="text-tertiary text-[14px]">check_circle</span>Academics</span>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="glass-card rounded-xl p-5 text-center animate-fade-in-up stagger-1">
+      <p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Level</p>
+      <p class="text-3xl font-black text-on-surface font-['Geist']" id="s-level">--</p>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center animate-fade-in-up stagger-2">
+      <p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Total XP</p>
+      <p class="text-3xl font-black text-on-surface font-['Geist']" id="s-total-xp">--</p>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center animate-fade-in-up stagger-3">
+      <p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Market Readiness</p>
+      <p class="text-3xl font-black text-primary font-['Geist']" id="s-readiness">--</p>
+    </div>
+    <div class="glass-card rounded-xl p-5 text-center animate-fade-in-up stagger-4">
+      <p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Longest Streak</p>
+      <p class="text-3xl font-black text-tertiary font-['Geist']" id="s-streak">--</p>
+    </div>
+  </div>
+
+  <!-- DSA & Competitive Programming -->
+  <div class="glass-card rounded-xl p-6 mb-6 animate-fade-in-up stagger-2">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary">code</span>
+      <h3 class="text-sm font-bold text-on-surface font-['Geist']">DSA & Competitive Programming</h3>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="section-dsa">
+      <p class="text-xs text-on-surface-variant col-span-full">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Projects & Open Source -->
+  <div class="glass-card rounded-xl p-6 mb-6 animate-fade-in-up stagger-3">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary">terminal</span>
+      <h3 class="text-sm font-bold text-on-surface font-['Geist']">Projects & Open Source</h3>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="section-projects">
+      <p class="text-xs text-on-surface-variant col-span-full">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Achievements -->
+  <div class="glass-card rounded-xl p-6 mb-6 animate-fade-in-up stagger-4">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary">emoji_events</span>
+      <h3 class="text-sm font-bold text-on-surface font-['Geist']">Achievements</h3>
+    </div>
+    <div class="grid grid-cols-6 gap-3" id="section-achievements">
+      <p class="text-xs text-on-surface-variant col-span-full">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="glass-card rounded-xl p-6 mb-6 animate-fade-in-up stagger-5">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary">bar_chart</span>
+      <h3 class="text-sm font-bold text-on-surface font-['Geist']">Recent Activity</h3>
+    </div>
+    <div class="space-y-2" id="section-activity">
+      <p class="text-xs text-on-surface-variant">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Resume Profiles using this data -->
+  <div class="glass-card rounded-xl p-6 mb-6 animate-fade-in-up stagger-5" id="profiles-section">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-secondary">description</span>
+      <h3 class="text-sm font-bold text-on-surface font-['Geist']">Resume Profiles using this snapshot</h3>
+    </div>
+    <div id="profiles-list" class="flex flex-wrap gap-3">
+      <p class="text-xs text-on-surface-variant">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Export -->
+  <div class="glass-card rounded-xl p-6 animate-fade-in-up stagger-5">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary">file_download</span>
+      <h3 class="text-sm font-bold text-on-surface font-['Geist']">Export</h3>
+    </div>
+    <p class="text-xs text-on-surface-variant mb-3">The PDF includes your professional profile, all resume profiles with configurations, and supporting career data.</p>
+    <div class="flex flex-wrap gap-3">
+      <button onclick="downloadPdf()"
+        class="bg-primary text-white px-4 py-2 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-95 transition-all shadow-sm flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+        Download PDF
+      </button>
+      <button disabled
+        class="px-4 py-2 rounded-lg font-label-md text-sm bg-gray-100 text-on-surface-variant/50 cursor-not-allowed flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[18px]">data_object</span>
+        JSON <span class="text-[10px] font-normal">Coming Soon</span>
+      </button>
+      <button disabled
+        class="px-4 py-2 rounded-lg font-label-md text-sm bg-gray-100 text-on-surface-variant/50 cursor-not-allowed flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[18px]">description</span>
+        Markdown <span class="text-[10px] font-normal">Coming Soon</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loading-state" class="text-center py-12 hidden">
+    <div class="animate-pulse space-y-4 max-w-lg mx-auto">
+      <div class="h-6 bg-gray-200 rounded w-1/3 mx-auto"></div>
+      <div class="h-24 bg-gray-200 rounded"></div>
+      <div class="h-24 bg-gray-200 rounded"></div>
+      <div class="h-24 bg-gray-200 rounded"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav fixed bottom-0 left-0 w-full z-50 lg:hidden grid grid-cols-5 px-2">
+  <a href="../index.html" class="nav-item" data-nav="home">
+    <span class="material-symbols-outlined">home</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a href="index.html" class="nav-item" data-nav="studio">
+    <span class="material-symbols-outlined">badge</span>
+    <span class="nav-label">Studio</span>
+  </a>
+  <a href="profile.html" class="nav-item" data-nav="profile">
+    <span class="material-symbols-outlined">edit</span>
+    <span class="nav-label">Profile</span>
+  </a>
+  <a href="photos.html" class="nav-item" data-nav="photos">
+    <span class="material-symbols-outlined">photo_library</span>
+    <span class="nav-label">Photos</span>
+  </a>
+  <a href="resume-profiles.html" class="nav-item" data-nav="resumes">
+    <span class="material-symbols-outlined">description</span>
+    <span class="nav-label">Resumes</span>
+  </a>
+</nav>
+
+<script>
+function showStatus(text, isError) {
+  const el = document.getElementById('status');
+  el.classList.remove('hidden');
+  el.textContent = text;
+  el.className = 'mb-4 p-3 rounded-lg text-sm font-bold ' + (isError ? 'text-error bg-error/5 border border-error/20' : 'text-tertiary bg-tertiary/5 border border-tertiary/20');
+  setTimeout(() => { el.classList.add('hidden'); }, 3000);
+}
+
+function showLoading(show) {
+  document.getElementById('loading-state').classList.toggle('hidden', !show);
+  const sections = ['stats-grid', 'section-dsa', 'section-projects', 'section-achievements', 'section-activity', 'profiles-section'];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', show);
+  });
+}
+
+async function downloadPdf() {
+  const btn = document.getElementById('btn-download-pdf');
+  const icon = btn.querySelector('.material-symbols-outlined');
+  const origIcon = icon.textContent;
+  icon.textContent = 'hourglass_empty';
+  btn.disabled = true;
+  btn.classList.add('opacity-70');
+
+  try {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_BASE = isLocalhost ? 'http://localhost:5000' : '';
+    const token = window.Clerk && window.Clerk.session ? await window.Clerk.session.getToken() : null;
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}/api/reports/career`, { method: 'GET', headers });
+    if (!res.ok) throw new Error('Failed to generate report');
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ProgressOS-Career-Snapshot.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    showStatus('PDF downloaded successfully', false);
+  } catch (err) {
+    showStatus('Error generating PDF: ' + err.message, true);
+  } finally {
+    icon.textContent = origIcon;
+    btn.disabled = false;
+    btn.classList.remove('opacity-70');
+  }
+}
+
+async function loadSnapshot() {
+  showLoading(true);
+  try {
+    const [userRes, readinessRes, insightsRes, weeklyRes, achievementsRes, timelineRes] = await Promise.all([
+      window.apiRequest('GET', '/api/user/me'),
+      window.apiRequest('GET', '/api/market-readiness'),
+      window.apiRequest('GET', '/api/insights'),
+      window.apiRequest('GET', '/api/weekly-review'),
+      window.apiRequest('GET', '/api/achievements'),
+      window.apiRequest('GET', '/api/timeline?days=14'),
+    ]);
+
+    const user = userRes.data || {};
+    const mr = readinessRes.data || {};
+    const wr = weeklyRes.data || {};
+    const achievements = achievementsRes.data || [];
+    const timeline = timelineRes.data || {};
+
+    // Timestamp
+    const now = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    document.getElementById('snapshot-timestamp').textContent = 'Updated ' + now;
+
+    // Quick stats
+    document.getElementById('s-level').textContent = Math.floor((user.totalXP || 0) / 1000) + 1;
+    document.getElementById('s-total-xp').textContent = (user.totalXP || 0).toLocaleString();
+    document.getElementById('s-readiness').textContent = (mr.overall || 0) + '%';
+    document.getElementById('s-streak').textContent = user.longestStreak || 0;
+
+    // DSA section
+    const dsaEl = document.getElementById('section-dsa');
+    if (dsaEl) {
+      const dsa = mr.components?.find(c => c.label === 'DSA');
+      const leetcode = mr.components?.find(c => c.label === 'LeetCode');
+      dsaEl.innerHTML = `
+        <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">DSA Score</p><p class="text-lg font-black text-on-surface">${dsa?.score || '--'}/100</p></div>
+        <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Weekly Average</p><p class="text-lg font-black text-on-surface">${wr.problemsSolved !== null ? wr.problemsSolved + ' solved' : '--'}</p></div>
+        <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Projects Score</p><p class="text-lg font-black text-on-surface">${mr.components?.find(c => c.label === 'Projects')?.score || '--'}/100</p></div>
+      `;
+    }
+
+    // Projects section
+    const projEl = document.getElementById('section-projects');
+    if (projEl) {
+      const oss = mr.components?.find(c => c.label === 'Open Source');
+      projEl.innerHTML = `
+        <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Commits (30d)</p><p class="text-lg font-black text-on-surface">${wr.commits !== null ? wr.commits : '--'}</p></div>
+        <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Projects</p><p class="text-lg font-black text-on-surface">${wr.projectsWorkedOn !== null ? wr.projectsWorkedOn : '--'}</p></div>
+        <div class="bg-gray-50 rounded-xl p-4"><p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mb-1">Open Source</p><p class="text-lg font-black text-on-surface">${oss?.score || '--'}/100</p></div>
+      `;
+    }
+
+    // Achievements
+    const achEl = document.getElementById('section-achievements');
+    if (achEl) {
+      const unlocked = achievements.filter(a => a.unlocked);
+      achEl.innerHTML = unlocked.length
+        ? unlocked.map(a => `
+            <div class="flex flex-col items-center gap-1 p-2 bg-primary/5 rounded-xl text-center">
+              <span class="material-symbols-outlined text-xl text-primary">${a.icon || 'emoji_events'}</span>
+              <p class="text-[8px] font-semibold text-on-surface leading-tight">${a.title || ''}</p>
+            </div>
+          `).join('')
+        : '<p class="text-xs text-on-surface-variant col-span-full text-center">No achievements yet.</p>';
+    }
+
+    // Recent Activity
+    const actEl = document.getElementById('section-activity');
+    if (actEl && timeline.entries?.length) {
+      actEl.innerHTML = timeline.entries.slice(0, 10).map(e => `
+        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+          <span class="material-symbols-outlined text-lg ${e.color || 'text-on-surface-variant'}">${e.icon || 'circle'}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-on-surface truncate">${e.title || ''}</p>
+            <p class="text-[10px] text-on-surface-variant">${e.subtitle || ''}</p>
+          </div>
+          ${e.xp ? `<span class="text-[10px] font-bold text-primary">+${e.xp} XP</span>` : ''}
+        </div>
+      `).join('');
+    } else if (actEl) {
+      actEl.innerHTML = '<p class="text-xs text-on-surface-variant">No recent activity.</p>';
+    }
+
+    // Resume Profiles using this data
+    const profilesRes = await window.apiRequest('GET', '/api/career-studio/resume-profiles');
+    const profiles = profilesRes.data || [];
+    const profilesEl = document.getElementById('profiles-list');
+    if (profilesEl) {
+      if (profiles.length > 0) {
+        profilesEl.innerHTML = profiles.map(p =>
+          `<a href="resume-profiles.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary/5 hover:bg-secondary/10 text-secondary text-[11px] font-bold rounded-lg transition-all">
+            <span class="material-symbols-outlined text-[14px]">description</span>
+            ${escHtml(p.name)}
+          </a>`
+        ).join('');
+      } else {
+        profilesEl.innerHTML = '<p class="text-xs text-on-surface-variant">No resume profiles yet. <a href="resume-profiles.html" class="text-primary font-bold hover:underline">Create one</a></p>';
+      }
+    }
+
+    showLoading(false);
+  } catch (err) {
+    console.error('Failed to load snapshot:', err);
+    showLoading(false);
+    showStatus('Failed to load career data', true);
+  }
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+if (window.clerkReady) loadSnapshot();
+else window.addEventListener('clerk-ready', loadSnapshot);
+</script>
+
+</body>
+</html>

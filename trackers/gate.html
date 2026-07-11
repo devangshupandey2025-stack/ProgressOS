@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="ProgressOS"/>
 <link rel="manifest" href="/manifest.json"/>
 <link rel="apple-touch-icon" href="/icons/icon-512.svg"/>
-<title>GATE CSE Tracker | ProgressOS</title>
+<title>GATE CSE | ProgressOS</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
@@ -18,7 +18,10 @@ tailwind.config = { theme: { extend: { colors: { primary: "#FF9933", secondary: 
 body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
 .glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: all 0.3s ease; }
-/* Bottom Nav */
+.glass-card:hover { box-shadow: 0 4px 12px rgb(0 0 0 / 0.08); }
+.readiness-ring { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 2rem; position: relative; }
+.readiness-ring::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: white; }
+.readiness-ring span { position: relative; z-index: 1; }
 .bottom-nav {
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
@@ -76,6 +79,7 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); }
 }
+.subject-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
 </style>
   <script src="../js/auth.js"></script>
 </head>
@@ -88,6 +92,7 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
       <nav class="hidden lg:flex items-center gap-4">
         <a href="../index.html" class="text-gray-500 font-medium text-sm hover:text-primary">Dashboard</a>
         <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">GATE</a>
+        <a href="gate-practice.html" class="text-gray-500 font-medium text-sm hover:text-primary">Practice</a>
       </nav>
       <div id="auth-container"></div>
     </div>
@@ -97,156 +102,32 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
 <main class="pt-24 pb-24 lg:pb-16 px-gutter max-w-max_width mx-auto">
   <div class="flex justify-between items-end mb-8">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900 font-['Geist']">GATE CSE Tracker</h1>
-      <p class="text-gray-500 mt-1">Track your progress and details.</p>
+      <h1 class="text-3xl font-bold text-gray-900 font-['Geist']">GATE CSE</h1>
+      <p class="text-gray-500 mt-1">Readiness dashboard &amp; session log</p>
     </div>
-    <button onclick="openModal()" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-[#e68a2e] active:scale-95 transition-all">
-      <span class="material-symbols-outlined text-[18px] mr-1">add</span> Add Entry
-    </button>
+    <button onclick="openModal()" class="bg-white text-gray-700 px-4 py-2.5 rounded-lg font-medium border hover:bg-gray-50 active:scale-95 transition-all flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[18px]">add</span> Log Session
+      </button>
+    </div>
   </div>
 
-  <div class="glass-card rounded-xl overflow-hidden">
-    <table class="w-full text-left border-collapse">
-      <thead>
-        <tr class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase tracking-wider">
-          <th class="px-6 py-4 font-medium">Subject</th>
-          <th class="px-6 py-4 font-medium">Topic</th>
-          <th class="px-6 py-4 font-medium">Attempted</th>
-          <th class="px-6 py-4 font-medium">Correct</th>
-          <th class="px-6 py-4 font-medium">Mock Score</th>
-          <th class="px-6 py-4 font-medium">Date</th>
-          <th class="px-6 py-4 font-medium text-right">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="entries-table" class="text-sm divide-y divide-gray-200">
-        <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Loading data...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Syllabus Section -->
-  <div class="mt-8 glass-card rounded-xl p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-bold text-gray-900 font-['Geist']">GATE 2026 Syllabus</h2>
-      <span class="text-xs text-gray-500">IIT Guwahati — CS &amp; IT</span>
+  <!-- Recent Sessions + Syllabus -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <div class="glass-card rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-gray-900 font-['Geist']">Recent Sessions</h3>
+      </div>
+      <div id="recent-sessions" class="space-y-3">
+        <p class="text-sm text-gray-500">Loading...</p>
+      </div>
     </div>
-    <div class="space-y-6" id="syllabus-container">
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 1: Engineering Mathematics
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Discrete Mathematics (Propositional & first order logic, Sets, relations, functions, partial orders, lattices, Monoids, Groups, Graphs, Combinatorics)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Linear Algebra (Matrices, determinants, system of linear equations, eigenvalues & eigenvectors, LU decomposition)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Calculus (Limits, continuity, differentiability, Maxima & minima, Mean value theorem, Integration)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Probability & Statistics (Random variables, distributions, Mean, median, mode, std dev, Conditional probability, Bayes theorem)</label>
-        </div>
+
+    <div class="glass-card rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-gray-900 font-['Geist']">GATE 2026 Syllabus</h3>
+        <span class="text-xs text-gray-500">IIT Guwahati — CS &amp; IT</span>
       </div>
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 2: Digital Logic
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Boolean algebra, Combinational & sequential circuits, Minimization</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Number representations & computer arithmetic (fixed & floating point)</label>
-        </div>
-      </div>
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 3: Computer Organization and Architecture
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Machine instructions & addressing modes, ALU, data-path & control unit</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Instruction pipelining, pipeline hazards</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Memory hierarchy (cache, main memory, secondary storage)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> I/O interface (interrupt & DMA mode)</label>
-        </div>
-      </div>
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 4: Programming and Data Structures
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Programming in C, Recursion</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Arrays, stacks, queues, linked lists</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Trees, binary search trees, binary heaps, graphs</label>
-        </div>
-      </div>
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 5: Algorithms
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Searching, sorting, hashing, Asymptotic complexity</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Algorithm design: greedy, dynamic programming, divide-and-conquer</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Graph traversals, minimum spanning trees, shortest paths</label>
-        </div>
-      </div>
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 6: Theory of Computation
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Regular expressions & finite automata</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Context-free grammars & push-down automata</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Regular & context-free languages, pumping lemma</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Turing machines & undecidability</label>
-        </div>
-      </div>
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 7: Compiler Design
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Lexical analysis, parsing, syntax-directed translation</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Runtime environments, Intermediate code generation</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Local optimization, Data flow analysis (constant prop, liveness, CSE)</label>
-        </div>
-      </div>
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 8: Operating System
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> System calls, processes, threads, IPC, concurrency & synchronization</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Deadlock, CPU & I/O scheduling</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Memory management & virtual memory, File systems</label>
-        </div>
-      </div>
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 9: Databases
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> ER-model, Relational model (relational algebra, tuple calculus, SQL)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Integrity constraints, normal forms</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> File organization, indexing (B & B+ trees)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Transactions & concurrency control</label>
-        </div>
-      </div>
-      <div class="syllabus-section">
-        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
-          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
-          Section 10: Computer Networks
-        </button>
-        <div class="hidden pl-6 space-y-1.5">
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Layering (OSI & TCP/IP), Packet, circuit & virtual-circuit switching</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Data link layer (framing, error detection, MAC, Ethernet bridging)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Routing protocols (shortest path, flooding, distance vector, link state)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> IP addressing (IPv4, CIDR, ARP, DHCP, ICMP, NAT)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Transport layer (flow/congestion control, UDP, TCP, sockets)</label>
-          <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"><input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> Application layer protocols (DNS, SMTP, HTTP, FTP, Email)</label>
-        </div>
-      </div>
+      <div class="space-y-4" id="syllabus-container"></div>
     </div>
   </div>
 
@@ -256,71 +137,28 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
     .syllabus-check:checked { accent-color: #FF9933; }
     .syllabus-check:checked + span { text-decoration: line-through; opacity: 0.5; }
   </style>
-  <script>
-    function toggleSection(btn) {
-      btn.parentElement.classList.toggle('open');
-      const content = btn.nextElementSibling;
-      content.classList.toggle('hidden');
-    }
-
-    const SYLLABUS_API = '/api/gate/syllabus';
-
-    function getTopicKey(cb) {
-      const section = cb.closest('.syllabus-section').querySelector('button').textContent.trim().split(':')[0].trim();
-      const label = cb.closest('label').textContent.trim();
-      return section + '|' + label;
-    }
-
-    function getSectionName(cb) {
-      return cb.closest('.syllabus-section').querySelector('button').textContent.trim().split(':')[0].trim();
-    }
-
-    function getTopicLabel(cb) {
-      return cb.closest('label').textContent.trim();
-    }
-
-    async function loadSyllabusProgress() {
-      if (!window.clerkReady) return;
-      try {
-        const res = await apiRequest('GET', SYLLABUS_API);
-        if (!res.success) return;
-        const map = {};
-        res.data.forEach(p => map[p.topicKey] = p.completed);
-        document.querySelectorAll('.syllabus-check').forEach(cb => {
-          const key = getTopicKey(cb);
-          if (key in map) cb.checked = map[key];
-        });
-      } catch (e) { /* ignore */ }
-    }
-
-    document.querySelectorAll('.syllabus-check').forEach(cb => {
-      cb.addEventListener('change', async () => {
-        try {
-          await apiRequest('PUT', SYLLABUS_API + '/' + encodeURIComponent(getTopicKey(cb)), {
-            section: getSectionName(cb),
-            topicLabel: getTopicLabel(cb),
-            completed: cb.checked
-          });
-        } catch (e) { /* ignore */ }
-      });
-    });
-
-    window.addEventListener('clerk-ready', loadSyllabusProgress);
-    if (window.clerkReady) loadSyllabusProgress();
-  </script>
 </main>
 
+<!-- Add Session Modal -->
 <div id="modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-      <h3 class="text-lg font-bold text-gray-900 font-['Geist']">Add Entry</h3>
+      <h3 class="text-lg font-bold text-gray-900 font-['Geist']">Log Study Session</h3>
       <button onclick="closeModal()" class="material-symbols-outlined text-gray-400 hover:text-gray-900">close</button>
     </div>
     <form id="entry-form" class="p-6 space-y-4">
-
       <div>
         <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">Subject</label>
-        <input id="in-subject" type="text" required class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
+        <select id="in-subject" required class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none">
+          <option value="">Select subject</option>
+          <option value="DBMS">DBMS</option>
+          <option value="OS">OS</option>
+          <option value="CN">CN</option>
+          <option value="TOC">TOC</option>
+          <option value="Algorithms">Algorithms</option>
+          <option value="COA">COA</option>
+          <option value="DiscreteMathematics">Discrete Mathematics</option>
+        </select>
       </div>
       <div>
         <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">Topic</label>
@@ -332,64 +170,183 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
           <input id="in-attempted" type="number" required class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
         </div>
         <div>
-          <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">Correct Answers</label>
+          <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">Correct</label>
           <input id="in-correct" type="number" required class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
         </div>
       </div>
       <div>
-        <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">Mock Score (if applicable)</label>
+        <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1.5">Mock Score (optional)</label>
         <input id="in-score" type="number" step="0.1" class="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none"/>
       </div>
-    
       <button type="submit" class="w-full bg-primary text-white py-2.5 rounded-lg font-medium hover:bg-[#e68a2e] transition-all">
-        Save Entry
+        Save Session
       </button>
     </form>
   </div>
 </div>
 
 <script>
-  const API_ENDPOINT = '/api/trackers/gate';
+  const SESSION_API = '/api/trackers/gate';
+  const SYLLABUS_API = '/api/gate/syllabus';
 
   function openModal() {
     document.getElementById('entry-form').reset();
     document.getElementById('modal').classList.remove('hidden');
   }
-
   function closeModal() {
     document.getElementById('modal').classList.add('hidden');
   }
 
-
-  async function loadData() {
-    if (!window.clerkReady) return;
+  async function loadSessions() {
     try {
-      const res = await apiRequest('GET', API_ENDPOINT);
-      const tbody = document.getElementById('entries-table');
+      const res = await apiRequest('GET', SESSION_API);
+      const container = document.getElementById('recent-sessions');
       if (!res.success || !res.data.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No entries logged yet.</td></tr>';
+        container.innerHTML = '<p class="text-sm text-gray-500">No sessions logged yet.</p>';
         return;
       }
-      tbody.innerHTML = res.data.map(d => {
-        const accuracy = d.questionsAttempted > 0 ? Math.round((d.correct / d.questionsAttempted) * 100) + '%' : '-';
+      const recent = res.data.slice(0, 5);
+      container.innerHTML = recent.map(d => {
+        const acc = d.questionsAttempted > 0 ? Math.round((d.correct / d.questionsAttempted) * 100) : 0;
         return `
-        <tr>
-          <td class="px-6 py-4 font-medium text-gray-900">${d.subject}</td>
-          <td class="px-6 py-4">${d.topic}</td>
-          <td class="px-6 py-4">${d.questionsAttempted}</td>
-          <td class="px-6 py-4 font-bold text-primary">${d.correct} (${accuracy})</td>
-          <td class="px-6 py-4">${d.mockScore !== null ? d.mockScore : '-'}</td>
-          <td class="px-6 py-4 text-gray-500">${new Date(d.date).toLocaleDateString()}</td>
-          <td class="px-6 py-4 text-right">
-            <button onclick="deleteEntry('${d.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">Delete</button>
-          </td>
-        </tr>
-      `}).join('');
+          <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+            <div>
+              <div class="text-sm font-medium text-gray-900">${d.subject}</div>
+              <div class="text-xs text-gray-500">${d.topic} · ${new Date(d.date).toLocaleDateString()}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-semibold text-gray-900">${d.correct}/${d.questionsAttempted}</div>
+              <div class="text-xs ${acc >= 60 ? 'text-green-600' : 'text-red-500'}">${acc}%</div>
+            </div>
+          </div>`;
+      }).join('');
     } catch (e) {
-      document.getElementById('entries-table').innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Failed to load data.</td></tr>';
+      document.getElementById('recent-sessions').innerHTML = '<p class="text-sm text-red-500">Failed to load sessions.</p>';
     }
   }
 
+  // Syllabus
+  const SYLLABUS_SECTIONS = [
+    { name: 'Section 1: Engineering Mathematics', topics: [
+      'Discrete Mathematics (Propositional & first order logic, Sets, relations, functions, partial orders, lattices, Monoids, Groups, Graphs, Combinatorics)',
+      'Linear Algebra (Matrices, determinants, system of linear equations, eigenvalues & eigenvectors, LU decomposition)',
+      'Calculus (Limits, continuity, differentiability, Maxima & minima, Mean value theorem, Integration)',
+      'Probability & Statistics (Random variables, distributions, Mean, median, mode, std dev, Conditional probability, Bayes theorem)',
+    ]},
+    { name: 'Section 2: Digital Logic', topics: [
+      'Boolean algebra, Combinational & sequential circuits, Minimization',
+      'Number representations & computer arithmetic (fixed & floating point)',
+    ]},
+    { name: 'Section 3: Computer Organization and Architecture', topics: [
+      'Machine instructions & addressing modes, ALU, data-path & control unit',
+      'Instruction pipelining, pipeline hazards',
+      'Memory hierarchy (cache, main memory, secondary storage)',
+      'I/O interface (interrupt & DMA mode)',
+    ]},
+    { name: 'Section 4: Programming and Data Structures', topics: [
+      'Programming in C, Recursion',
+      'Arrays, stacks, queues, linked lists',
+      'Trees, binary search trees, binary heaps, graphs',
+    ]},
+    { name: 'Section 5: Algorithms', topics: [
+      'Searching, sorting, hashing, Asymptotic complexity',
+      'Algorithm design: greedy, dynamic programming, divide-and-conquer',
+      'Graph traversals, minimum spanning trees, shortest paths',
+    ]},
+    { name: 'Section 6: Theory of Computation', topics: [
+      'Regular expressions & finite automata',
+      'Context-free grammars & push-down automata',
+      'Regular & context-free languages, pumping lemma',
+      'Turing machines & undecidability',
+    ]},
+    { name: 'Section 7: Compiler Design', topics: [
+      'Lexical analysis, parsing, syntax-directed translation',
+      'Runtime environments, Intermediate code generation',
+      'Local optimization, Data flow analysis (constant prop, liveness, CSE)',
+    ]},
+    { name: 'Section 8: Operating System', topics: [
+      'System calls, processes, threads, IPC, concurrency & synchronization',
+      'Deadlock, CPU & I/O scheduling',
+      'Memory management & virtual memory, File systems',
+    ]},
+    { name: 'Section 9: Databases', topics: [
+      'ER-model, Relational model (relational algebra, tuple calculus, SQL)',
+      'Integrity constraints, normal forms',
+      'File organization, indexing (B & B+ trees)',
+      'Transactions & concurrency control',
+    ]},
+    { name: 'Section 10: Computer Networks', topics: [
+      'Layering (OSI & TCP/IP), Packet, circuit & virtual-circuit switching',
+      'Data link layer (framing, error detection, MAC, Ethernet bridging)',
+      'Routing protocols (shortest path, flooding, distance vector, link state)',
+      'IP addressing (IPv4, CIDR, ARP, DHCP, ICMP, NAT)',
+      'Transport layer (flow/congestion control, UDP, TCP, sockets)',
+      'Application layer protocols (DNS, SMTP, HTTP, FTP, Email)',
+    ]},
+  ];
+
+  function renderSyllabus() {
+    const container = document.getElementById('syllabus-container');
+    container.innerHTML = SYLLABUS_SECTIONS.map((sec, si) => `
+      <div class="syllabus-section">
+        <button onclick="toggleSection(this)" class="flex items-center gap-2 w-full text-left font-semibold text-gray-800 text-sm mb-2">
+          <span class="material-symbols-outlined text-gray-400 transition-transform">chevron_right</span>
+          ${sec.name}
+        </button>
+        <div class="hidden pl-6 space-y-1.5">
+          ${sec.topics.map(t => `
+            <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" class="syllabus-check rounded border-gray-300 text-primary focus:ring-primary/30"> ${t}
+            </label>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  function toggleSection(btn) {
+    btn.parentElement.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('hidden');
+  }
+
+  function getTopicKey(cb) {
+    const section = cb.closest('.syllabus-section').querySelector('button').textContent.trim().split(':')[0].trim();
+    const label = cb.closest('label').textContent.trim();
+    return section + '|' + label;
+  }
+
+  function getSectionName(cb) {
+    return cb.closest('.syllabus-section').querySelector('button').textContent.trim().split(':')[0].trim();
+  }
+
+  function getTopicLabel(cb) {
+    return cb.closest('label').textContent.trim();
+  }
+
+  async function loadSyllabusProgress() {
+    if (!window.clerkReady) return;
+    try {
+      const res = await apiRequest('GET', SYLLABUS_API);
+      if (!res.success) return;
+      const map = {};
+      res.data.forEach(p => map[p.topicKey] = p.completed);
+      document.querySelectorAll('.syllabus-check').forEach(cb => {
+        const key = getTopicKey(cb);
+        if (key in map) cb.checked = map[key];
+      });
+    } catch (e) { /* ignore */ }
+  }
+
+  document.addEventListener('change', e => {
+    if (e.target.classList.contains('syllabus-check')) {
+      const cb = e.target;
+      apiRequest('PUT', SYLLABUS_API + '/' + encodeURIComponent(getTopicKey(cb)), {
+        section: getSectionName(cb),
+        topicLabel: getTopicLabel(cb),
+        completed: cb.checked
+      }).catch(() => {});
+    }
+  });
+
+  // Session form
   document.getElementById('entry-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
@@ -400,28 +357,26 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
       mockScore: parseFloat(document.getElementById('in-score').value) || null
     };
     try {
-      await apiRequest('POST', API_ENDPOINT, data);
+      await apiRequest('POST', SESSION_API, data);
       closeModal();
-      loadData();
+      loadSessions();
     } catch (err) {
-      alert('Failed to save entry');
+      alert('Failed to save session');
     }
   });
 
-  async function deleteEntry(id) {
-    if(!confirm('Delete this entry?')) return;
-    try {
-      await apiRequest('DELETE', `${API_ENDPOINT}/${id}`);
-      loadData();
-    } catch(e) {
-      alert('Failed to delete');
-    }
+  // Init
+  function init() {
+    if (!window.clerkReady) return;
+    loadSessions();
+    renderSyllabus();
+    loadSyllabusProgress();
   }
 
-  window.addEventListener('clerk-ready', loadData);
-  if (window.clerkReady) loadData();
-    
+  window.addEventListener('clerk-ready', init);
+  if (window.clerkReady) init();
 </script>
+
 <!-- Mobile Bottom Nav -->
 <nav class="bottom-nav fixed bottom-0 left-0 w-full z-50 lg:hidden grid grid-cols-4 px-2">
     <a href="../index.html" class="nav-item" data-nav="home">
@@ -432,9 +387,6 @@ body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-ser
         <span class="material-symbols-outlined">grid_view</span>
         <span class="nav-label">Tracker</span>
     </a>
-    <button class="nav-item fab" onclick="openModal()">
-        <span class="material-symbols-outlined">add</span>
-    </button>
     <a href="#" class="nav-item" data-nav="settings" onclick="typeof openSettingsModal==='function'?openSettingsModal():window.location.href='../index.html'">
         <span class="material-symbols-outlined">settings</span>
         <span class="nav-label">Settings</span>

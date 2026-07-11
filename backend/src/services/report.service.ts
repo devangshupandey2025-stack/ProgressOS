@@ -1,4 +1,7 @@
 import PDFDocument from 'pdfkit';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { prisma } from '../config/database.js';
 import { MetricRegistry } from '../metrics/index.js';
 import { marketReadinessService } from './market-readiness.service.js';
@@ -6,14 +9,44 @@ import { achievementsService } from './achievements.service.js';
 import { gitHubService } from '../integrations/github/github.service.js';
 import { TrackerSource } from '@prisma/client';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const UPLOADS_DIR = path.resolve(__dirname, '../../../uploads/photos');
+
+const COMPLETION_CHECKS = [
+  { key: 'name', label: 'Name', weight: 0.25 },
+  { key: 'targetRole', label: 'Target Role', weight: 0.25 },
+  { key: 'photoId', label: 'Photo', weight: 0.25 },
+  { key: 'description', label: 'Description', weight: 0.25 },
+] as const;
+
+function computeCompletion(profile: Record<string, unknown>): number {
+  const filled = COMPLETION_CHECKS.reduce((sum, c) => {
+    const v = profile[c.key];
+    return sum + (v !== null && v !== undefined && v !== '' ? c.weight : 0);
+  }, 0);
+  return Math.round(filled * 100);
+}
+
 export class ReportService {
   public async generateCareerSnapshot(userId: string): Promise<Buffer> {
     return new Promise(async (resolve, reject) => {
       try {
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (!user) throw new Error('User not found');
+        // ─── Core Career Studio Data ────────────────────────────────────
+        const careerProfile = await prisma.careerProfile.findUnique({
+          where: { userId },
+          include: {
+            photos: { where: { isDefault: true }, take: 1 },
+          },
+        });
 
-        // Fetch data concurrently
+        const resumeProfiles = await prisma.resumeProfile.findMany({
+          where: { careerProfileId: careerProfile?.id ?? '' },
+          include: { photo: true },
+          orderBy: [{ displayOrder: 'asc' }, { createdAt: 'desc' }],
+        });
+
+        // ─── Platform Context Data ──────────────────────────────────────
         const [
           readinessData,
           cgpaMetric,
@@ -24,7 +57,7 @@ export class ReportService {
           githubActivityMetric,
           rawGoals,
           achievementsData,
-          projects
+          projects,
         ] = await Promise.all([
           marketReadinessService.compute(userId).catch(() => ({ overall: 0 })),
           MetricRegistry.resolve(TrackerSource.VIT_CGPA, userId).catch(() => ({ current: 0 })),
@@ -33,35 +66,34 @@ export class ReportService {
           MetricRegistry.resolve(TrackerSource.CODEFORCES_RATING, userId).catch(() => ({ current: 0 })),
           MetricRegistry.resolve(TrackerSource.PROJECTS_COMPLETED, userId).catch(() => ({ current: 0 })),
           MetricRegistry.resolve(TrackerSource.GITHUB_ACTIVITY, userId).catch(() => ({ current: 0 })),
-          prisma.goal.findMany({ where: { userId }, take: 5 }), // top 5 goals
+          prisma.goal.findMany({ where: { userId }, take: 5 }),
           achievementsService.getAll(userId).catch(() => []),
-          prisma.projectEntry.findMany({ where: { userId }, select: { techStack: true } })
+          prisma.projectEntry.findMany({ where: { userId }, select: { techStack: true } }),
         ]);
 
-        // Resolve goals dynamically
         const goals = await Promise.all(rawGoals.map(async (g) => {
           let actualCurrent = g.current;
           if (g.trackerSource !== 'MANUAL') {
-             const m = await MetricRegistry.resolve(g.trackerSource, userId).catch(() => ({ current: 0 }));
-             actualCurrent = m.current;
+            const m = await MetricRegistry.resolve(g.trackerSource, userId).catch(() => ({ current: 0 }));
+            actualCurrent = m.current;
           }
           return { ...g, current: actualCurrent };
         }));
 
-        // Fetch top project
         let topProjectName = 'N/A';
         let topProjectActivity = '';
-        if (user.githubUsername) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        const ghUsername = user?.githubUsername || (careerProfile?.github ? careerProfile.github.match(/(?:github\.com\/)([^\/]+)/)?.[1] : null);
+        if (ghUsername) {
           try {
-            const ghAnalytics = await gitHubService.getAnalytics(userId, user.githubUsername);
-            if (ghAnalytics.topProjects && ghAnalytics.topProjects.length > 0) {
+            const ghAnalytics = await gitHubService.getAnalytics(userId, ghUsername);
+            if (ghAnalytics.topProjects?.length > 0) {
               topProjectName = ghAnalytics.topProjects[0].name;
               topProjectActivity = `Quality Score: ${ghAnalytics.topProjects[0].score}/100`;
             }
-          } catch {}
+          } catch { /* skip */ }
         }
 
-        // Calculate top skills (ignoring generic languages)
         const IGNORED_SKILLS = new Set(['html', 'css', 'html5', 'css3', 'markdown', 'scss', 'sass', 'less']);
         const skillCounts: Record<string, number> = {};
         projects.forEach(p => {
@@ -74,17 +106,10 @@ export class ReportService {
             });
           }
         });
-        const topSkills = Object.entries(skillCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5)
-          .map(entry => entry[0]);
+        const topSkills = Object.entries(skillCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0]);
+        const unlockedAchievements = achievementsData.filter(a => a.unlocked).slice(0, 4);
 
-        // Filter unlocked achievements and get top 4
-        const unlockedAchievements = achievementsData
-          .filter(a => a.unlocked)
-          .slice(0, 4);
-
-        // --- PDF Generation ---
+        // ─── PDF Generation ────────────────────────────────────────────
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
         const buffers: Buffer[] = [];
         doc.on('data', buffers.push.bind(buffers));
@@ -94,109 +119,197 @@ export class ReportService {
         const primaryColor = '#FF9933';
         const textColor = '#1E293B';
         const secondaryColor = '#64748B';
+        const tertiaryColor = '#128807';
+        const borderColor = '#E5E7EB';
 
-        // 1. Header (ProgressOS Branding)
+        // ═══ 1. HEADER ═══
         doc.font('Helvetica-Bold').fontSize(24).fillColor(primaryColor).text('ProgressOS', { align: 'center' });
         doc.font('Helvetica').fontSize(12).fillColor(secondaryColor).text('Career Snapshot', { align: 'center' });
-        
         doc.moveDown(0.5);
         const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
         doc.fontSize(10).fillColor('#94a3b8').text(`Generated: ${today}`, { align: 'center' });
-        
         doc.moveDown(1.5);
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(1).stroke('#E5E7EB');
-        doc.moveDown(1.5);
-
-        // 2. Personal Info & Market Readiness
-        doc.font('Helvetica-Bold').fontSize(20).fillColor(textColor).text(user.name || user.username || 'Engineer Profile', { continued: true });
-        
-        // Align Market readiness to right
-        doc.font('Helvetica-Bold').fontSize(14).fillColor(primaryColor).text(`Market Readiness: ${readinessData.overall} / 100`, { align: 'right' });
-        doc.moveDown(1);
-        
-        // Career Highlights
-        doc.font('Helvetica-Bold').fontSize(12).fillColor(textColor).text('Career Highlights');
-        doc.moveDown(0.3);
-        doc.font('Helvetica').fontSize(10).fillColor(secondaryColor);
-        doc.text(`• ${leetcodeMetric.current} LeetCode Problems Solved`);
-        doc.text(`• Codeforces Rating: ${codeforcesMetric.current > 0 ? codeforcesMetric.current : 'Unrated'}`);
-        if (cgpaMetric.current > 0) doc.text(`• ${cgpaMetric.current} CGPA`);
-        if (githubActivityMetric.current > 0) doc.text(`• ${githubActivityMetric.current} Active GitHub Projects`);
-        else doc.text(`• ${projectsCountMetric.current} Completed Projects`);
-        
-        doc.moveDown(1);
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#E5E7EB');
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(1).stroke(borderColor);
         doc.moveDown(1.5);
 
-        // Helper to draw sections
-        const drawSection = (title: string, data: Record<string, any>, isTwoColumn = false) => {
-          doc.font('Helvetica-Bold').fontSize(14).fillColor(textColor).text(title);
-          doc.moveDown(0.5);
-          
-          doc.font('Helvetica').fontSize(11).fillColor(secondaryColor);
-          
-          if (isTwoColumn) {
-            const entries = Object.entries(data);
-            const startY = doc.y;
-            
-            entries.forEach((entry, idx) => {
-              const xPos = idx % 2 === 0 ? 50 : 300;
-              const yPos = startY + Math.floor(idx / 2) * 20;
-              
-              doc.font('Helvetica-Bold').fillColor(textColor).text(`${entry[0]}: `, xPos, yPos, { continued: true });
-              doc.font('Helvetica').fillColor(secondaryColor).text(`${entry[1]}`);
-            });
-            doc.y = startY + Math.ceil(entries.length / 2) * 20;
-          } else {
-            Object.entries(data).forEach(([k, v]) => {
-              doc.font('Helvetica-Bold').fillColor(textColor).text(`${k}: `, { continued: true });
-              doc.font('Helvetica').fillColor(secondaryColor).text(`${v}`);
-              doc.moveDown(0.2);
-            });
-          }
-          
-          doc.moveDown(1);
-          doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#E5E7EB');
-          doc.moveDown(1.5);
-        };
+        // ═══ 2. PROFESSIONAL PROFILE (RESUME HEADER) ═══
+        const profileName = careerProfile?.fullName || 'Professional Profile';
+        const profileTitle = careerProfile?.professionalTitle || '';
+        const sectionStartY = doc.y;
+        const photoSize = 100;
+        const photoX = 545 - photoSize; // right-aligned within content area
 
-        // 3. Academics
-        drawSection('Academics', {
-          'CGPA': cgpaMetric.current > 0 ? cgpaMetric.current : 'N/A',
-          'Credits': creditsMetric.current > 0 ? creditsMetric.current : 'N/A'
-        }, true);
-
-        // 4. DSA
-        drawSection('DSA', {
-          'LeetCode Solved': leetcodeMetric.current,
-          'Codeforces Rating': codeforcesMetric.current > 0 ? codeforcesMetric.current : 'Unrated'
-        }, true);
-
-        // 5. Projects & Activity
-        const projData: Record<string, any> = {
-          'Completed Projects': projectsCountMetric.current,
-          'GitHub Active Projects': githubActivityMetric.current
-        };
-        if (topProjectName !== 'N/A') {
-           projData['Top Project'] = topProjectName;
-           projData['Latest Activity'] = topProjectActivity;
+        // Try to load photo
+        let photoBuffer: Buffer | null = null;
+        const defaultPhoto = careerProfile?.photos?.[0];
+        if (defaultPhoto) {
+          try {
+            const photoPath = path.join(UPLOADS_DIR, defaultPhoto.storageKey);
+            photoBuffer = await fs.readFile(photoPath);
+          } catch { /* photo file not found */ }
         }
-        drawSection('Projects', projData, true);
 
-        // 6. Skills
+        // Draw photo on the right (if available)
+        const textAreaWidth = photoBuffer ? 545 - 50 - photoSize - 20 : 495; // 50 margin left, gap, photo
+        if (photoBuffer) {
+          // Square photo with subtle border
+          doc.save();
+          // Clip to circle
+          doc.circle(photoX + photoSize / 2, sectionStartY + photoSize / 2, photoSize / 2);
+          doc.clip();
+          doc.image(photoBuffer, photoX, sectionStartY, { fit: [photoSize, photoSize], align: 'center', valign: 'center' });
+          doc.restore();
+          // Border ring
+          doc.circle(photoX + photoSize / 2, sectionStartY + photoSize / 2, photoSize / 2 + 1)
+             .lineWidth(2).strokeColor(primaryColor).stroke();
+        }
+
+        // Name (left side)
+        doc.font('Helvetica-Bold').fontSize(22).fillColor(textColor);
+        doc.text(profileName, 50, sectionStartY, { width: textAreaWidth });
+
+        // Title
+        let currentY = doc.y;
+        if (profileTitle) {
+          doc.font('Helvetica').fontSize(13).fillColor(primaryColor);
+          doc.text(profileTitle, 50, doc.y, { width: textAreaWidth });
+          currentY = doc.y;
+        }
+
+        // Contact info
+        const contactParts: string[] = [];
+        if (careerProfile?.email) contactParts.push(careerProfile.email);
+        if (careerProfile?.phone) contactParts.push(careerProfile.phone);
+        if (careerProfile?.location) contactParts.push(careerProfile.location);
+        if (contactParts.length > 0) {
+          doc.font('Helvetica').fontSize(9).fillColor(secondaryColor);
+          doc.text(contactParts.join('  |  '), 50, doc.y, { width: textAreaWidth });
+        }
+
+        // Links (clickable)
+        const linkEntries: { label: string; url: string }[] = [];
+        if (careerProfile?.linkedin) linkEntries.push({ label: 'LinkedIn', url: careerProfile.linkedin });
+        if (careerProfile?.github) linkEntries.push({ label: 'GitHub', url: careerProfile.github });
+        if (careerProfile?.portfolio) linkEntries.push({ label: 'Portfolio', url: careerProfile.portfolio });
+        if (careerProfile?.website) linkEntries.push({ label: 'Website', url: careerProfile.website });
+        if (careerProfile?.leetcode) linkEntries.push({ label: 'LeetCode', url: careerProfile.leetcode });
+        if (careerProfile?.codeforces) linkEntries.push({ label: 'Codeforces', url: careerProfile.codeforces });
+        if (linkEntries.length > 0) {
+          doc.font('Helvetica').fontSize(9).fillColor('#2563EB');
+          const linkStartY = doc.y;
+          let linkCursorX = 50;
+          const gap = 16;
+          linkEntries.forEach((entry) => {
+            const w = doc.widthOfString(entry.label);
+            doc.text(entry.label, linkCursorX, linkStartY);
+            doc.link(linkCursorX, linkStartY - 1, w + 2, 12, entry.url);
+            linkCursorX += w + gap;
+          });
+          doc.y = linkStartY + 14;
+        }
+
+        // Bio
+        if (careerProfile?.bio) {
+          doc.moveDown(0.3);
+          doc.font('Helvetica-Oblique').fontSize(10).fillColor(textColor);
+          doc.text(careerProfile.bio, 50, doc.y, { width: textAreaWidth });
+        }
+
+        // Ensure we clear the photo area height
+        const headerBottomY = Math.max(doc.y, sectionStartY + photoSize + 10);
+
+        // Market Readiness
+        if (readinessData.overall > 0) {
+          doc.y = headerBottomY;
+          doc.moveDown(0.3);
+          doc.font('Helvetica-Bold').fontSize(11).fillColor(textColor).text('Market Readiness', 50, doc.y, { continued: true });
+          doc.font('Helvetica').fillColor(primaryColor).text(`  ${readinessData.overall}/100`);
+        } else {
+          doc.y = headerBottomY;
+        }
+
+        doc.moveDown(1);
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(borderColor);
+        doc.moveDown(1.5);
+
+        // ═══ 3. RESUME PROFILES ═══
+        doc.font('Helvetica-Bold').fontSize(16).fillColor(textColor).text('Resume Profiles');
+        doc.moveDown(0.5);
+
+        if (resumeProfiles.length > 0) {
+          resumeProfiles.forEach((rp, i) => {
+            const pct = computeCompletion(rp as unknown as Record<string, unknown>);
+
+            // Profile name + default badge
+            doc.font('Helvetica-Bold').fontSize(12).fillColor(textColor).text(
+              `${rp.name}${rp.isDefault ? '  [Default]' : ''}`
+            );
+            doc.font('Helvetica').fontSize(10).fillColor(secondaryColor).text(`Target: ${rp.targetRole}`);
+
+            // Config badges
+            const configParts = [
+              `Template: ${rp.template.charAt(0).toUpperCase() + rp.template.slice(1)}`,
+              `Page: ${rp.pageSize.toUpperCase()}`,
+              `Completion: ${pct}%`,
+            ];
+            if (rp.photo) configParts.push('Photo: Yes');
+            doc.font('Helvetica').fontSize(9).fillColor(secondaryColor).text(configParts.join('  •  '));
+
+            if (rp.description) {
+              doc.font('Helvetica-Oblique').fontSize(9).fillColor(secondaryColor).text(rp.description, { indent: 10 });
+            }
+
+            doc.moveDown(0.5);
+            if (i < resumeProfiles.length - 1) {
+              doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(0.5).stroke(borderColor);
+              doc.moveDown(0.5);
+            }
+          });
+        } else {
+          doc.font('Helvetica').fontSize(11).fillColor(secondaryColor).text('No resume profiles yet.');
+        }
+
+        doc.moveDown(1);
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(borderColor);
+        doc.moveDown(1.5);
+
+        // ═══ 4. CAREER HIGHLIGHTS (Context Data) ═══
+        doc.font('Helvetica-Bold').fontSize(16).fillColor(textColor).text('Career Highlights');
+        doc.moveDown(0.5);
+        doc.font('Helvetica').fontSize(10).fillColor(secondaryColor);
+
+        const highlights: string[] = [];
+        if (leetcodeMetric.current > 0) highlights.push(`${leetcodeMetric.current} LeetCode Problems`);
+        if (codeforcesMetric.current > 0) highlights.push(`Codeforces: ${codeforcesMetric.current}`);
+        if (cgpaMetric.current > 0) highlights.push(`CGPA: ${cgpaMetric.current}`);
+        if (projectsCountMetric.current > 0) highlights.push(`${projectsCountMetric.current} Projects Completed`);
+        if (githubActivityMetric.current > 0) highlights.push(`${githubActivityMetric.current} GitHub Repositories`);
+        if (creditsMetric.current > 0) highlights.push(`${creditsMetric.current} Credits Earned`);
+
+        if (highlights.length > 0) {
+          doc.text('•  ' + highlights.join('\n•  '));
+        } else {
+          doc.text('No career data logged yet. Start tracking to see highlights here.');
+        }
+
+        doc.moveDown(1);
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(borderColor);
+        doc.moveDown(1.5);
+
+        // ═══ 5. TOP SKILLS ═══
         doc.font('Helvetica-Bold').fontSize(14).fillColor(textColor).text('Top Skills');
         doc.moveDown(0.5);
         doc.font('Helvetica').fontSize(11).fillColor(secondaryColor);
         if (topSkills.length > 0) {
-          doc.text(topSkills.join(' • '));
+          doc.text(topSkills.join('  •  '));
         } else {
           doc.text('No skills logged yet.');
         }
         doc.moveDown(1);
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#E5E7EB');
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(borderColor);
         doc.moveDown(1.5);
 
-        // 7. Goals
+        // ═══ 6. CURRENT GOALS ═══
         doc.font('Helvetica-Bold').fontSize(14).fillColor(textColor).text('Current Goals');
         doc.moveDown(0.5);
         if (goals.length > 0) {
@@ -210,24 +323,24 @@ export class ReportService {
           doc.font('Helvetica').fontSize(11).fillColor(secondaryColor).text('No active goals.');
         }
         doc.moveDown(1);
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#E5E7EB');
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(borderColor);
         doc.moveDown(1.5);
 
-        // 8. Achievements
+        // ═══ 7. RECENT ACHIEVEMENTS ═══
         doc.font('Helvetica-Bold').fontSize(14).fillColor(textColor).text('Recent Achievements');
         doc.moveDown(0.5);
         if (unlockedAchievements.length > 0) {
           unlockedAchievements.forEach(a => {
-            doc.font('Helvetica-Bold').fontSize(11).fillColor(textColor).text(`• ${a.title}`);
+            doc.font('Helvetica-Bold').fontSize(11).fillColor(textColor).text(`\u2022 ${a.title}`);
             doc.moveDown(0.2);
           });
         } else {
           doc.font('Helvetica').fontSize(11).fillColor(secondaryColor).text('Keep building to unlock achievements!');
         }
         doc.moveDown(1);
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#E5E7EB');
-        
-        // 9. Footer
+        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(borderColor);
+
+        // ═══ 8. FOOTER ═══
         doc.moveDown(2);
         doc.font('Helvetica').fontSize(10).fillColor('#94a3b8').text('Generated by ProgressOS', { align: 'center' });
 

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="theme-color" content="#FF9933"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="ProgressOS"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-512.svg"/>
+<title>Professional Profile | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = { theme: { extend: { colors: { primary: "#FF9933", "on-surface": "#1E293B", "on-surface-variant": "#64748B", secondary: "#000080", tertiary: "#128807", error: "#EF4444" }, spacing: { "max_width": "1440px", "gutter": "24px" } } } }
+</script>
+<style>
+body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: all 0.3s ease; }
+.bottom-nav { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid #E5E7EB; }
+.bottom-nav .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; color: #94a3b8; transition: color 0.2s; text-decoration: none; position: relative; -webkit-tap-highlight-color: transparent; }
+.bottom-nav .nav-item.active { color: #FF9933; }
+.bottom-nav .nav-item.active::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 2.5px; background: #FF9933; border-radius: 0 0 4px 4px; }
+.bottom-nav .nav-item span { font-size: 22px; }
+.bottom-nav .nav-item .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; }
+@supports (padding-bottom: env(safe-area-inset-bottom)) { .bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); } }
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in-up { animation: fade-in-up 0.4s ease-out both; }
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+</style>
+<script src="../js/auth.js"></script>
+</head>
+<body class="bg-background selection:bg-primary/20 selection:text-primary">
+
+<header id="topnav" class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
+  <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
+    <div class="flex justify-between w-full">
+      <div class="flex items-center gap-8">
+        <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+        <nav class="hidden lg:flex items-center gap-4">
+          <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
+          <a href="index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Career Studio</a>
+          <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">Profile</a>
+          <a href="photos.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Photos</a>
+          <a href="resume-profiles.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Resume Profiles</a>
+          <a href="snapshot.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Snapshot</a>
+        </nav>
+      </div>
+      <div id="auth-container"></div>
+    </div>
+  </div>
+</header>
+
+<main class="pt-24 pb-24 lg:pb-16 px-gutter max-w-max_width mx-auto">
+
+  <div class="flex items-center gap-3 mb-6">
+    <a href="index.html" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">arrow_back</a>
+    <div>
+      <h1 class="text-2xl font-bold text-on-surface font-['Geist']">Professional Profile</h1>
+      <p class="text-sm text-on-surface-variant">This is your single source of truth — used by Resume Builder, Portfolio, Cover Letters, and more.</p>
+    </div>
+    <div class="ml-auto">
+      <span id="save-indicator" class="text-xs text-on-surface-variant hidden"></span>
+    </div>
+  </div>
+
+  <form id="profile-form" class="space-y-6">
+    <!-- Professional Information -->
+    <div class="glass-card p-6 rounded-xl animate-fade-in-up stagger-1">
+      <div class="flex items-center gap-2 mb-5">
+        <span class="material-symbols-outlined text-primary text-xl">person</span>
+        <h2 class="text-base font-bold text-on-surface font-['Geist']">Professional Information</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-fullName">Full Name</label>
+          <input id="field-fullName" name="fullName" type="text"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            placeholder="e.g. Devangshu Pandey" />
+        </div>
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-professionalTitle">Professional Title</label>
+          <input id="field-professionalTitle" name="professionalTitle" type="text"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            placeholder="e.g. Full Stack Developer" />
+        </div>
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-email">Email</label>
+          <input id="field-email" name="email" type="email"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-phone">Phone</label>
+          <input id="field-phone" name="phone" type="tel"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            placeholder="+1 234 567 890" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-location">Location</label>
+          <input id="field-location" name="location" type="text"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            placeholder="e.g. San Francisco, CA" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Professional Links -->
+    <div class="glass-card p-6 rounded-xl animate-fade-in-up stagger-2">
+      <div class="flex items-center gap-2 mb-5">
+        <span class="material-symbols-outlined text-secondary text-xl">link</span>
+        <h2 class="text-base font-bold text-on-surface font-['Geist']">Professional Links</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-github">
+            <span class="material-symbols-outlined text-[14px]">code</span> GitHub
+          </label>
+          <input id="field-github" name="github" type="url"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-mono"
+            placeholder="https://github.com/username" />
+        </div>
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-linkedin">
+            <span class="material-symbols-outlined text-[14px]">work</span> LinkedIn
+          </label>
+          <input id="field-linkedin" name="linkedin" type="url"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-mono"
+            placeholder="https://linkedin.com/in/username" />
+        </div>
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-portfolio">
+            <span class="material-symbols-outlined text-[14px]">globe</span> Portfolio
+          </label>
+          <input id="field-portfolio" name="portfolio" type="url"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-mono"
+            placeholder="https://your-portfolio.com" />
+        </div>
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-website">
+            <span class="material-symbols-outlined text-[14px]">language</span> Website
+          </label>
+          <input id="field-website" name="website" type="url"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-mono"
+            placeholder="https://yoursite.com" />
+        </div>
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-leetcode">
+            <span class="material-symbols-outlined text-[14px]">terminal</span> LeetCode
+          </label>
+          <input id="field-leetcode" name="leetcode" type="url"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-mono"
+            placeholder="https://leetcode.com/u/username" />
+        </div>
+        <div>
+          <label class="text-label-sm text-on-surface-variant uppercase tracking-wider block mb-1.5" for="field-codeforces">
+            <span class="material-symbols-outlined text-[14px]">military_tech</span> Codeforces
+          </label>
+          <input id="field-codeforces" name="codeforces" type="url"
+            class="w-full px-3 py-2 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-mono"
+            placeholder="https://codeforces.com/profile/handle" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Professional Bio -->
+    <div class="glass-card p-6 rounded-xl animate-fade-in-up stagger-3">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-tertiary text-xl">description</span>
+        <h2 class="text-base font-bold text-on-surface font-['Geist']">Professional Bio</h2>
+      </div>
+      <textarea id="field-bio" name="bio" rows="5"
+        class="w-full px-3 py-2.5 text-sm border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-y"
+        placeholder="Write a short professional summary about yourself, your skills, and your career goals."></textarea>
+      <p class="text-[10px] text-on-surface-variant mt-1"><span id="bio-count">0</span> / 2000 characters</p>
+    </div>
+
+    <!-- Photo Preview -->
+    <div class="glass-card p-6 rounded-xl animate-fade-in-up stagger-3">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-primary text-xl">photo_camera</span>
+        <h2 class="text-base font-bold text-on-surface font-['Geist']">Profile Photo</h2>
+      </div>
+      <div class="flex items-center gap-4">
+        <div id="photo-preview" class="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-outline-variant flex items-center justify-center overflow-hidden shrink-0">
+          <span class="material-symbols-outlined text-2xl text-on-surface-variant/40">person</span>
+        </div>
+        <div>
+          <p id="photo-name" class="text-sm text-on-surface-variant">No photo selected</p>
+          <a href="photos.html" class="text-xs font-bold text-primary hover:underline mt-1 inline-block">Manage Photos</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save -->
+    <div class="flex items-center justify-end gap-3 animate-fade-in-up stagger-3">
+      <p id="form-status" class="text-sm hidden"></p>
+      <button type="submit" class="bg-primary text-white px-6 py-2.5 rounded-lg font-label-md text-sm hover:bg-[#e68a2e] active:scale-[0.98] transition-all shadow-sm hover:shadow-md">
+        Save Changes
+      </button>
+    </div>
+  </form>
+
+  <!-- Loading State -->
+  <div id="loading-state" class="text-center py-12">
+    <div class="animate-pulse space-y-4 max-w-lg mx-auto">
+      <div class="h-6 bg-gray-200 rounded w-1/3 mx-auto"></div>
+      <div class="h-32 bg-gray-200 rounded"></div>
+      <div class="h-32 bg-gray-200 rounded"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav fixed bottom-0 left-0 w-full z-50 lg:hidden grid grid-cols-5 px-2">
+  <a href="../index.html" class="nav-item" data-nav="home">
+    <span class="material-symbols-outlined">home</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a href="index.html" class="nav-item" data-nav="studio">
+    <span class="material-symbols-outlined">badge</span>
+    <span class="nav-label">Studio</span>
+  </a>
+  <a href="profile.html" class="nav-item active" data-nav="profile">
+    <span class="material-symbols-outlined">edit</span>
+    <span class="nav-label">Profile</span>
+  </a>
+  <a href="photos.html" class="nav-item" data-nav="photos">
+    <span class="material-symbols-outlined">photo_library</span>
+    <span class="nav-label">Photos</span>
+  </a>
+  <a href="resume-profiles.html" class="nav-item" data-nav="resumes">
+    <span class="material-symbols-outlined">description</span>
+    <span class="nav-label">Resumes</span>
+  </a>
+</nav>
+
+<script>
+const FIELD_IDS = ['fullName','professionalTitle','email','phone','location','github','linkedin','portfolio','website','leetcode','codeforces','bio'];
+
+let profileCache = null;
+
+async function loadProfile() {
+  document.getElementById('loading-state').classList.remove('hidden');
+  try {
+    const res = await window.apiRequest('GET', '/api/career-studio/profile');
+    if (res.success && res.data) {
+      profileCache = res.data;
+      FIELD_IDS.forEach(id => {
+        const el = document.getElementById('field-' + id);
+        if (el) el.value = res.data[id] || '';
+      });
+      if (res.data.defaultPhoto) {
+        const preview = document.getElementById('photo-preview');
+        preview.innerHTML = `<img src="${res.data.defaultPhoto.originalUrl}" class="w-full h-full object-cover" alt="Profile photo" />`;
+        document.getElementById('photo-name').textContent = res.data.defaultPhoto.fileName;
+      }
+      document.getElementById('loading-state').classList.add('hidden');
+    }
+  } catch (err) {
+    console.error('Failed to load profile:', err);
+    document.getElementById('loading-state').classList.add('hidden');
+  }
+}
+
+// Char counter for bio
+document.addEventListener('DOMContentLoaded', () => {
+  const bio = document.getElementById('field-bio');
+  const counter = document.getElementById('bio-count');
+  if (bio && counter) {
+    bio.addEventListener('input', () => { counter.textContent = bio.value.length; });
+  }
+});
+
+document.getElementById('profile-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const statusEl = document.getElementById('form-status');
+  const saveIndicator = document.getElementById('save-indicator');
+
+  statusEl.classList.remove('hidden');
+  statusEl.textContent = 'Saving...';
+  statusEl.className = 'text-sm text-on-surface-variant';
+
+  const payload = {};
+  FIELD_IDS.forEach(id => {
+    const el = document.getElementById('field-' + id);
+    if (el) payload[id] = el.value.trim() || null;
+  });
+
+  try {
+    const res = await window.apiRequest('PUT', '/api/career-studio/profile', payload);
+    if (res.success) {
+      statusEl.textContent = 'Profile saved successfully!';
+      statusEl.className = 'text-sm font-bold text-tertiary';
+      saveIndicator.textContent = 'Saved';
+      saveIndicator.className = 'text-xs text-tertiary font-bold';
+      setTimeout(() => {
+        statusEl.classList.add('hidden');
+        setTimeout(() => { saveIndicator.textContent = ''; }, 3000);
+      }, 2000);
+    } else {
+      statusEl.textContent = 'Error: ' + (res.error || 'Failed to save');
+      statusEl.className = 'text-sm font-bold text-error';
+    }
+  } catch (err) {
+    statusEl.textContent = 'Error: ' + err.message;
+    statusEl.className = 'text-sm font-bold text-error';
+  }
+});
+
+if (window.clerkReady) loadProfile();
+else window.addEventListener('clerk-ready', loadProfile);
+</script>
+
+</body>
+</html>

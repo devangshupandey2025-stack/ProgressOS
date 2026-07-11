@@ -7,6 +7,7 @@ import { getOpenSourcePRs } from './opensource.metric.js';
 import { getGitHubRepositories, getGitHubProjects, getGitHubActivity, getGitHubCommits, getGitHubReadiness } from './github.metric.js';
 import { getVitCgpa, getVitCredits, getVitAttendance, getVitReadiness } from './vit.metric.js';
 
+
 export * from './types.js';
 
 export class MetricRegistry {
@@ -37,6 +38,7 @@ export class MetricRegistry {
     VIT_CREDITS: getVitCredits,
     VIT_ATTENDANCE: getVitAttendance,
     VIT_READINESS: getVitReadiness,
+
   };
 
   static async resolve(source: TrackerSource, userId: string, target?: number): Promise<MetricResult> {

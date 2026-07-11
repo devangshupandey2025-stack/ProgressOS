@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="theme-color" content="#FF9933"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="ProgressOS"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-512.svg"/>
+<title>Career Studio | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = { theme: { extend: { colors: { primary: "#FF9933", "on-surface": "#1E293B", "on-surface-variant": "#64748B", secondary: "#000080", tertiary: "#128807", error: "#EF4444" }, spacing: { "max_width": "1440px", "gutter": "24px" } } } }
+</script>
+<style>
+body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: all 0.3s ease; }
+.glass-card:hover { border-color: #D1D5DB; box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.08), 0 4px 6px -2px rgb(0 0 0 / 0.04); transform: translateY(-2px); }
+.navy-card { background: linear-gradient(135deg, #000080 0%, #00004d 100%); color: white; }
+.bottom-nav { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid #E5E7EB; }
+.bottom-nav .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; color: #94a3b8; transition: color 0.2s; text-decoration: none; position: relative; -webkit-tap-highlight-color: transparent; }
+.bottom-nav .nav-item.active { color: #FF9933; }
+.bottom-nav .nav-item.active::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 2.5px; background: #FF9933; border-radius: 0 0 4px 4px; }
+.bottom-nav .nav-item span { font-size: 22px; }
+.bottom-nav .nav-item .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; }
+@supports (padding-bottom: env(safe-area-inset-bottom)) { .bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0px); } }
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in-up { animation: fade-in-up 0.4s ease-out both; }
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+</style>
+<script src="../js/auth.js"></script>
+</head>
+<body class="bg-background selection:bg-primary/20 selection:text-primary">
+
+<header id="topnav" class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
+  <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
+    <div class="flex justify-between w-full">
+      <div class="flex items-center gap-8">
+        <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+        <nav class="hidden lg:flex items-center gap-4">
+          <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
+          <a href="index.html" class="text-primary font-medium text-sm border-b-2 border-primary">Career Studio</a>
+          <a href="profile.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Profile</a>
+          <a href="photos.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Photos</a>
+          <a href="resume-profiles.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Resume Profiles</a>
+          <a href="snapshot.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Snapshot</a>
+        </nav>
+      </div>
+      <div id="auth-container"></div>
+    </div>
+  </div>
+</header>
+
+<main class="pt-24 pb-24 lg:pb-16 px-gutter max-w-max_width mx-auto">
+
+  <div class="flex justify-between items-end mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-on-surface font-['Geist']">Career Studio</h1>
+      <p class="text-on-surface-variant mt-1">Your professional identity — the single source of truth for resumes, portfolios, and career tools.</p>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="glass-card p-5 rounded-xl text-center animate-fade-in-up stagger-1">
+      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider mb-1">Profile Complete</p>
+      <p id="stat-completion" class="text-3xl font-bold text-primary font-['Geist']">--%</p>
+      <div class="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden mt-2">
+        <div id="stat-completion-bar" class="h-full bg-primary rounded-full" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="glass-card p-5 rounded-xl text-center animate-fade-in-up stagger-2">
+      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider mb-1">Photos</p>
+      <p id="stat-photos" class="text-3xl font-bold text-secondary font-['Geist']">--</p>
+    </div>
+    <div class="glass-card p-5 rounded-xl text-center animate-fade-in-up stagger-3">
+      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider mb-1">Linked Accounts</p>
+      <p id="stat-accounts" class="text-3xl font-bold text-tertiary font-['Geist']">--</p>
+    </div>
+    <div class="glass-card p-5 rounded-xl text-center animate-fade-in-up stagger-4">
+      <p class="text-xs text-on-surface-variant uppercase font-bold tracking-wider mb-1">Projects</p>
+      <p id="stat-projects" class="text-3xl font-bold text-on-surface font-['Geist']">--</p>
+    </div>
+  </div>
+
+  <!-- Action Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <a href="profile.html" class="glass-card p-6 rounded-xl animate-fade-in-up stagger-2 block group">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+          <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1;">badge</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-on-surface font-['Geist'] group-hover:text-primary transition-colors">Professional Profile</h3>
+          <p class="text-sm text-on-surface-variant mt-1">Your name, title, bio, links, and contact info — used everywhere.</p>
+          <div class="flex items-center gap-2 mt-3">
+            <span class="text-xs font-bold text-primary">Open Profile</span>
+            <span class="material-symbols-outlined text-primary text-[16px]">arrow_forward</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="photos.html" class="glass-card p-6 rounded-xl animate-fade-in-up stagger-3 block group">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
+          <span class="material-symbols-outlined text-secondary text-2xl" style="font-variation-settings:'FILL' 1;">photo_library</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-on-surface font-['Geist'] group-hover:text-secondary transition-colors">Photo Library</h3>
+          <p class="text-sm text-on-surface-variant mt-1">Upload and manage your professional photos for resumes and profiles.</p>
+          <div class="flex items-center gap-2 mt-3">
+            <span class="text-xs font-bold text-secondary">Open Library</span>
+            <span class="material-symbols-outlined text-secondary text-[16px]">arrow_forward</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="resume-profiles.html" class="glass-card p-6 rounded-xl animate-fade-in-up stagger-4 block group">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center shrink-0 group-hover:bg-tertiary/20 transition-colors">
+          <span class="material-symbols-outlined text-tertiary text-2xl" style="font-variation-settings:'FILL' 1;">description</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-on-surface font-['Geist'] group-hover:text-tertiary transition-colors">Resume Profiles</h3>
+          <p class="text-sm text-on-surface-variant mt-1">Manage multiple role-specific resumes.</p>
+          <div class="flex items-center gap-2 mt-3">
+            <span class="text-xs font-bold text-tertiary">Open Profiles</span>
+            <span class="material-symbols-outlined text-tertiary text-[16px]">arrow_forward</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <a href="snapshot.html" class="glass-card p-6 rounded-xl animate-fade-in-up stagger-5 block group">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
+          <span class="material-symbols-outlined text-secondary text-2xl" style="font-variation-settings:'FILL' 1;">timeline</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-on-surface font-['Geist'] group-hover:text-secondary transition-colors">Career Snapshot</h3>
+          <p class="text-sm text-on-surface-variant mt-1">A complete view of your career data from across the platform. Updated in real time.</p>
+          <div class="flex items-center gap-2 mt-3">
+            <span class="text-xs font-bold text-secondary">Open Snapshot</span>
+            <span class="material-symbols-outlined text-secondary text-[16px]">arrow_forward</span>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Quick Info -->
+  <div class="glass-card p-6 rounded-xl animate-fade-in-up stagger-5">
+    <h3 class="text-sm font-bold text-on-surface font-['Geist'] mb-3">Fields Completed</h3>
+    <div id="fields-list" class="grid grid-cols-2 md:grid-cols-3 gap-2">
+      <p class="text-xs text-on-surface-variant">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loading-state" class="text-center py-12 hidden">
+    <div class="animate-pulse space-y-3 max-w-md mx-auto">
+      <div class="h-4 bg-gray-200 rounded w-1/3 mx-auto"></div>
+      <div class="h-10 bg-gray-200 rounded w-1/4 mx-auto"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav fixed bottom-0 left-0 w-full z-50 lg:hidden grid grid-cols-5 px-2">
+  <a href="../index.html" class="nav-item" data-nav="home">
+    <span class="material-symbols-outlined">home</span>
+    <span class="nav-label">Home</span>
+  </a>
+  <a href="index.html" class="nav-item active" data-nav="studio">
+    <span class="material-symbols-outlined">badge</span>
+    <span class="nav-label">Studio</span>
+  </a>
+  <a href="profile.html" class="nav-item" data-nav="profile">
+    <span class="material-symbols-outlined">edit</span>
+    <span class="nav-label">Profile</span>
+  </a>
+  <a href="photos.html" class="nav-item" data-nav="photos">
+    <span class="material-symbols-outlined">photo_library</span>
+    <span class="nav-label">Photos</span>
+  </a>
+  <a href="resume-profiles.html" class="nav-item" data-nav="resumes">
+    <span class="material-symbols-outlined">description</span>
+    <span class="nav-label">Resumes</span>
+  </a>
+</nav>
+
+<script>
+async function loadStats() {
+  try {
+    const res = await window.apiRequest('GET', '/api/career-studio/stats');
+    if (res.success && res.data) {
+      const d = res.data;
+      const stats = d.stats || {};
+      document.getElementById('stat-completion').textContent = (stats.profileCompletion || 0) + '%';
+      document.getElementById('stat-completion-bar').style.width = (stats.profileCompletion || 0) + '%';
+      document.getElementById('stat-photos').textContent = stats.photoCount || 0;
+      document.getElementById('stat-accounts').textContent = stats.linkedAccounts || 0;
+      document.getElementById('stat-projects').textContent = stats.projectCount || 0;
+
+      const fieldsContainer = document.getElementById('fields-list');
+      if (stats.fieldsCompleted) {
+        fieldsContainer.innerHTML = `<p class="text-sm font-bold text-on-surface">${stats.fieldsCompleted} fields filled</p>`;
+      }
+      if (d.profile && d.profile.missingFields) {
+        const missing = d.profile.missingFields;
+        if (missing.length > 0) {
+          fieldsContainer.innerHTML += `<div class="col-span-full mt-2"><p class="text-xs text-on-surface-variant mb-1 font-bold uppercase tracking-wider">Still Missing</p></div>`;
+          missing.forEach(f => {
+            fieldsContainer.innerHTML += `<div class="flex items-center gap-1.5 text-xs text-on-surface-variant"><span class="material-symbols-outlined text-[14px] text-error">circle</span>${f}</div>`;
+          });
+        } else {
+          fieldsContainer.innerHTML += `<div class="col-span-full mt-2 flex items-center gap-2 text-tertiary"><span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">check_circle</span><span class="text-sm font-bold">All fields completed!</span></div>`;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load career studio stats:', err);
+  }
+}
+
+if (window.clerkReady) loadStats();
+else window.addEventListener('clerk-ready', loadStats);
+</script>
+
+</body>
+</html>

@@ -90,8 +90,9 @@ import vitRoutes from './integrations/vit/vit.routes.js';
 import reportRoutes from './routes/report.routes.js';
 import { createTrackerRouter } from './utils/trackerFactory.js';
 import gateSyllabusRoutes from './routes/gateSyllabus.routes.js';
+import careerStudioRoutes from './routes/career-studio.routes.js';
 
-
+app.use('/api/career-studio', careerStudioRoutes);
 
 app.use('/api/user', userRoutes);
 app.use('/api/activities', activityRoutes);
@@ -152,6 +153,14 @@ app.get('/u/:username', (_req, res) => {
   res.sendFile(path.join(__dirname, '../../u.html'));
 });
 
+// Career Studio dashboard
+app.get('/career-studio', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../../career-studio/index.html'));
+});
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+
 // ─── 404 Catch-All ───────────────────────────────────────────────────────────
 
 app.use((_req, res) => {
@@ -164,6 +173,8 @@ app.use((_req, res) => {
 // ─── Global Error Handler ────────────────────────────────────────────────────
 
 app.use(errorHandler);
+
+
 
 // Only start listening when running as a standalone server (not in Vercel serverless)
 if (!process.env.VERCEL) {

@@ -40,6 +40,10 @@ model User {
   vitUsername        String?
   vitPasswordEncrypted String?
   vitLastSync        DateTime?
+  googleEmail        String?
+  googleRefreshToken String?
+  googleCalendarId   String?
+  googleLastSync     DateTime?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -57,11 +61,15 @@ model User {
   cyber           CyberEntry[]
   gate            GATEEntry[]
   gateSyllabusProgress GATESyllabusProgress[]
+
   research        ResearchEntry[]
   goals           Goal[]
   leetCodeSnapshots LeetCodeSnapshot[]
   gitHubSnapshots   GitHubSnapshot[]
   vitSnapshots      VITSnapshot[]
+
+  xpTransactions  XPTransaction[]
+  careerProfile   CareerProfile?
 
   @@index([clerkId])
 }
@@ -355,6 +363,7 @@ enum TrackerSource {
   VIT_CREDITS
   VIT_ATTENDANCE
   VIT_READINESS
+
 }
 
 model Goal {
@@ -416,4 +425,97 @@ model VITSnapshot {
 
   @@index([userId])
   @@index([userId, createdAt])
+}
+
+// ─── Career Studio ─────────────────────────────────────────────────────────
+
+model CareerProfile {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName          String?
+  professionalTitle String?
+  email             String?
+  phone             String?
+  location          String?
+  website           String?
+  linkedin          String?
+  github            String?
+  leetcode          String?
+  codeforces        String?
+  portfolio         String?
+  bio               String?
+  defaultPhotoId    String?
+  preferences       Json?     @default("{}")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  photos CareerPhoto[]
+  resumeProfiles ResumeProfile[]
+
+  @@index([userId])
+}
+
+model CareerPhoto {
+  id              String        @id @default(uuid())
+  careerProfileId String
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  storageKey      String        @unique
+  originalUrl     String
+  thumbnailUrl    String?
+  mimeType        String
+  fileSize        Int
+  width           Int?
+  height          Int?
+  fileName        String
+  isDefault       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+
+  resumeProfiles ResumeProfile[]
+
+  @@index([careerProfileId])
+}
+
+// ─── Resume Profiles ─────────────────────────────────────────────────────────
+
+model ResumeProfile {
+  id              String         @id @default(uuid())
+  careerProfileId String
+  careerProfile   CareerProfile  @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  name            String
+  targetRole      String
+  description     String?
+  template        String         @default("modern")
+  pageSize        String         @default("a4")
+  photoId         String?
+  photo           CareerPhoto?   @relation(fields: [photoId], references: [id], onDelete: SetNull)
+  summaryStrategy String         @default("manual")
+  isDefault       Boolean        @default(false)
+  displayOrder    Int            @default(0)
+  lastGeneratedAt DateTime?
+  version         Int            @default(1)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([careerProfileId])
+}
+
+// ─── XPTransaction ───────────────────────────────────────────────────────────
+
+model XPTransaction {
+  id              String   @id @default(uuid())
+  amount          Int      // positive = earned, negative = deducted
+  source          String   // ACTIVITY | LEETCODE | GOAL_COMPLETE | ATTENDANCE | FOCUS_SESSION
+  sourceId        String?  // Activity.id, etc.
+  description     String?
+  category        String?  // DSA | ML | PROJECT | ACADEMICS | CYBER | OPEN_SOURCE
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([source, sourceId])
 }

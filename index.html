@@ -470,10 +470,10 @@
                             <a href="trackers/opensource.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Open
                                 Source</a>
-                            <a href="trackers/nptel.html"
-                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">NPTEL</a>
-                            <div class="border-t border-outline-variant my-1"></div>
-                            <p class="nav-group-label">Advanced</p>
+<a href="trackers/nptel.html"
+    class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">NPTEL</a>
+<div class="border-t border-outline-variant my-1"></div>
+<p class="nav-group-label">Advanced</p>
                             <a href="trackers/aiml.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">AI
                                 / ML</a>
@@ -487,6 +487,28 @@
                             <a href="trackers/research.html"
                                 class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Papers
                                 & Publications</a>
+                        </div>
+                    </div>
+
+                    <!-- Career Studio Dropdown -->
+                    <div class="relative group" id="nav-career-studio">
+                        <button
+                            class="flex items-center gap-1 text-on-surface-variant px-3 py-1.5 rounded-lg hover:bg-gray-50 font-label-md text-sm transition-colors">
+                            Career Studio
+                            <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                        </button>
+                        <div
+                            class="absolute top-full left-0 mt-1 w-[200px] bg-white border border-outline-variant rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-50">
+                            <a href="career-studio/index.html"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Dashboard</a>
+                            <a href="career-studio/profile.html"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Profile</a>
+                            <a href="career-studio/photos.html"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Photo Gallery</a>
+                            <a href="career-studio/resume-profiles.html"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Resume Profiles</a>
+                            <a href="career-studio/snapshot.html"
+                                class="block px-4 py-2 text-sm text-on-surface-variant hover:bg-primary/5 hover:text-primary transition-colors">Career Snapshot</a>
                         </div>
                     </div>
 
@@ -519,12 +541,6 @@
                     onclick="openLogActivityModal()">
                     <span class="material-symbols-outlined text-[16px] lg:mr-1 align-middle">add</span>
                     <span class="hidden lg:inline">Log Activity</span>
-                </button>
-                <button id="btn-career-report"
-                    class="bg-secondary text-white lg:px-4 lg:py-2 p-2 rounded-lg font-label-md text-sm hover:bg-[#0000b3] active:scale-95 transition-all shadow-sm hover:shadow-md ml-1"
-                    onclick="downloadCareerReport()">
-                    <span class="material-symbols-outlined text-[16px] lg:mr-1 align-middle">download</span>
-                    <span class="hidden lg:inline">Career Report</span>
                 </button>
                 <div id="auth-container"></div>
             </div>
@@ -1197,7 +1213,7 @@
 
     <!-- ═══════════════════════ MOBILE BOTTOM NAV ═══════════════════════ -->
     <nav id="bottom-nav"
-        class="bottom-nav fixed bottom-0 left-0 w-full z-50 lg:hidden grid grid-cols-5 px-2">
+        class="bottom-nav fixed bottom-0 left-0 w-full z-50 lg:hidden grid grid-cols-6 px-2">
         <a href="#" class="nav-item active" data-nav="dashboard">
             <span class="material-symbols-outlined">home</span>
             <span class="nav-label">Home</span>
@@ -1987,46 +2003,6 @@
                 }
             } catch (error) {
                 console.error("Failed to load goals for command palette", error);
-            }
-        }
-        
-        async function downloadCareerReport() {
-            const btn = document.getElementById('btn-career-report');
-            const icon = btn.querySelector('.material-symbols-outlined');
-            const text = btn.querySelector('span:not(.material-symbols-outlined)');
-            
-            const origIcon = icon.textContent;
-            const origText = text.textContent;
-            
-            icon.textContent = 'hourglass_empty';
-            text.textContent = 'Generating...';
-            btn.disabled = true;
-            btn.classList.add('opacity-70');
-            
-            try {
-                const res = await window.apiFetch('http://localhost:5000/api/reports/career', {
-                    method: 'GET'
-                });
-                
-                if (!res.ok) throw new Error('Failed to generate report');
-                
-                const blob = await res.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'ProgressOS-Career-Snapshot.pdf';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
-            } catch (err) {
-                console.error(err);
-                alert('Error generating Career Report. Please try again.');
-            } finally {
-                icon.textContent = origIcon;
-                text.textContent = origText;
-                btn.disabled = false;
-                btn.classList.remove('opacity-70');
             }
         }
         
