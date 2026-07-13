@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Router } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -91,8 +91,40 @@ import reportRoutes from './routes/report.routes.js';
 import { createTrackerRouter } from './utils/trackerFactory.js';
 import gateSyllabusRoutes from './routes/gateSyllabus.routes.js';
 import careerStudioRoutes from './routes/career-studio.routes.js';
+import careerIntelligenceRoutes from './routes/career-intelligence.routes.js';
 
 app.use('/api/career-studio', careerStudioRoutes);
+app.use('/api/career-intelligence', careerIntelligenceRoutes);
+
+// ─── Project Bullet Routes ────────────────────────────────────────────────
+
+import { requireAuth } from './middleware/auth.js';
+import { resumeCompositionController } from './controllers/career-studio/resume-composition.controller.js';
+import { AuthenticatedRequest } from './types/index.js';
+
+const bulletRouter = Router();
+
+bulletRouter.get('/:projectId/bullets', requireAuth, (req, res, next) =>
+  resumeCompositionController.listBullets(req as AuthenticatedRequest, res, next)
+);
+
+bulletRouter.post('/:projectId/bullets', requireAuth, (req, res, next) =>
+  resumeCompositionController.createBullet(req as AuthenticatedRequest, res, next)
+);
+
+bulletRouter.put('/:projectId/bullets/:bulletId', requireAuth, (req, res, next) =>
+  resumeCompositionController.updateBullet(req as AuthenticatedRequest, res, next)
+);
+
+bulletRouter.delete('/:projectId/bullets/:bulletId', requireAuth, (req, res, next) =>
+  resumeCompositionController.deleteBullet(req as AuthenticatedRequest, res, next)
+);
+
+bulletRouter.put('/:projectId/bullets/reorder', requireAuth, (req, res, next) =>
+  resumeCompositionController.reorderBullets(req as AuthenticatedRequest, res, next)
+);
+
+app.use('/api/trackers/projects', bulletRouter);
 
 app.use('/api/user', userRoutes);
 app.use('/api/activities', activityRoutes);

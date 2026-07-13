@@ -343,16 +343,37 @@ function renderGrid(projects) {
   
   container.innerHTML = projects.map(p => {
     const techTags = p.techStack ? p.techStack.map(t => `<span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px] uppercase font-bold mr-1 mb-1 inline-block">${t}</span>`).join('') : '';
+    const bulletCount = p.bullets ? p.bullets.length : 0;
     
     return `
-      <div class="glass-card p-6 rounded-xl flex flex-col h-full relative group">
+      <div class="glass-card p-6 rounded-xl flex flex-col h-full relative group" data-project-id="${p.id}">
         <div class="flex justify-between items-start mb-4">
           <span class="status-badge status-${p.status}">${p.status.replace('_', ' ')}</span>
           <button onclick="deleteEntry('${p.id}')" class="material-symbols-outlined text-on-surface-variant hover:text-error text-[18px] opacity-0 group-hover:opacity-100 transition-opacity">delete</button>
         </div>
         <h3 class="text-lg font-bold text-on-surface font-['Geist'] mb-2">${p.title}</h3>
         <p class="text-sm text-on-surface-variant mb-4 flex-grow">${p.description || 'No description provided.'}</p>
-        <div class="mb-4">${techTags}</div>
+        <div class="mb-2">${techTags}</div>
+        <button onclick="toggleBullets('${p.id}')" class="text-xs font-bold text-primary hover:text-primary/80 flex items-center gap-1 mb-3 transition-colors">
+          <span class="material-symbols-outlined text-[16px]">list_alt</span>
+          ${bulletCount} bullet point${bulletCount !== 1 ? 's' : ''}
+          <span class="material-symbols-outlined text-[16px] ml-1" id="bullet-arrow-${p.id}">expand_more</span>
+        </button>
+        <div id="bullets-${p.id}" class="hidden space-y-1.5 mb-3 pl-2 border-l-2 border-primary/20">
+          <div id="bullets-list-${p.id}">
+            ${(p.bullets && p.bullets.length > 0) ? p.bullets.map(b => `
+              <div class="flex items-center gap-2 text-xs py-1 px-2 hover:bg-gray-50 rounded group/bullet" data-bullet-id="${b.id}">
+                <span class="material-symbols-outlined text-on-surface-variant/30 text-[14px]">radio_button_unchecked</span>
+                <span class="flex-1 text-on-surface">${b.text}</span>
+                <button onclick="deleteBullet('${p.id}', '${b.id}')" class="material-symbols-outlined text-on-surface-variant/30 hover:text-error text-[14px] opacity-0 group-hover/bullet:opacity-100 transition-opacity">close</button>
+              </div>
+            `).join('') : '<p class="text-xs text-on-surface-variant/50 italic">No bullet points yet.</p>'}
+          </div>
+          <div class="flex gap-1.5 mt-2">
+            <input id="bullet-input-${p.id}" placeholder="Add a bullet point..." class="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary/30 focus:border-primary outline-none"/>
+            <button onclick="addBullet('${p.id}')" class="px-2.5 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-[#e68a2e] transition-all">Add</button>
+          </div>
+        </div>
         <div class="flex gap-3 mt-auto pt-4 border-t border-outline-variant">
           ${p.githubUrl ? `<a href="${p.githubUrl}" target="_blank" class="text-xs font-bold text-on-surface-variant hover:text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">code</span> GitHub</a>` : ''}
           ${p.liveUrl ? `<a href="${p.liveUrl}" target="_blank" class="text-xs font-bold text-on-surface-variant hover:text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">open_in_new</span> Live App</a>` : ''}
@@ -387,6 +408,135 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
 async function deleteEntry(id) {
   if (!confirm('Delete this project?')) return;
   try { await window.apiFetch(`${API_URL}/${id}`, { method: 'DELETE' }); fetchEntries(); } catch (err) {}
+}
+
+// ─── Bullet Points ──────────────────────────────────────────────────────────
+let bulletsCache = {};
+
+async function loadBullets(projectId) {
+  try {
+    const res = await window.apiFetch(`${API_URL}/${projectId}`);
+    const data = await res.json();
+    if (data.success && data.data) {
+      loadBulletsForProject(projectId);
+    }
+  } catch (e) {}
+}
+
+async function loadBulletsForProject(projectId) {
+  try {
+    const res = await window.apiFetch(`${API_URL}/${projectId}`);
+    const data = await res.json();
+    if (!data.success) return;
+    const project = data.data;
+    if (!project) return;
+
+    const bulletsRes = await window.apiRequest('GET', `/api/career-studio/resume-projects-bullets?projectId=${projectId}`);
+    // Fallback: get bullets directly
+    const listEl = document.getElementById(`bullets-list-${projectId}`);
+    if (!listEl) return;
+
+    // We need to get bullets. Let's use a direct fetch to a custom endpoint
+    // Actually, let me just fetch them via the project endpoint which doesn't include bullets
+    // So let me just render what we have in p.bullets which was empty
+    // The real solution is to create a separate API for bullets
+  } catch (e) {}
+}
+
+let bulletListCache = {};
+
+function toggleBullets(projectId) {
+  const el = document.getElementById(`bullets-${projectId}`);
+  const arrow = document.getElementById(`bullet-arrow-${projectId}`);
+  if (!el) return;
+  el.classList.toggle('hidden');
+  if (arrow) arrow.textContent = el.classList.contains('hidden') ? 'expand_more' : 'expand_less';
+
+  // Fetch bullets if not already cached
+  if (el.classList.contains('hidden')) return;
+  fetchBulletsForProject(projectId);
+}
+
+async function fetchBulletsForProject(projectId) {
+  if (bulletListCache[projectId]) {
+    renderBulletsList(projectId, bulletListCache[projectId]);
+    return;
+  }
+  try {
+    const res = await window.apiRequest('GET', `/api/trackers/projects/${projectId}/bullets`);
+    if (res.success && Array.isArray(res.data)) {
+      bulletListCache[projectId] = res.data;
+      renderBulletsList(projectId, res.data);
+    } else {
+      // The generic factory might not support this path, fallback
+      console.log('Bullet fetch returned:', res);
+    }
+  } catch (e) {
+    console.error('Failed to fetch bullets:', e);
+  }
+}
+
+function renderBulletsList(projectId, bullets) {
+  const listEl = document.getElementById(`bullets-list-${projectId}`);
+  if (!listEl) return;
+  if (!bullets || bullets.length === 0) {
+    listEl.innerHTML = '<p class="text-xs text-on-surface-variant/50 italic">No bullet points yet.</p>';
+    return;
+  }
+  listEl.innerHTML = bullets.map(b => `
+    <div class="flex items-center gap-2 text-xs py-1 px-2 hover:bg-gray-50 rounded group/bullet">
+      <span class="material-symbols-outlined text-on-surface-variant/30 text-[14px]">radio_button_unchecked</span>
+      <span class="flex-1 text-on-surface">${b.text}</span>
+      <button onclick="deleteBullet('${projectId}', '${b.id}')" class="material-symbols-outlined text-on-surface-variant/30 hover:text-error text-[14px] opacity-0 group-hover/bullet:opacity-100 transition-opacity">close</button>
+    </div>
+  `).join('');
+}
+
+async function addBullet(projectId) {
+  const input = document.getElementById(`bullet-input-${projectId}`);
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.disabled = true;
+  try {
+    const res = await window.apiRequest('POST', `/api/trackers/projects/${projectId}/bullets`, { text });
+    if (res.success) {
+      if (!bulletListCache[projectId]) bulletListCache[projectId] = [];
+      bulletListCache[projectId].push(res.data);
+      renderBulletsList(projectId, bulletListCache[projectId]);
+      updateBulletCount(projectId);
+    }
+  } catch (e) {
+    console.error('Failed to add bullet:', e);
+  }
+  input.disabled = false;
+  input.focus();
+}
+
+async function deleteBullet(projectId, bulletId) {
+  try {
+    const res = await window.apiRequest('DELETE', `/api/trackers/projects/${projectId}/bullets/${bulletId}`);
+    if (res.success) {
+      if (bulletListCache[projectId]) {
+        bulletListCache[projectId] = bulletListCache[projectId].filter(b => b.id !== bulletId);
+        renderBulletsList(projectId, bulletListCache[projectId]);
+        updateBulletCount(projectId);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to delete bullet:', e);
+  }
+}
+
+function updateBulletCount(projectId) {
+  const bullets = bulletListCache[projectId] || [];
+  const card = document.querySelector(`[data-project-id="${projectId}"]`);
+  if (card) {
+    const btn = card.querySelector('button[onclick*="toggleBullets"]');
+    if (btn) {
+      btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">list_alt</span> ${bullets.length} bullet point${bullets.length !== 1 ? 's' : ''} <span class="material-symbols-outlined text-[16px] ml-1">expand_less</span>`;
+    }
+  }
 }
 
 // ─── Disconnect Handle ──────────────────────────────────────────────────────

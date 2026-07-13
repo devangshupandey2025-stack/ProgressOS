@@ -284,9 +284,8 @@ function renderProfiles(profiles) {
   empty.classList.add('hidden');
   notice.classList.remove('hidden');
   grid.innerHTML = profiles.map((p, i) => {
-    const comp = p.completion || { percentage: 0, checks: [] };
-    const doneChecks = comp.checks.filter(c => c.done);
-    const totalChecks = comp.checks.length;
+    const comp = p.completion || { percentage: 0, checks: [], counts: {} };
+    const counts = comp.counts || {};
     const stagger = Math.min(i % 6 + 1, 5);
 
     return `
@@ -306,18 +305,36 @@ function renderProfiles(profiles) {
             <span class="text-[10px] font-bold text-on-surface-variant">${comp.percentage}%</span>
           </div>
           <p class="text-[10px] text-on-surface-variant">
-            ${doneChecks.map(c => `<span class="text-tertiary">\u2713</span> ${c.label}`).join(' \u00B7 ')}
-            ${doneChecks.length < totalChecks ? ' \u00B7 ' + comp.checks.filter(c => !c.done).map(c => `<span class="text-on-surface-variant/50">\u25CB</span> ${c.label}`).join(' \u00B7 ') : ''}
+            ${comp.checks.map(c => `<span class="${c.done ? 'text-tertiary' : 'text-on-surface-variant/50'}">${c.done ? '\u2713' : '\u25CB'}</span> ${c.label}`).join(' \u00B7 ')}
           </p>
         </div>
 
-        <div class="flex flex-wrap gap-1.5 mb-4">
+        <div class="grid grid-cols-4 gap-1.5 mb-3">
+          <div class="text-center p-1.5 bg-gray-50 rounded-lg">
+            <div class="text-xs font-bold text-on-surface font-['Geist']">${counts.projects ?? '?'}</div>
+            <div class="text-[8px] text-on-surface-variant font-bold uppercase tracking-wider">Projects</div>
+          </div>
+          <div class="text-center p-1.5 bg-gray-50 rounded-lg">
+            <div class="text-xs font-bold text-on-surface font-['Geist']">${counts.skills ?? '?'}</div>
+            <div class="text-[8px] text-on-surface-variant font-bold uppercase tracking-wider">Skills</div>
+          </div>
+          <div class="text-center p-1.5 bg-gray-50 rounded-lg">
+            <div class="text-xs font-bold text-on-surface font-['Geist']">${counts.certificates ?? '?'}</div>
+            <div class="text-[8px] text-on-surface-variant font-bold uppercase tracking-wider">Certs</div>
+          </div>
+          <div class="text-center p-1.5 bg-gray-50 rounded-lg">
+            <div class="text-xs font-bold text-on-surface font-['Geist']">${counts.achievements ?? '?'}</div>
+            <div class="text-[8px] text-on-surface-variant font-bold uppercase tracking-wider">Achieve</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5 mb-3">
           <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full">${capitalize(p.template)}</span>
           <span class="px-2 py-0.5 bg-secondary/10 text-secondary text-[10px] font-bold rounded-full">${p.pageSize.toUpperCase()}</span>
         </div>
 
         <div class="flex flex-wrap gap-1.5 border-t border-outline-variant pt-3">
-          <button onclick="openEditModal('${p.id}')" class="flex-1 px-2 py-1.5 bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-on-surface rounded-lg transition-all">Edit</button>
+          <button onclick="openConfig('${p.id}')" class="flex-1 px-2 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold rounded-lg transition-all">Configure</button>
           <button onclick="cloneProfile('${p.id}')" class="flex-1 px-2 py-1.5 bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-on-surface rounded-lg transition-all">Clone</button>
           <button onclick="deleteProfile('${p.id}')" class="flex-1 px-2 py-1.5 bg-red-50 hover:bg-red-100 text-[11px] font-bold text-error rounded-lg transition-all">Delete</button>
           ${!p.isDefault ? `<button onclick="setDefault('${p.id}')" class="flex-1 px-2 py-1.5 bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-on-surface rounded-lg transition-all">Set Default</button>` : ''}
@@ -325,6 +342,10 @@ function renderProfiles(profiles) {
       </div>
     `;
   }).join('');
+}
+
+function openConfig(id) {
+  window.location.href = `resume-config.html?id=${id}`;
 }
 
 function escHtml(s) {

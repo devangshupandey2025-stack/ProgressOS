@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="theme-color" content="#FF9933"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="ProgressOS"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-512.svg"/>
+<title>Resume Preview | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = { theme: { extend: { colors: { primary: "#FF9933", "on-surface": "#1E293B", "on-surface-variant": "#64748B", secondary: "#000080", tertiary: "#128807", error: "#EF4444" }, spacing: { "max_width": "1440px", "gutter": "24px" } } } }
+</script>
+<style>
+body { background: #f3f4f6; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+
+/* ── Layout ──────────────────────────────────────── */
+.preview-layout { display: flex; gap: 0; height: calc(100vh - 140px); }
+.sidebar { width: 240px; flex-shrink: 0; background: #fff; border-right: 1px solid #e5e7eb; overflow-y: auto; display: flex; flex-direction: column; }
+.preview-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.preview-stage { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 24px; background: #e5e7eb; }
+.toolbar { display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: #fff; border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; }
+
+/* ── Tabs ─────────────────────────────────────────── */
+.tab-bar { display: flex; background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 24px; }
+.tab-btn { padding: 10px 20px; font-size: 13px; font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.tab-btn.active { color: #FF9933; border-bottom-color: #FF9933; }
+.tab-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Sidebar ─────────────────────────────────────── */
+.sidebar-header { padding: 16px 16px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; border-bottom: 1px solid #f1f5f9; }
+.profile-list { flex: 1; overflow-y: auto; padding: 8px; }
+.profile-item { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: all 0.15s; margin-bottom: 2px; }
+.profile-item:hover { background: #f8fafc; }
+.profile-item.active { background: #fff7ed; border-left: 3px solid #FF9933; }
+.profile-item-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+.profile-item-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+.profile-item-badge { font-size: 9px; font-weight: 700; color: #fff; background: #FF9933; padding: 1px 6px; border-radius: 8px; }
+.sidebar-footer { padding: 12px 16px; border-top: 1px solid #f1f5f9; }
+.sidebar-footer a { font-size: 12px; font-weight: 600; color: #FF9933; text-decoration: none; }
+
+/* ── Toolbar ─────────────────────────────────────── */
+.toolbar-select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; font-weight: 500; color: #374151; background: #fff; outline: none; cursor: pointer; }
+.toolbar-select:focus { border-color: #FF9933; box-shadow: 0 0 0 2px rgba(255,153,51,0.15); }
+.toolbar-label { font-size: 11px; font-weight: 600; color: #64748b; }
+.toolbar-divider { width: 1px; height: 20px; background: #e5e7eb; }
+
+/* ── Preview Page ────────────────────────────────── */
+.preview-page { background: #fff; box-shadow: 0 4px 24px rgba(0,0,0,0.1); transform-origin: top center; transition: transform 0.2s; }
+.preview-page.a4 { width: 800px; }
+.preview-page.letter { width: 800px; }
+.preview-loading { display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 14px; }
+.preview-error { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #ef4444; padding: 40px; text-align: center; }
+.preview-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8; }
+
+/* ── Customize Tab ───────────────────────────────── */
+.customize-panel { max-width: 640px; margin: 32px auto; padding: 0 24px; }
+.customize-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+.customize-card h3 { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+.customize-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 13px; font-weight: 500; color: #374151; cursor: pointer; }
+.customize-toggle input { width: 16px; height: 16px; accent-color: #FF9933; cursor: pointer; }
+.customize-input { width: 60px; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; }
+.customize-input:focus { border-color: #FF9933; }
+.customize-save { background: #FF9933; color: #fff; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: background 0.2s; }
+.customize-save:hover { background: #e68a2e; }
+.customize-link { font-size: 12px; font-weight: 600; color: #FF9933; text-decoration: none; }
+
+/* ── Coming Soon ─────────────────────────────────── */
+.coming-soon { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 24px; text-align: center; }
+.coming-soon h2 { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+.coming-soon p { font-size: 14px; color: #64748b; }
+.coming-soon .icon { font-size: 48px; color: #d1d5db; margin-bottom: 16px; }
+
+/* ── Misc ─────────────────────────────────────────── */
+.status-msg { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; display: none; }
+.status-msg.success { display: block; color: #128807; background: #f0fdf4; }
+.status-msg.error { display: block; color: #ef4444; background: #fef2f2; }
+
+/* ── Responsive ──────────────────────────────────── */
+/* ── AI Assistant ─────────────────────────────────── */
+.ai-layout { display: flex; gap: 0; height: calc(100vh - 140px); }
+.ai-preview { flex: 1; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid #e5e7eb; background: #f3f4f6; }
+.ai-preview-header { padding: 8px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; background: #fff; border-bottom: 1px solid #e5e7eb; }
+.ai-preview-stage { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 16px; }
+.ai-preview-stage .preview-page.a4 { width: 600px; }
+.ai-panel { width: 380px; flex-shrink: 0; display: flex; flex-direction: column; background: #fff; overflow-y: auto; }
+.ai-panel-header { display: flex; align-items: center; gap: 8px; padding: 14px 16px; font-size: 14px; font-weight: 700; color: #1e293b; border-bottom: 1px solid #e5e7eb; }
+.ai-empty { padding: 40px 20px; text-align: center; font-size: 13px; color: #94a3b8; }
+.ai-controls { padding: 16px; }
+.ai-control-group { margin-bottom: 12px; }
+.ai-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; margin-bottom: 4px; }
+.ai-select { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; font-weight: 500; color: #1e293b; background: #fff; outline: none; cursor: pointer; }
+.ai-select:focus { border-color: #FF9933; box-shadow: 0 0 0 2px rgba(255,153,51,0.15); }
+.ai-improve-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 10px; background: #FF9933; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-top: 4px; }
+.ai-improve-btn:hover { background: #e68a2e; }
+.ai-improve-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ai-status { padding: 8px 16px; font-size: 12px; font-weight: 600; display: none; }
+.ai-status.loading { display: block; color: #FF9933; }
+.ai-status.success { display: block; color: #128807; background: #f0fdf4; }
+.ai-status.error { display: block; color: #ef4444; background: #fef2f2; }
+.ai-results { flex: 1; padding: 16px; overflow-y: auto; }
+.ai-review-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+.ai-review-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ai-review-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #FF9933; }
+.ai-review-card-status { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; text-transform: uppercase; }
+.ai-review-card-status.pending { background: #fef3c7; color: #92400e; }
+.ai-review-card-status.accepted { background: #f0fdf4; color: #166534; }
+.ai-review-card-status.rejected { background: #fef2f2; color: #991b1b; }
+.ai-review-section { margin-bottom: 10px; }
+.ai-review-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #94a3b8; margin-bottom: 4px; }
+.ai-review-content { font-size: 12px; color: #1e293b; line-height: 1.5; white-space: pre-wrap; }
+.ai-review-actions { display: flex; gap: 6px; margin-top: 10px; }
+.ai-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s; }
+.ai-btn-accept { background: #128807; color: #fff; }
+.ai-btn-accept:hover { background: #0f6d06; }
+.ai-btn-reject { background: #ef4444; color: #fff; }
+.ai-btn-reject:hover { background: #dc2626; }
+.ai-btn-edit { background: #e5e7eb; color: #374151; }
+.ai-btn-edit:hover { background: #d1d5db; }
+.ai-review-editor { margin-top: 8px; }
+.ai-review-editor textarea { width: 100%; min-height: 100px; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; font-family: inherit; resize: vertical; outline: none; }
+.ai-review-editor textarea:focus { border-color: #FF9933; }
+.ai-review-editor-actions { display: flex; gap: 6px; margin-top: 6px; }
+.ai-reasoning { margin-top: 8px; padding: 8px; background: #fffbeb; border-radius: 6px; font-size: 11px; color: #92400e; }
+.ai-reasoning summary { font-weight: 600; cursor: pointer; }
+.ai-no-items { font-size: 11px; color: #94a3b8; font-style: italic; }
+
+/* ── Versions ──────────────────────────────────────── */
+.versions-panel { max-width: 700px; margin: 24px auto; padding: 0 24px; }
+.versions-header { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
+.versions-loading { padding: 40px; text-align: center; color: #94a3b8; font-size: 14px; }
+.versions-empty { padding: 40px; text-align: center; color: #94a3b8; font-size: 13px; }
+.version-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; transition: box-shadow 0.15s; }
+.version-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.version-card.active { border-left: 3px solid #FF9933; background: #fff7ed; }
+.version-card-info { flex: 1; min-width: 0; }
+.version-card-label { font-size: 13px; font-weight: 600; color: #1e293b; }
+.version-card-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; display: flex; gap: 12px; align-items: center; }
+.version-card-badge { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 8px; background: #e5e7eb; color: #374151; }
+.version-card-badge.active { background: #FF9933; color: #fff; }
+.version-restore-btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid #d1d5db; background: #fff; color: #374151; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+.version-restore-btn:hover { background: #FF9933; color: #fff; border-color: #FF9933; }
+.version-restore-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.version-changes { margin-top: 8px; padding: 8px; background: #f8fafc; border-radius: 6px; }
+.version-change-item { font-size: 11px; color: #374151; padding: 2px 0; display: flex; gap: 6px; align-items: center; }
+.version-change-section { font-weight: 600; color: #FF9933; }
+
+@media (max-width: 768px) {
+  .preview-layout { flex-direction: column; height: auto; }
+  .sidebar { width: 100%; max-height: 160px; border-right: none; border-bottom: 1px solid #e5e7eb; }
+  .profile-list { display: flex; gap: 4px; padding: 8px; overflow-x: auto; }
+  .profile-item { min-width: 160px; }
+  .toolbar { padding: 8px 12px; }
+  .preview-stage { padding: 12px; }
+  .preview-page { width: 100% !important; }
+  .ai-layout { flex-direction: column; height: auto; }
+  .ai-preview { border-right: none; border-bottom: 1px solid #e5e7eb; max-height: 50vh; }
+  .ai-panel { width: 100%; }
+  .versions-panel { padding: 0 12px; }
+  .version-card { flex-direction: column; align-items: stretch; gap: 8px; }
+}
+</style>
+<script src="../js/auth.js"></script>
+</head>
+<body>
+
+<header class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
+  <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
+    <div class="flex justify-between w-full">
+      <div class="flex items-center gap-8">
+        <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+        <nav class="hidden lg:flex items-center gap-4">
+          <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
+          <a href="index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Career Studio</a>
+          <a href="resume-profiles.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Resume Profiles</a>
+          <a href="#" class="text-primary font-medium text-sm border-b-2 border-primary">Resume Preview</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-3">
+        <a id="config-link" href="#" class="text-sm font-bold text-primary hover:underline hidden items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">settings</span>
+          Open Configuration
+        </a>
+        <div id="auth-container"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="pt-16">
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="preview" onclick="switchTab('preview')">Preview</button>
+    <button class="tab-btn" data-tab="customize" onclick="switchTab('customize')">Customize</button>
+    <button class="tab-btn" data-tab="ai" onclick="switchTab('ai')">AI Assistant</button>
+    <button class="tab-btn" data-tab="versions" onclick="switchTab('versions')">Versions</button>
+    <button class="tab-btn" disabled>Export — Coming Soon</button>
+  </div>
+
+  <!-- Tab: Preview -->
+  <div id="tab-preview" class="tab-content active">
+    <div class="preview-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">Resume Profiles</div>
+        <div class="profile-list" id="profile-list">
+          <div class="preview-loading" style="height:120px">Loading profiles...</div>
+        </div>
+        <div class="sidebar-footer">
+          <a href="resume-profiles.html">+ New Profile</a>
+        </div>
+      </aside>
+
+      <!-- Preview Main -->
+      <div class="preview-main">
+        <!-- Toolbar -->
+        <div class="toolbar" id="toolbar">
+          <span class="toolbar-label">Template</span>
+          <select class="toolbar-select" id="template-select">
+            <option value="modern">Modern</option>
+            <option value="minimal">Minimal</option>
+          </select>
+
+          <div class="toolbar-divider"></div>
+
+          <span class="toolbar-label">Zoom</span>
+          <select class="toolbar-select" id="zoom-select">
+            <option value="75">75%</option>
+            <option value="100" selected>100%</option>
+            <option value="125">125%</option>
+          </select>
+
+          <div class="toolbar-divider"></div>
+
+          <span class="toolbar-label">Page</span>
+          <select class="toolbar-select" id="pagesize-select">
+            <option value="a4">A4</option>
+            <option value="letter">Letter</option>
+          </select>
+
+          <div class="toolbar-divider"></div>
+
+          <div id="toolbar-status" class="status-msg"></div>
+        </div>
+
+        <!-- Stage -->
+        <div class="preview-stage" id="preview-stage">
+          <div class="preview-page a4" id="preview-page">
+            <div class="preview-empty" id="preview-empty">
+              <span class="material-symbols-outlined text-5xl text-on-surface-variant/20" style="font-variation-settings:'FILL'1;">description</span>
+              <p class="text-sm font-bold text-on-surface mt-3">Select a Resume Profile</p>
+              <p class="text-xs text-on-surface-variant mt-1">Choose a profile from the sidebar to preview.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Customize -->
+  <div id="tab-customize" class="tab-content">
+    <div class="customize-panel">
+      <div class="customize-card">
+        <h3>Section Visibility</h3>
+        <div id="customize-sections"></div>
+      </div>
+      <div class="customize-card">
+        <h3>Max Bullets Per Project</h3>
+        <input type="number" id="customize-maxBullets" class="customize-input" min="1" max="20" value="3"/>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="customize-save" onclick="saveCustomize()">Save Settings</button>
+        <div id="customize-status" class="status-msg"></div>
+      </div>
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;">
+        <a id="config-link-bottom" href="#" class="customize-link">Open Full Configuration →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Export (Coming Soon) -->
+  <div id="tab-export" class="tab-content">
+    <div class="coming-soon">
+      <span class="material-symbols-outlined icon" style="font-variation-settings:'FILL'1;">download</span>
+      <h2>Export</h2>
+      <p>PDF and DOCX export coming in Phase 5.</p>
+    </div>
+  </div>
+
+  <!-- Tab: AI Assistant -->
+  <div id="tab-ai" class="tab-content">
+    <div class="ai-layout">
+      <div class="ai-preview">
+        <div class="ai-preview-header">Preview</div>
+        <div class="ai-preview-stage" id="ai-preview-stage">
+          <div class="preview-page a4" id="ai-preview-page">
+            <div class="preview-empty" id="ai-preview-empty">
+              <span class="material-symbols-outlined text-5xl text-on-surface-variant/20" style="font-variation-settings:'FILL'1;">description</span>
+              <p class="text-sm font-bold text-on-surface mt-3">Select a Resume Profile</p>
+              <p class="text-xs text-on-surface-variant mt-1">Choose a profile from the sidebar to preview.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-panel">
+        <div class="ai-panel-header">
+          <span class="material-symbols-outlined text-primary">auto_awesome</span>
+          AI Assistant
+        </div>
+
+        <div id="ai-no-profile" class="ai-empty">
+          Select a resume profile to start improving.
+        </div>
+
+        <div id="ai-controls" style="display:none">
+          <div class="ai-control-group">
+            <label class="ai-label">Section</label>
+            <select id="ai-section" class="ai-select">
+              <option value="summary">Summary</option>
+              <option value="project">Project</option>
+              <option value="achievement">Achievement</option>
+            </select>
+          </div>
+
+          <div class="ai-control-group" id="ai-section-item-group" style="display:none">
+            <label class="ai-label">Item</label>
+            <select id="ai-section-item" class="ai-select"></select>
+          </div>
+
+          <div class="ai-control-group">
+            <label class="ai-label">Action</label>
+            <select id="ai-action" class="ai-select"></select>
+          </div>
+
+          <div class="ai-control-group">
+            <label class="ai-label">Style / Focus</label>
+            <select id="ai-style" class="ai-select">
+              <option value="">Default</option>
+              <option value="professional">Professional</option>
+              <option value="concise">Concise</option>
+              <option value="detailed">Detailed</option>
+              <option value="action-oriented">Action-Oriented</option>
+            </select>
+          </div>
+
+          <button id="ai-improve-btn" class="ai-improve-btn" onclick="doImprove()">
+            <span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span>
+            Improve
+          </button>
+        </div>
+
+        <div id="ai-status" class="ai-status"></div>
+
+        <div class="ai-results" id="ai-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Versions -->
+  <div id="tab-versions" class="tab-content">
+    <div class="versions-panel">
+      <div class="versions-header">Revision History</div>
+      <div id="versions-no-profile" class="ai-empty">
+        Select a resume profile to view versions.
+      </div>
+      <div id="versions-list" style="display:none"></div>
+      <div id="versions-loading" class="versions-loading" style="display:none">
+        <div class="animate-pulse">Loading versions...</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { el } from './renderer/renderer.js';
+import { ModernRenderer } from './renderer/templates/modern.js';
+import { MinimalRenderer } from './renderer/templates/minimal.js';
+
+const TEMPLATES = { modern: ModernRenderer, minimal: MinimalRenderer };
+const contextCache = new Map();
+
+let profiles = [];
+let currentProfileId = null;
+let currentContext = null;
+let currentTemplate = 'modern';
+let currentZoom = 100;
+let currentPageSize = 'a4';
+let isLoading = false;
+let customizeData = null;
+
+function timeAgo(dateStr) {
+  if (!dateStr) return null;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const urlId = params.get('id');
+
+  const res = await window.apiRequest('GET', '/api/career-studio/resume-profiles');
+  if (res.success) {
+    profiles = res.data || [];
+    renderSidebar();
+  }
+
+  if (urlId && profiles.find(p => p.id === urlId)) {
+    selectProfile(urlId);
+  }
+
+  setupToolbar();
+
+  window.addEventListener('focus', () => {
+    const ts = sessionStorage.getItem('resume-config-saved');
+    if (ts && currentProfileId && sessionStorage.getItem('resume-config-profile') === currentProfileId) {
+      const elapsed = Date.now() - parseInt(ts);
+      if (elapsed < 30000) {
+        contextCache.delete(currentProfileId);
+        loadContext(currentProfileId).then(() => renderResume());
+        sessionStorage.removeItem('resume-config-saved');
+      }
+    }
+  });
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      if (!tab) return;
+      switchTab(tab);
+    });
+  });
+}
+
+function renderSidebar() {
+  const list = document.getElementById('profile-list');
+  const empty = document.getElementById('preview-empty');
+
+  if (!profiles || profiles.length === 0) {
+    list.innerHTML = '<div class="text-center py-6 text-sm text-on-surface-variant">No profiles yet.</div>';
+    if (empty) empty.style.display = 'flex';
+    return;
+  }
+
+  if (empty) empty.style.display = 'none';
+
+  list.innerHTML = '';
+  profiles.forEach(p => {
+    const item = el('div', { className: 'profile-item', 'data-id': p.id, onclick: () => selectProfile(p.id) },
+      el('span', { className: 'profile-item-name' }, p.name),
+      el('span', { className: 'profile-item-meta' },
+        p.isDefault ? el('span', { className: 'profile-item-badge' }, 'Default') : null,
+        timeAgo(p.updatedAt) ? `Updated ${timeAgo(p.updatedAt)}` : capitalize(p.targetRole)
+      )
+    );
+    if (p.id === currentProfileId) item.classList.add('active');
+    list.appendChild(item);
+  });
+}
+
+async function selectProfile(id) {
+  currentProfileId = id;
+  history.replaceState(null, '', `?id=${id}`);
+
+  document.querySelectorAll('.profile-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === id);
+  });
+
+  document.getElementById('config-link').href = `resume-config.html?id=${id}`;
+  document.getElementById('config-link').classList.remove('hidden');
+  document.getElementById('config-link-bottom').href = `resume-config.html?id=${id}`;
+
+  showPreviewLoading();
+  await loadContext(id);
+  renderResume();
+
+  if (document.getElementById('tab-ai')?.classList.contains('active')) {
+    document.getElementById('ai-no-profile').style.display = 'none';
+    document.getElementById('ai-controls').style.display = '';
+    updateActionOptions();
+    updateSectionItems();
+    updateAiPreview();
+  }
+  if (document.getElementById('tab-versions')?.classList.contains('active')) {
+    loadVersions();
+  }
+}
+
+function showPreviewLoading() {
+  const page = document.getElementById('preview-page');
+  page.innerHTML = '<div class="preview-loading"><div class="animate-pulse">Loading resume data...</div></div>';
+}
+
+function showPreviewError(msg) {
+  const page = document.getElementById('preview-page');
+  page.innerHTML = `<div class="preview-error"><span class="material-symbols-outlined text-3xl mb-2" style="font-variation-settings:'FILL'1;">error</span><p class="font-bold">Failed to Load</p><p class="text-sm mt-1">${escHtml(msg)}</p></div>`;
+}
+
+async function loadContext(id) {
+  if (contextCache.has(id)) {
+    currentContext = contextCache.get(id);
+    return;
+  }
+
+  isLoading = true;
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${id}/context`);
+    if (res.success && res.data) {
+      currentContext = res.data;
+      contextCache.set(id, currentContext);
+    } else {
+      showPreviewError(res.error || 'Failed to load context');
+    }
+  } catch (err) {
+    showPreviewError(err.message);
+  } finally {
+    isLoading = false;
+  }
+}
+
+function injectTemplateCSS(css) {
+  let style = document.getElementById('resume-template-css');
+  if (style) style.remove();
+  style = document.createElement('style');
+  style.id = 'resume-template-css';
+  style.textContent = css;
+  document.head.appendChild(style);
+}
+
+function renderResume() {
+  if (!currentContext) return;
+  const page = document.getElementById('preview-page');
+
+  const TemplateClass = TEMPLATES[currentTemplate] || ModernRenderer;
+  const renderer = new TemplateClass();
+
+  injectTemplateCSS(TemplateClass.css);
+
+  page.innerHTML = '';
+  try {
+    const resumeEl = renderer.render(currentContext);
+    page.appendChild(resumeEl);
+  } catch (err) {
+    showPreviewError('Render error: ' + err.message);
+    return;
+  }
+
+  applyZoom();
+}
+
+function applyZoom() {
+  const page = document.getElementById('preview-page');
+  const scale = currentZoom / 100;
+  page.style.transform = `scale(${scale})`;
+}
+
+function setupToolbar() {
+  document.getElementById('template-select').addEventListener('change', async (e) => {
+    currentTemplate = e.target.value;
+    renderResume();
+    if (currentProfileId) {
+      const res = await window.apiRequest('PUT', `/api/career-studio/resume-profiles/${currentProfileId}`, { template: currentTemplate });
+      if (res.success) {
+        showToolbarStatus('Template saved', false);
+      }
+    }
+  });
+
+  document.getElementById('zoom-select').addEventListener('change', (e) => {
+    currentZoom = parseInt(e.target.value);
+    applyZoom();
+  });
+
+  document.getElementById('pagesize-select').addEventListener('change', (e) => {
+    currentPageSize = e.target.value;
+    const page = document.getElementById('preview-page');
+    page.className = `preview-page ${currentPageSize}`;
+    applyZoom();
+  });
+}
+
+function showToolbarStatus(text, isError) {
+  const el = document.getElementById('toolbar-status');
+  el.textContent = text;
+  el.className = 'status-msg ' + (isError ? 'error' : 'success');
+  setTimeout(() => { el.className = 'status-msg'; }, 2500);
+}
+
+window.switchTab = function(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === `tab-${name}`);
+  });
+  if (name === 'customize' && currentProfileId) {
+    loadCustomizeSettings();
+  }
+};
+
+async function loadCustomizeSettings() {
+  if (!currentProfileId) return;
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${currentProfileId}/sections`);
+    if (!res.success) return;
+    customizeData = res.data;
+    renderCustomize();
+  } catch (e) {
+    document.getElementById('customize-sections').innerHTML = '<p class="text-sm text-error">Failed to load settings.</p>';
+  }
+}
+
+function renderCustomize() {
+  if (!customizeData) return;
+  const container = document.getElementById('customize-sections');
+  container.innerHTML = '';
+  customizeData.order.forEach(key => {
+    const label = customizeData.labels?.[key] || key.charAt(0).toUpperCase() + key.slice(1);
+    const visible = customizeData.visibility?.[key] !== false;
+    const toggle = el('label', { className: 'customize-toggle' },
+      el('input', { type: 'checkbox', checked: visible, 'data-key': key }),
+      label
+    );
+    container.appendChild(toggle);
+  });
+  const maxBulletsInput = document.getElementById('customize-maxBullets');
+  if (maxBulletsInput) {
+    maxBulletsInput.value = customizeData.projects?.maxBullets ?? 3;
+  }
+}
+
+// ── AI Assistant ────────────────────────────────────
+const ACTION_OPTIONS = {
+  summary: ['rewrite', 'improve', 'ats-optimize', 'shorten', 'expand', 'technical', 'beginner-friendly'],
+  project: ['improve', 'quantify', 'action-verbs', 'star-format', 'ats'],
+  achievement: ['rewrite', 'quantify', 'recruiter-friendly'],
+};
+const ACTION_LABELS = {
+  'rewrite': 'Rewrite', 'improve': 'Improve', 'ats-optimize': 'ATS Optimize',
+  'shorten': 'Shorten', 'expand': 'Expand', 'technical': 'Make Technical',
+  'beginner-friendly': 'Beginner Friendly', 'quantify': 'Quantify',
+  'action-verbs': 'Action Verbs', 'star-format': 'STAR Format',
+  'recruiter-friendly': 'Recruiter Friendly',
+};
+
+let currentReview = null;
+
+document.getElementById('ai-section').addEventListener('change', () => {
+  updateActionOptions();
+  updateSectionItems();
+});
+document.getElementById('ai-section-item').addEventListener('change', updateActionOptions);
+
+function updateActionOptions() {
+  const section = document.getElementById('ai-section').value;
+  const actions = ACTION_OPTIONS[section] || [];
+  const sel = document.getElementById('ai-action');
+  sel.innerHTML = actions.map(a => `<option value="${a}">${ACTION_LABELS[a] || a}</option>`).join('');
+}
+
+function updateSectionItems() {
+  const section = document.getElementById('ai-section').value;
+  const group = document.getElementById('ai-section-item-group');
+  const sel = document.getElementById('ai-section-item');
+
+  if (section === 'project' && currentContext?.projects?.length) {
+    group.style.display = '';
+    sel.innerHTML = currentContext.projects.map((p, i) =>
+      `<option value="${p.id || i}">${escHtml(p.title || p.id || `Project ${i + 1}`)}</option>`
+    ).join('');
+  } else if (section === 'summary') {
+    group.style.display = 'none';
+    sel.innerHTML = '';
+  } else {
+    group.style.display = 'none';
+    sel.innerHTML = '';
+  }
+}
+
+window.doImprove = async function() {
+  const btn = document.getElementById('ai-improve-btn');
+  const status = document.getElementById('ai-status');
+  const results = document.getElementById('ai-results');
+
+  if (!currentProfileId) { showAiStatus('Select a profile first.', true); return; }
+
+  const section = document.getElementById('ai-section').value;
+  const sectionItemId = document.getElementById('ai-section-item-group').style.display !== 'none'
+    ? document.getElementById('ai-section-item').value : undefined;
+  const action = document.getElementById('ai-action').value;
+  const style = document.getElementById('ai-style').value;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="animate-spin material-symbols-outlined" style="font-size:16px">progress_activity</span> Improving...';
+  showAiStatus('AI is analyzing your resume...');
+
+  try {
+    const payload = { resumeProfileId: currentProfileId, section, action };
+    if (sectionItemId) payload.sectionItemId = sectionItemId;
+    if (style) payload.style = style;
+
+    const res = await window.apiRequest('POST', '/api/career-intelligence/improve', payload);
+    if (res.success) {
+      showAiStatus('Improvement generated!', false);
+      renderAiReview(res.data);
+    } else {
+      showAiStatus(res.error || 'Failed to improve', true);
+    }
+  } catch (err) {
+    showAiStatus(err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span> Improve';
+  }
+};
+
+function showAiStatus(msg, isError) {
+  const el = document.getElementById('ai-status');
+  el.textContent = msg;
+  if (isError === undefined) el.className = 'ai-status loading';
+  else if (isError) el.className = 'ai-status error';
+  else el.className = 'ai-status success';
+}
+
+function renderAiReview(data) {
+  const results = document.getElementById('ai-results');
+  if (!data?.review) { results.innerHTML = '<div class="ai-empty">No response from AI.</div>'; return; }
+
+  const r = data.review;
+  currentReview = r;
+  const before = r.before || {};
+  const after = r.after || {};
+
+  const card = document.createElement('div');
+  card.className = 'ai-review-card';
+  card.id = `review-${r.id}`;
+
+  card.innerHTML = `
+    <div class="ai-review-card-header">
+      <span class="ai-review-card-label">${escHtml(r.section)} — ${ACTION_LABELS[r.action] || r.action}</span>
+      <span class="ai-review-card-status ${r.status}">${r.status}</span>
+    </div>
+    <div class="ai-review-section">
+      <div class="ai-review-section-title">Before</div>
+      <div class="ai-review-content">${formatReviewContent(before)}</div>
+    </div>
+    <div class="ai-review-section">
+      <div class="ai-review-section-title">After</div>
+      <div class="ai-review-content" id="review-after-${r.id}">${formatReviewContent(after)}</div>
+    </div>
+    ${r.reasoning?.length ? `
+      <details class="ai-reasoning">
+        <summary>AI Reasoning (${r.reasoning.length})</summary>
+        ${r.reasoning.map(s => `<p style="margin-top:4px">• ${escHtml(s)}</p>`).join('')}
+      </details>
+    ` : ''}
+    <div class="ai-review-actions" id="review-actions-${r.id}">
+      <button class="ai-btn ai-btn-accept" onclick="acceptReview('${r.id}')">Accept</button>
+      <button class="ai-btn ai-btn-edit" onclick="editReview('${r.id}')">Edit & Accept</button>
+      <button class="ai-btn ai-btn-reject" onclick="rejectReview('${r.id}')">Reject</button>
+    </div>
+  `;
+
+  results.prepend(card);
+}
+
+function formatReviewContent(obj) {
+  if (!obj) return '<span class="ai-no-items">No content</span>';
+  const parts = [];
+  if (obj.summary) parts.push(escHtml(obj.summary));
+  if (obj.title) parts.push(`<strong>${escHtml(obj.title)}</strong>`);
+  if (obj.description) parts.push(escHtml(obj.description));
+  if (obj.bullets?.length) {
+    parts.push('<ul style="margin:4px 0 0 16px;padding:0">' +
+      obj.bullets.map(b => `<li style="list-style:disc;font-size:12px">${escHtml(b)}</li>`).join('') +
+      '</ul>');
+  }
+  return parts.join('<br>') || '<span class="ai-no-items">No content</span>';
+}
+
+window.acceptReview = async function(reviewId) {
+  try {
+    const res = await window.apiRequest('POST', `/api/career-intelligence/review/${reviewId}/accept`);
+    if (res.success) {
+      document.querySelectorAll(`#review-${CSS.escape(reviewId)} .ai-review-card-status`).forEach(el => {
+        el.textContent = 'accepted'; el.className = 'ai-review-card-status accepted';
+      });
+      document.getElementById(`review-actions-${CSS.escape(reviewId)}`).innerHTML =
+        '<span style="font-size:12px;color:#128807;font-weight:600">✓ Accepted</span>';
+      refreshAfterVersionChange();
+    } else {
+      showAiStatus(res.error || 'Failed to accept', true);
+    }
+  } catch (err) { showAiStatus(err.message, true); }
+};
+
+window.rejectReview = async function(reviewId) {
+  try {
+    const res = await window.apiRequest('POST', `/api/career-intelligence/review/${reviewId}/reject`);
+    if (res.success) {
+      document.querySelectorAll(`#review-${CSS.escape(reviewId)} .ai-review-card-status`).forEach(el => {
+        el.textContent = 'rejected'; el.className = 'ai-review-card-status rejected';
+      });
+      document.getElementById(`review-actions-${CSS.escape(reviewId)}`).innerHTML =
+        '<span style="font-size:12px;color:#ef4444;font-weight:600">✗ Rejected</span>';
+    } else {
+      showAiStatus(res.error || 'Failed to reject', true);
+    }
+  } catch (err) { showAiStatus(err.message, true); }
+};
+
+window.editReview = async function(reviewId) {
+  const actionsEl = document.getElementById(`review-actions-${CSS.escape(reviewId)}`);
+  if (document.getElementById(`editor-${CSS.escape(reviewId)}`)) return;
+
+  const afterEl = document.getElementById(`review-after-${CSS.escape(reviewId)}`);
+  const currentText = afterEl?.textContent || '';
+
+  const editor = document.createElement('div');
+  editor.className = 'ai-review-editor';
+  editor.id = `editor-${reviewId}`;
+  editor.innerHTML = `
+    <textarea id="edit-text-${reviewId}">${escHtml(currentText)}</textarea>
+    <div class="ai-review-editor-actions">
+      <button class="ai-btn ai-btn-accept" onclick="submitEdit('${reviewId}')">
+        <span class="material-symbols-outlined" style="font-size:14px">check</span> Save
+      </button>
+      <button class="ai-btn ai-btn-reject" onclick="cancelEdit('${reviewId}')">Cancel</button>
+    </div>
+  `;
+  actionsEl.parentNode.insertBefore(editor, actionsEl.nextSibling);
+};
+
+window.submitEdit = async function(reviewId) {
+  const textarea = document.getElementById(`edit-text-${reviewId}`);
+  if (!textarea) return;
+  try {
+    const res = await window.apiRequest('POST', `/api/career-intelligence/review/${reviewId}/edit`, {
+      edited: { raw: textarea.value }
+    });
+    if (res.success) {
+      document.getElementById(`editor-${CSS.escape(reviewId)}`)?.remove();
+      document.querySelectorAll(`#review-${CSS.escape(reviewId)} .ai-review-card-status`).forEach(el => {
+        el.textContent = 'accepted'; el.className = 'ai-review-card-status accepted';
+      });
+      document.getElementById(`review-actions-${CSS.escape(reviewId)}`).innerHTML =
+        '<span style="font-size:12px;color:#128807;font-weight:600">✓ Accepted (edited)</span>';
+      refreshAfterVersionChange();
+    } else {
+      showAiStatus(res.error || 'Failed to save edit', true);
+    }
+  } catch (err) { showAiStatus(err.message, true); }
+};
+
+window.cancelEdit = function(reviewId) {
+  document.getElementById(`editor-${CSS.escape(reviewId)}`)?.remove();
+};
+
+function refreshAfterVersionChange() {
+  contextCache.delete(currentProfileId);
+  loadContext(currentProfileId).then(() => {
+    renderResume();
+    updateAiPreview();
+  });
+}
+
+function updateAiPreview() {
+  if (!currentContext) return;
+  const page = document.getElementById('ai-preview-page');
+  const TemplateClass = TEMPLATES[currentTemplate] || ModernRenderer;
+  const renderer = new TemplateClass();
+  page.innerHTML = '';
+  try {
+    const resumeEl = renderer.render(currentContext);
+    page.appendChild(resumeEl);
+  } catch { /* ignore */ }
+}
+
+// ── Versions ─────────────────────────────────────────
+async function loadVersions() {
+  const list = document.getElementById('versions-list');
+  const loading = document.getElementById('versions-loading');
+  const noProfile = document.getElementById('versions-no-profile');
+
+  if (!currentProfileId) {
+    list.style.display = 'none';
+    loading.style.display = 'none';
+    noProfile.style.display = 'block';
+    return;
+  }
+
+  noProfile.style.display = 'none';
+  loading.style.display = 'block';
+  list.style.display = 'none';
+
+  try {
+    const res = await window.apiRequest('GET', `/api/career-intelligence/versions/${currentProfileId}`);
+    loading.style.display = 'none';
+    if (res.success && res.data?.length) {
+      list.style.display = 'block';
+      renderVersions(res.data);
+    } else {
+      list.innerHTML = '<div class="versions-empty">No versions yet. Use AI Assistant to create one.</div>';
+      list.style.display = 'block';
+    }
+  } catch {
+    loading.style.display = 'none';
+    list.style.display = 'block';
+    list.innerHTML = '<div class="versions-empty">Failed to load versions.</div>';
+  }
+}
+
+function renderVersions(versions) {
+  const list = document.getElementById('versions-list');
+  list.innerHTML = versions.map(v => {
+    const isActive = v.isActive;
+    return `
+      <div class="version-card${isActive ? ' active' : ''}">
+        <div class="version-card-info">
+          <div class="version-card-label">${escHtml(v.label || 'Unnamed')}</div>
+          <div class="version-card-meta">
+            <span>${v.createdAt ? new Date(v.createdAt).toLocaleDateString() : ''}</span>
+            ${isActive ? '<span class="version-card-badge active">Active</span>' : ''}
+            <span class="version-card-badge">${v.changes?.length || 0} change${v.changes?.length !== 1 ? 's' : ''}</span>
+          </div>
+          ${v.changes?.length ? `
+            <div class="version-changes">
+              ${v.changes.map(c => `
+                <div class="version-change-item">
+                  <span class="version-change-section">${escHtml(c.section)}</span>
+                  <span>— ${escHtml(c.changeType)}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+        <button class="version-restore-btn" onclick="restoreVersion('${v.id}')" ${isActive ? 'disabled' : ''}>
+          ${isActive ? 'Current' : 'Restore'}
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+window.restoreVersion = async function(revisionId) {
+  if (!confirm('Restore this version? Current changes will be replaced.')) return;
+  try {
+    const res = await window.apiRequest('POST', '/api/career-intelligence/versions/restore', {
+      profileId: currentProfileId, revisionId
+    });
+    if (res.success) {
+      await loadVersions();
+      refreshAfterVersionChange();
+      showAiStatus('Version restored!', false);
+    } else {
+      showAiStatus(res.error || 'Failed to restore', true);
+    }
+  } catch (err) { showAiStatus(err.message, true); }
+};
+
+// ── Enhanced switchTab ──────────────────────────────
+const origSwitchTab = window.switchTab;
+window.switchTab = function(name) {
+  origSwitchTab(name);
+  if (name === 'ai') {
+    if (currentProfileId) {
+      document.getElementById('ai-no-profile').style.display = 'none';
+      document.getElementById('ai-controls').style.display = '';
+      updateActionOptions();
+      updateSectionItems();
+      updateAiPreview();
+    } else {
+      document.getElementById('ai-no-profile').style.display = 'block';
+      document.getElementById('ai-controls').style.display = 'none';
+    }
+  }
+  if (name === 'versions') {
+    loadVersions();
+  }
+};
+
+window.saveCustomize = async function() {
+  if (!currentProfileId || !customizeData) return;
+  const statusEl = document.getElementById('customize-status');
+
+  const visibility = {};
+  document.querySelectorAll('#customize-sections .customize-toggle input').forEach(cb => {
+    visibility[cb.dataset.key] = cb.checked;
+  });
+
+  const maxBullets = parseInt(document.getElementById('customize-maxBullets').value) || 3;
+
+  const payload = {
+    order: customizeData.order,
+    visibility,
+    labels: customizeData.labels || {},
+    projects: { maxBullets },
+  };
+
+  try {
+    const res = await window.apiRequest('PUT', `/api/career-studio/resume-profiles/${currentProfileId}/sections`, payload);
+    if (res.success) {
+      customizeData = res.data;
+      statusEl.textContent = 'Settings saved!';
+      statusEl.className = 'status-msg success';
+      setTimeout(() => { statusEl.className = 'status-msg'; }, 2000);
+      contextCache.delete(currentProfileId);
+      await loadContext(currentProfileId);
+      switchTab('preview');
+      renderResume();
+    } else {
+      statusEl.textContent = res.error || 'Failed to save';
+      statusEl.className = 'status-msg error';
+    }
+  } catch (err) {
+    statusEl.textContent = err.message;
+    statusEl.className = 'status-msg error';
+  }
+};
+
+if (window.clerkReady) init();
+else window.addEventListener('clerk-ready', init);
+</script>
+</body>
+</html>

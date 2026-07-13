@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="theme-color" content="#FF9933"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="ProgressOS"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-512.svg"/>
+<title>Resume Configuration | ProgressOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = { theme: { extend: { colors: { primary: "#FF9933", "on-surface": "#1E293B", "on-surface-variant": "#64748B", secondary: "#000080", tertiary: "#128807", error: "#EF4444" }, spacing: { "max_width": "1440px", "gutter": "24px" } } } }
+</script>
+<style>
+body { background-color: #F9FAFB; color: #1E293B; font-family: 'Inter', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: #FFFFFF; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); transition: all 0.3s ease; }
+.glass-card:hover { border-color: #D1D5DB; }
+.tab-btn { padding: 10px 20px; font-size: 13px; font-weight: 600; color: #64748B; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.tab-btn.active { color: #FF9933; border-bottom-color: #FF9933; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fade-in-up 0.3s ease-out; }
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.stat-card { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px; text-align: center; }
+.stat-card .value { font-size: 28px; font-weight: 700; font-family: 'Geist', sans-serif; color: #1E293B; }
+.stat-card .label { font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+.project-card { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; padding: 14px 16px; transition: all 0.2s; }
+.project-card.selected { border-color: #FF9933; background: #FFF8F0; }
+.project-checkbox { width: 20px; height: 20px; accent-color: #FF9933; cursor: pointer; }
+.bullet-checkbox { width: 16px; height: 16px; accent-color: #FF9933; cursor: pointer; }
+.order-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid #E5E7EB; border-radius: 6px; background: white; cursor: pointer; font-size: 16px; color: #64748B; transition: all 0.15s; }
+.order-btn:hover { background: #F1F5F9; border-color: #CBD5E1; }
+.order-btn:active { transform: scale(0.95); }
+.section-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: white; border: 1px solid #E5E7EB; border-radius: 8px; }
+.context-section { margin-bottom: 20px; }
+.context-section h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; margin-bottom: 8px; }
+.warning-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: #FEF2F2; color: #EF4444; font-size: 11px; font-weight: 600; border-radius: 20px; }
+</style>
+<script src="../js/auth.js"></script>
+</head>
+<body class="bg-background selection:bg-primary/20 selection:text-primary">
+
+<header class="fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant shadow-sm">
+  <div class="flex justify-between items-center px-gutter h-16 max-w-max_width mx-auto">
+    <div class="flex justify-between w-full">
+      <div class="flex items-center gap-8">
+        <a href="../index.html" class="text-xl font-bold text-primary tracking-tight font-['Geist']">ProgressOS</a>
+        <nav class="hidden lg:flex items-center gap-4">
+          <a href="../index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Dashboard</a>
+          <a href="index.html" class="text-on-surface-variant font-medium text-sm hover:text-primary">Career Studio</a>
+          <a href="resume-profiles.html" class="text-primary font-medium text-sm border-b-2 border-primary">Resume Profiles</a>
+        </nav>
+      </div>
+      <div id="auth-container"></div>
+    </div>
+  </div>
+</header>
+
+<main class="pt-24 pb-24 lg:pb-16 px-gutter max-w-max_width mx-auto">
+
+  <div id="loading-state" class="text-center py-20">
+    <div class="animate-pulse space-y-3">
+      <div class="h-6 w-48 bg-gray-200 rounded mx-auto"></div>
+      <div class="h-4 w-64 bg-gray-200 rounded mx-auto"></div>
+    </div>
+  </div>
+
+  <div id="page-content" class="hidden">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-1">
+      <a href="resume-profiles.html" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">arrow_back</a>
+      <div class="flex-1">
+        <h1 id="resume-name" class="text-2xl font-bold text-on-surface font-['Geist']">Resume Configuration</h1>
+        <p id="resume-target" class="text-sm text-on-surface-variant"></p>
+      </div>
+      <a id="preview-btn" href="#" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e68a2e] transition-all flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[16px]">visibility</span>
+        Preview
+      </a>
+    </div>
+
+    <!-- Completion bar -->
+    <div class="flex items-center gap-2 mb-6 mt-3">
+      <div class="h-2 flex-1 bg-gray-100 rounded-full overflow-hidden max-w-md">
+        <div id="completion-bar" class="h-full bg-primary rounded-full" style="width:0%"></div>
+      </div>
+      <span id="completion-text" class="text-xs font-bold text-on-surface-variant">0%</span>
+      <span id="save-status" class="text-xs font-bold text-tertiary ml-2 hidden">Saved</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-0 border-b border-gray-200 overflow-x-auto mb-6">
+      <div class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Overview</div>
+      <div class="tab-btn" data-tab="projects" onclick="switchTab('projects')">Projects</div>
+      <div class="tab-btn" data-tab="certificates" onclick="switchTab('certificates')">Certificates</div>
+      <div class="tab-btn" data-tab="sections" onclick="switchTab('sections')">Sections</div>
+      <div class="tab-btn" data-tab="context" onclick="switchTab('context')">Resume Context</div>
+    </div>
+
+    <!-- Tab: Overview -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="glass-card rounded-xl p-5">
+            <h2 class="text-sm font-bold text-on-surface font-['Geist'] mb-4">General Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-on-surface-variant block mb-1">Name</label>
+                <input id="cfg-name" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"/>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-on-surface-variant block mb-1">Target Role</label>
+                <input id="cfg-targetRole" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"/>
+              </div>
+              <div class="md:col-span-2">
+                <label class="text-xs font-bold text-on-surface-variant block mb-1">Description</label>
+                <textarea id="cfg-description" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none resize-none"></textarea>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-on-surface-variant block mb-1">Template</label>
+                <select id="cfg-template" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
+                  <option value="modern">Modern</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="classic">Classic</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-on-surface-variant block mb-1">Page Size</label>
+                <select id="cfg-pageSize" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
+                  <option value="a4">A4</option>
+                  <option value="letter">Letter</option>
+                </select>
+              </div>
+            </div>
+            <button onclick="saveGeneral()" class="mt-4 bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e68a2e] transition-all">Save</button>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <!-- Completion Details -->
+          <div class="glass-card rounded-xl p-5">
+            <h2 class="text-sm font-bold text-on-surface font-['Geist'] mb-3">Completion</h2>
+            <div id="completion-details" class="space-y-2"></div>
+          </div>
+          <!-- Stats -->
+          <div class="glass-card rounded-xl p-5">
+            <h2 class="text-sm font-bold text-on-surface font-['Geist'] mb-3">Included</h2>
+            <div id="stats-cards" class="grid grid-cols-2 gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Projects -->
+    <div class="tab-panel" id="tab-projects">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-on-surface-variant">Select projects and choose which bullet points to include.</p>
+        <button onclick="saveProjects()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e68a2e] transition-all">Save Projects</button>
+      </div>
+      <div id="projects-list" class="space-y-2"></div>
+      <div id="projects-empty" class="hidden text-center py-10">
+        <span class="material-symbols-outlined text-4xl text-on-surface-variant/20 block mb-2" style="font-variation-settings:'FILL'1;">folder_off</span>
+        <p class="text-sm font-bold text-on-surface">No Projects Yet</p>
+        <p class="text-xs text-on-surface-variant mt-1">Add projects from the tracker first.</p>
+      </div>
+    </div>
+
+    <!-- Tab: Certificates -->
+    <div class="tab-panel" id="tab-certificates">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-on-surface-variant">Select certificates to include in this resume.</p>
+        <button onclick="saveCertificates()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e68a2e] transition-all">Save Certificates</button>
+      </div>
+      <div id="certificates-list" class="space-y-2"></div>
+      <div id="certificates-empty" class="hidden text-center py-10">
+        <span class="material-symbols-outlined text-4xl text-on-surface-variant/20 block mb-2" style="font-variation-settings:'FILL'1;">badge</span>
+        <p class="text-sm font-bold text-on-surface">No Certificates Yet</p>
+        <p class="text-xs text-on-surface-variant mt-1">Add certificates to include them in your resume.</p>
+        <button onclick="openCertManager()" class="mt-3 bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e68a2e] transition-all">Manage Certificates</button>
+      </div>
+    </div>
+
+    <!-- Tab: Sections -->
+    <div class="tab-panel" id="tab-sections">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-on-surface-variant">Reorder sections and control visibility.</p>
+        <button onclick="saveSections()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e68a2e] transition-all">Save Sections</button>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Section Order & Visibility</h3>
+          <div id="sections-list" class="space-y-2"></div>
+        </div>
+        <div>
+          <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Labels & Settings</h3>
+          <div id="sections-labels" class="space-y-3 glass-card rounded-xl p-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Resume Context -->
+    <div class="tab-panel" id="tab-context">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-on-surface-variant">
+          Canonical resume data. All renderers (PDF, HTML, AI) consume this object.
+          <span class="text-primary font-bold ml-1">This is the only source of truth.</span>
+        </p>
+        <div class="flex gap-2">
+          <button onclick="downloadResumePDF()" class="bg-secondary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#0000b3] transition-all flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px]">download</span>
+            PDF
+          </button>
+          <button onclick="loadResumeContext()" class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#e68a2e] transition-all">Refresh</button>
+        </div>
+      </div>
+
+      <!-- Metadata -->
+      <div id="ctx-metadata" class="glass-card rounded-xl p-4 mb-4 hidden">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Metadata</h3>
+          <span id="ctx-version" class="text-[10px] font-bold bg-gray-100 px-2 py-0.5 rounded"></span>
+        </div>
+        <div id="ctx-meta-body" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+      </div>
+
+      <!-- Warnings -->
+      <div id="ctx-warnings" class="mb-4 space-y-1 hidden"></div>
+
+      <!-- Missing -->
+      <div id="ctx-missing" class="mb-4 hidden"></div>
+
+      <!-- Stats -->
+      <div id="ctx-stats" class="grid grid-cols-4 gap-3 mb-6 hidden"></div>
+
+      <!-- Computed -->
+      <div id="ctx-computed" class="glass-card rounded-xl p-4 mb-4 hidden">
+        <h3 class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Computed Fields</h3>
+        <div id="ctx-computed-body" class="grid grid-cols-3 gap-3"></div>
+      </div>
+
+      <!-- Section Content -->
+      <div id="ctx-content" class="space-y-4 hidden"></div>
+
+      <!-- Empty state -->
+      <div id="ctx-empty" class="text-center py-10 hidden">
+        <span class="material-symbols-outlined text-4xl text-on-surface-variant/20 block mb-2" style="font-variation-settings:'FILL'1;">code</span>
+        <p class="text-sm font-bold text-on-surface">No Context</p>
+        <p class="text-xs text-on-surface-variant mt-1">Configure your resume profile first.</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Certificate Manager Modal -->
+<div id="cert-modal" class="fixed inset-0 z-[100] hidden items-center justify-center">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeCertModal()"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 max-h-[80vh] overflow-y-auto animate-slide-down">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold font-['Geist']">Manage Certificates</h3>
+      <button onclick="closeCertModal()" class="material-symbols-outlined text-on-surface-variant hover:text-on-surface">close</button>
+    </div>
+    <div class="mb-4 flex gap-2">
+      <input id="new-cert-name" placeholder="Certificate name" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+      <input id="new-cert-issuer" placeholder="Issuer" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+      <button onclick="addCertificate()" class="bg-primary text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#e68a2e]">Add</button>
+    </div>
+    <div id="cert-manager-list" class="space-y-2"></div>
+    <div id="cert-manager-empty" class="text-center py-6 text-sm text-on-surface-variant hidden">No certificates. Add one above.</div>
+  </div>
+</div>
+
+<script>
+let resumeId = null;
+let resumeData = null;
+let projectsData = [];
+let certificatesData = [];
+let achievementsData = null;
+let sectionsData = null;
+
+function showStatus(text, isError) {
+  const el = document.getElementById('save-status');
+  el.textContent = text;
+  el.className = 'text-xs font-bold ml-2 ' + (isError ? 'text-error' : 'text-tertiary');
+  el.classList.remove('hidden');
+  setTimeout(() => { el.classList.add('hidden'); }, 3000);
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab-btn[data-tab="${name}"]`).classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if (name === 'context') loadResumeContext();
+}
+
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// ─── Init ───────────────────────────────────────────────────────────────
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  resumeId = params.get('id');
+  if (!resumeId) {
+    document.getElementById('loading-state').innerHTML = '<p class="text-error font-bold">No resume profile ID provided.</p>';
+    return;
+  }
+
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${resumeId}`);
+    if (!res.success) throw new Error(res.error);
+    resumeData = res.data;
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('page-content').classList.remove('hidden');
+    document.getElementById('preview-btn').href = `resume-preview.html?id=${resumeId}`;
+    renderOverview();
+    loadProjects();
+    loadCertificates();
+    loadSections();
+  } catch (err) {
+    document.getElementById('loading-state').innerHTML = `<p class="text-error font-bold">Failed to load: ${escHtml(err.message)}</p>`;
+  }
+}
+
+// ─── Overview ────────────────────────────────────────────────────────────
+
+function renderOverview() {
+  const p = resumeData;
+  document.getElementById('resume-name').textContent = p.name;
+  document.getElementById('resume-target').textContent = p.targetRole;
+
+  document.getElementById('cfg-name').value = p.name || '';
+  document.getElementById('cfg-targetRole').value = p.targetRole || '';
+  document.getElementById('cfg-description').value = p.description || '';
+  document.getElementById('cfg-template').value = p.template || 'modern';
+  document.getElementById('cfg-pageSize').value = p.pageSize || 'a4';
+
+  updateCompletionDisplay(p.completion);
+  loadStats();
+}
+
+async function saveGeneral() {
+  const payload = {
+    name: document.getElementById('cfg-name').value.trim(),
+    targetRole: document.getElementById('cfg-targetRole').value.trim(),
+    description: document.getElementById('cfg-description').value.trim() || null,
+    template: document.getElementById('cfg-template').value,
+    pageSize: document.getElementById('cfg-pageSize').value,
+  };
+  try {
+    const res = await window.apiRequest('PUT', `/api/career-studio/resume-profiles/${resumeId}`, payload);
+    if (res.success) {
+      resumeData = res.data;
+      updateCompletionDisplay(res.data.completion);
+      showStatus('Saved', false);
+      sessionStorage.setItem('resume-config-saved', Date.now());
+      sessionStorage.setItem('resume-config-profile', resumeId);
+    } else {
+      showStatus(res.error || 'Failed to save', true);
+    }
+  } catch (err) {
+    showStatus(err.message, true);
+  }
+}
+
+function updateCompletionDisplay(comp) {
+  if (!comp) return;
+  document.getElementById('completion-bar').style.width = comp.percentage + '%';
+  document.getElementById('completion-text').textContent = comp.percentage + '%';
+
+  const details = document.getElementById('completion-details');
+  details.innerHTML = comp.checks.map(c =>
+    `<div class="flex items-center justify-between text-xs">
+      <span class="flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-${c.done ? 'tertiary' : 'on-surface-variant/40'}" style="font-size:16px;${c.done ? 'font-variation-settings:\'FILL\'1;' : ''}">${c.done ? 'check_circle' : 'radio_button_unchecked'}</span>
+        ${escHtml(c.label)}
+      </span>
+    </div>`
+  ).join('');
+}
+
+async function loadStats() {
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${resumeId}/context`);
+    if (res.success && res.data) {
+      const { stats } = res.data;
+      const cards = document.getElementById('stats-cards');
+      cards.innerHTML = Object.entries(stats).map(([key, val]) =>
+        `<div class="stat-card">
+          <div class="value">${val}</div>
+          <div class="label">${key}</div>
+        </div>`
+      ).join('');
+    }
+  } catch (e) {}
+}
+
+// ─── Projects ────────────────────────────────────────────────────────────
+
+async function loadProjects() {
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${resumeId}/projects`);
+    if (!res.success) throw new Error(res.error);
+    projectsData = res.data || [];
+    renderProjects();
+  } catch (err) {
+    document.getElementById('projects-list').innerHTML = `<p class="text-error text-sm">${escHtml(err.message)}</p>`;
+  }
+}
+
+function renderProjects() {
+  const list = document.getElementById('projects-list');
+  const empty = document.getElementById('projects-empty');
+
+  if (projectsData.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  list.innerHTML = projectsData.map((p, i) => {
+    const isSelected = p.selected;
+    return `
+      <div class="project-card ${isSelected ? 'selected' : ''}" data-project-id="${p.id}">
+        <div class="flex items-center gap-3">
+          <input type="checkbox" class="project-checkbox" data-id="${p.id}" ${isSelected ? 'checked' : ''} onchange="toggleProject('${p.id}')"/>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm text-on-surface">${escHtml(p.title)}</span>
+              <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] font-bold rounded text-on-surface-variant">${escHtml(p.status)}</span>
+            </div>
+            <p class="text-xs text-on-surface-variant truncate mt-0.5">${escHtml(p.description || '')}</p>
+            <p class="text-[10px] text-primary mt-1 font-medium">${p.selectedBulletCount} / ${p.bulletCount} bullets selected</p>
+          </div>
+          <div class="flex flex-col gap-1">
+            <button class="order-btn" onclick="moveProject(${i}, -1)" ${i === 0 ? 'disabled style="opacity:0.3"' : ''}>\u25B2</button>
+            <button class="order-btn" onclick="moveProject(${i}, 1)" ${i === projectsData.length-1 ? 'disabled style="opacity:0.3"' : ''}>\u25BC</button>
+          </div>
+          <button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors" onclick="toggleBullets('${p.id}')" style="font-size:20px">expand_more</button>
+        </div>
+        <div id="bullets-${p.id}" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-1.5 pl-9">
+          ${(p.bullets || []).map(b =>
+            `<label class="flex items-center gap-2 text-xs cursor-pointer hover:bg-gray-50 rounded px-2 py-1">
+              <input type="checkbox" class="bullet-checkbox" data-project="${p.id}" data-bullet="${b.id}" ${(p.selectedBulletIds || []).includes(b.id) ? 'checked' : ''} onchange="toggleBullet('${p.id}','${b.id}')"/>
+              <span class="text-on-surface">${escHtml(b.text)}</span>
+            </label>`
+          ).join('')}
+          ${(!p.bullets || p.bullets.length === 0) ? '<p class="text-xs text-on-surface-variant/60 italic">No bullet points. Add them in the project tracker.</p>' : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleProject(id) {
+  const p = projectsData.find(x => x.id === id);
+  if (p) p.selected = !p.selected;
+
+  const card = document.querySelector(`.project-card[data-project-id="${id}"]`);
+  if (card) {
+    card.classList.toggle('selected');
+    const cb = card.querySelector('.project-checkbox');
+    if (cb) cb.checked = p.selected;
+  }
+}
+
+function toggleBullet(projectId, bulletId) {
+  const p = projectsData.find(x => x.id === projectId);
+  if (!p) return;
+  if (!p.selectedBulletIds) p.selectedBulletIds = [];
+  const idx = p.selectedBulletIds.indexOf(bulletId);
+  if (idx > -1) p.selectedBulletIds.splice(idx, 1);
+  else p.selectedBulletIds.push(bulletId);
+
+  const count = p.selectedBulletIds.length;
+  const total = (p.bullets || []).length;
+  const el = document.querySelector(`.project-card[data-project-id="${projectId}"] .text-primary`);
+  if (el) el.textContent = `${count} / ${total} bullets selected`;
+}
+
+function moveProject(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= projectsData.length) return;
+  [projectsData[idx], projectsData[newIdx]] = [projectsData[newIdx], projectsData[idx]];
+  renderProjects();
+}
+
+function toggleBullets(id) {
+  const el = document.getElementById(`bullets-${id}`);
+  if (el) el.classList.toggle('hidden');
+}
+
+async function saveProjects() {
+  const selections = projectsData
+    .filter(p => p.selected)
+    .map((p, i) => ({
+      projectId: p.id,
+      displayOrder: i,
+      selectedBulletIds: p.selectedBulletIds || [],
+    }));
+  try {
+    const res = await window.apiRequest('PUT', `/api/career-studio/resume-profiles/${resumeId}/projects`, { selections });
+    if (res.success) {
+      showStatus('Projects saved', false);
+      loadStats();
+      loadOverviewCompletion();
+      sessionStorage.setItem('resume-config-saved', Date.now());
+      sessionStorage.setItem('resume-config-profile', resumeId);
+    } else {
+      showStatus(res.error || 'Failed to save projects', true);
+    }
+  } catch (err) {
+    showStatus(err.message, true);
+  }
+}
+
+// ─── Certificates ────────────────────────────────────────────────────────
+
+async function loadCertificates() {
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${resumeId}/certificates`);
+    if (!res.success) throw new Error(res.error);
+    certificatesData = res.data || [];
+    renderCertificates();
+  } catch (err) {
+    document.getElementById('certificates-list').innerHTML = `<p class="text-error text-sm">${escHtml(err.message)}</p>`;
+  }
+}
+
+function renderCertificates() {
+  const list = document.getElementById('certificates-list');
+  const empty = document.getElementById('certificates-empty');
+
+  if (certificatesData.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  const selected = certificatesData.filter(c => c.selected);
+  list.innerHTML = certificatesData.map((c, i) => {
+    const selIndex = selected.findIndex(s => s.id === c.id);
+    const displayOrder = selIndex > -1 ? selIndex : null;
+    return `
+      <div class="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-lg">
+        <input type="checkbox" class="project-checkbox" ${c.selected ? 'checked' : ''} onchange="toggleCert('${c.id}')"/>
+        <span class="material-symbols-outlined text-secondary/40 text-xl">verified</span>
+        <div class="flex-1 min-w-0">
+          <span class="font-bold text-sm text-on-surface">${escHtml(c.name)}</span>
+          ${c.issuer ? `<span class="text-xs text-on-surface-variant ml-2">${escHtml(c.issuer)}</span>` : ''}
+        </div>
+        ${displayOrder !== null ? `<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">#${displayOrder + 1}</span>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function toggleCert(id) {
+  const c = certificatesData.find(x => x.id === id);
+  if (c) c.selected = !c.selected;
+  renderCertificates();
+}
+
+async function saveCertificates() {
+  const selected = certificatesData.filter(c => c.selected);
+  const selections = selected.map((c, i) => ({
+    certificateId: c.id,
+    displayOrder: i,
+  }));
+  try {
+    const res = await window.apiRequest('PUT', `/api/career-studio/resume-profiles/${resumeId}/certificates`, { selections });
+    if (res.success) {
+      showStatus('Certificates saved', false);
+      loadStats();
+      loadOverviewCompletion();
+      sessionStorage.setItem('resume-config-saved', Date.now());
+      sessionStorage.setItem('resume-config-profile', resumeId);
+    } else {
+      showStatus(res.error || 'Failed to save certificates', true);
+    }
+  } catch (err) {
+    showStatus(err.message, true);
+  }
+}
+
+// Certificate Manager Modal
+let certManagerData = [];
+
+async function openCertManager() {
+  document.getElementById('cert-modal').classList.remove('hidden');
+  document.getElementById('cert-modal').classList.add('flex');
+  try {
+    const res = await window.apiRequest('GET', '/api/career-studio/certificates');
+    if (res.success) certManagerData = res.data || [];
+    renderCertManager();
+  } catch (e) {}
+}
+
+function closeCertModal() {
+  document.getElementById('cert-modal').classList.add('hidden');
+  document.getElementById('cert-modal').classList.remove('flex');
+  loadCertificates();
+}
+
+function renderCertManager() {
+  const list = document.getElementById('cert-manager-list');
+  const empty = document.getElementById('cert-manager-empty');
+  if (certManagerData.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  list.innerHTML = certManagerData.map(c =>
+    `<div class="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+      <span class="material-symbols-outlined text-secondary/30 text-sm">verified</span>
+      <span class="flex-1 text-sm font-medium">${escHtml(c.name)}</span>
+      ${c.issuer ? `<span class="text-xs text-on-surface-variant">${escHtml(c.issuer)}</span>` : ''}
+      <button onclick="deleteCert('${c.id}')" class="material-symbols-outlined text-error/60 hover:text-error text-sm">delete</button>
+    </div>`
+  ).join('');
+}
+
+async function addCertificate() {
+  const name = document.getElementById('new-cert-name').value.trim();
+  const issuer = document.getElementById('new-cert-issuer').value.trim();
+  if (!name) return;
+  try {
+    const res = await window.apiRequest('POST', '/api/career-studio/certificates', { name, issuer: issuer || null });
+    if (res.success) {
+      certManagerData.push(res.data);
+      renderCertManager();
+      document.getElementById('new-cert-name').value = '';
+      document.getElementById('new-cert-issuer').value = '';
+    }
+  } catch (e) {}
+}
+
+async function deleteCert(id) {
+  try {
+    const res = await window.apiRequest('DELETE', `/api/career-studio/certificates/${id}`);
+    if (res.success) {
+      certManagerData = certManagerData.filter(c => c.id !== id);
+      renderCertManager();
+    }
+  } catch (e) {}
+}
+
+// ─── Sections ────────────────────────────────────────────────────────────
+
+async function loadSections() {
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${resumeId}/sections`);
+    if (!res.success) throw new Error(res.error);
+    sectionsData = res.data;
+    renderSections();
+  } catch (err) {
+    console.error('Failed to load sections:', err);
+  }
+}
+
+function renderSections() {
+  if (!sectionsData) return;
+  const list = document.getElementById('sections-list');
+  list.innerHTML = sectionsData.order.map((key, i) => {
+    const label = sectionsData.labels?.[key] || key.charAt(0).toUpperCase() + key.slice(1);
+    const visible = sectionsData.visibility?.[key] !== false;
+    return `
+      <div class="section-row" data-section="${key}">
+        <span class="material-symbols-outlined text-on-surface-variant/40 cursor-grab" style="font-size:18px">drag_indicator</span>
+        <span class="flex-1 text-sm font-medium">${label}</span>
+        <label class="flex items-center gap-1.5 text-xs text-on-surface-variant cursor-pointer">
+          <input type="checkbox" ${visible ? 'checked' : ''} onchange="toggleSection('${key}')"/>
+          Show
+        </label>
+        <div class="flex gap-1">
+          <button class="order-btn" onclick="moveSection(${i}, -1)" ${i === 0 ? 'disabled style="opacity:0.3"' : ''}>\u25B2</button>
+          <button class="order-btn" onclick="moveSection(${i}, 1)" ${i === sectionsData.order.length-1 ? 'disabled style="opacity:0.3"' : ''}>\u25BC</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Labels & Settings
+  const labelsEl = document.getElementById('sections-labels');
+  labelsEl.innerHTML = `
+    <div>
+      <label class="text-xs font-bold text-on-surface-variant block mb-1">Custom Section Labels</label>
+      ${sectionsData.order.map(key => {
+        const label = sectionsData.labels?.[key] || '';
+        return `<div class="flex items-center gap-2 mb-1.5">
+          <span class="text-xs text-on-surface-variant w-24 capitalize">${key}</span>
+          <input class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs section-label-input" data-key="${key}" value="${escHtml(label)}" placeholder="${key.charAt(0).toUpperCase() + key.slice(1)}"/>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="pt-3 border-t border-gray-100">
+      <label class="text-xs font-bold text-on-surface-variant block mb-1">Max Bullets Per Project</label>
+      <input id="cfg-maxBullets" type="number" min="1" max="20" value="${sectionsData.projects?.maxBullets ?? 3}" class="w-20 px-2 py-1.5 border border-gray-200 rounded text-sm"/>
+    </div>
+  `;
+}
+
+function toggleSection(key) {
+  if (sectionsData.visibility) {
+    sectionsData.visibility[key] = !sectionsData.visibility[key];
+  }
+}
+
+function moveSection(idx, dir) {
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= sectionsData.order.length) return;
+  [sectionsData.order[idx], sectionsData.order[newIdx]] = [sectionsData.order[newIdx], sectionsData.order[idx]];
+  renderSections();
+}
+
+async function saveSections() {
+  const labels = {};
+  document.querySelectorAll('.section-label-input').forEach(inp => {
+    const val = inp.value.trim();
+    if (val) labels[inp.dataset.key] = val;
+  });
+
+  const payload = {
+    order: sectionsData.order,
+    visibility: sectionsData.visibility,
+    labels,
+    projects: { maxBullets: parseInt(document.getElementById('cfg-maxBullets').value) || 3 },
+  };
+
+  try {
+    const res = await window.apiRequest('PUT', `/api/career-studio/resume-profiles/${resumeId}/sections`, payload);
+    if (res.success) {
+      sectionsData = res.data;
+      showStatus('Sections saved', false);
+      sessionStorage.setItem('resume-config-saved', Date.now());
+      sessionStorage.setItem('resume-config-profile', resumeId);
+    } else {
+      showStatus(res.error || 'Failed to save sections', true);
+    }
+  } catch (err) {
+    showStatus(err.message, true);
+  }
+}
+
+// ─── Resume Context ──────────────────────────────────────────────────────
+
+async function loadResumeContext() {
+  const metaEl = document.getElementById('ctx-metadata');
+  const metaBody = document.getElementById('ctx-meta-body');
+  const versionEl = document.getElementById('ctx-version');
+  const warningsEl = document.getElementById('ctx-warnings');
+  const missingEl = document.getElementById('ctx-missing');
+  const statsEl = document.getElementById('ctx-stats');
+  const computedEl = document.getElementById('ctx-computed');
+  const computedBody = document.getElementById('ctx-computed-body');
+  const contentEl = document.getElementById('ctx-content');
+  const emptyEl = document.getElementById('ctx-empty');
+
+  [metaEl, warningsEl, missingEl, statsEl, computedEl, contentEl, emptyEl].forEach(el => el.classList.add('hidden'));
+
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${resumeId}/context`);
+    if (!res.success || !res.data) throw new Error(res.error);
+
+    const ctx = res.data;
+    const { metadata, sections, sectionOrder, visibility, sectionLabels, computed, warnings, missing, stats } = ctx;
+
+    // ─── Metadata ───────────────────────────────────────────────────────
+    if (metadata) {
+      metaEl.classList.remove('hidden');
+      versionEl.textContent = `v${metadata.version}`;
+      metaBody.innerHTML = [
+        { label: 'Profile', value: metadata.profileName },
+        { label: 'Target Role', value: metadata.targetRole },
+        { label: 'Completion', value: metadata.completion + '%' },
+        { label: 'Generated', value: new Date(metadata.generatedAt).toLocaleTimeString() },
+      ].map(m => `<div><p class="text-[10px] text-on-surface-variant font-bold uppercase">${m.label}</p><p class="text-sm font-semibold text-on-surface">${escHtml(m.value)}</p></div>`).join('');
+    }
+
+    // ─── Warnings ───────────────────────────────────────────────────────
+    if (warnings && (warnings.critical?.length || warnings.suggestions?.length)) {
+      warningsEl.classList.remove('hidden');
+      let html = '';
+      warnings.critical?.forEach(w => {
+        html += `<div class="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs font-bold text-red-700"><span class="material-symbols-outlined text-[16px]">error</span>${escHtml(w)}</div>`;
+      });
+      warnings.suggestions?.forEach(w => {
+        html += `<div class="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs font-bold text-amber-700"><span class="material-symbols-outlined text-[16px]">lightbulb</span>${escHtml(w)}</div>`;
+      });
+      warningsEl.innerHTML = html;
+    }
+
+    // ─── Missing ────────────────────────────────────────────────────────
+    if (missing?.fields?.length) {
+      missingEl.classList.remove('hidden');
+      missingEl.innerHTML = `
+        <div class="px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg">
+          <span class="text-xs font-bold text-orange-700">Missing: </span>
+          <span class="text-xs text-orange-600">${missing.fields.map(f => escHtml(f)).join(', ')}</span>
+        </div>`;
+    }
+
+    // ─── Stats ──────────────────────────────────────────────────────────
+    if (stats) {
+      statsEl.classList.remove('hidden');
+      statsEl.innerHTML = Object.entries(stats).map(([key, val]) =>
+        `<div class="stat-card"><div class="value">${val}</div><div class="label">${key}</div></div>`
+      ).join('');
+    }
+
+    // ─── Computed ───────────────────────────────────────────────────────
+    if (computed) {
+      computedEl.classList.remove('hidden');
+      computedBody.innerHTML = [
+        { label: 'Skills', value: computed.skills?.length ?? 0 },
+        { label: 'Projects', value: computed.projectCount ?? 0 },
+        { label: 'Skill Count', value: computed.skillCount ?? 0 },
+      ].map(m => `
+        <div class="bg-gray-50 rounded-xl p-3 text-center">
+          <p class="text-lg font-black text-on-surface font-['Geist']">${m.value}</p>
+          <p class="text-[9px] text-on-surface-variant uppercase font-bold tracking-wider mt-0.5">${m.label}</p>
+        </div>`).join('');
+    }
+
+    // ─── Sections ───────────────────────────────────────────────────────
+    let html = '';
+
+    // Profile card
+    if (sections?.profile) {
+      const p = sections.profile;
+      html += '<div class="context-section"><h3>Profile</h3><div class="glass-card rounded-xl p-4">';
+      html += `<p class="text-sm font-bold">${escHtml(p.fullName || 'No name')}</p>`;
+      html += `<p class="text-sm text-on-surface-variant">${escHtml(p.professionalTitle || '')}</p>`;
+      if (p.email) html += `<p class="text-xs text-on-surface-variant mt-1">${escHtml(p.email)}</p>`;
+      if (p.bio) html += `<p class="text-xs text-on-surface-variant mt-2 italic">${escHtml(p.bio.substring(0, 200))}${p.bio && p.bio.length > 200 ? '...' : ''}</p>`;
+      if (p.website || p.linkedin || p.portfolio) {
+        const links = [p.website && `Website: ${p.website}`, p.linkedin && `LinkedIn: ${p.linkedin}`, p.portfolio && `Portfolio: ${p.portfolio}`].filter(Boolean);
+        html += `<div class="flex flex-wrap gap-2 mt-2 text-[10px] text-primary">${links.map(l => `<span>${escHtml(l)}</span>`).join('')}</div>`;
+      }
+      html += '</div></div>';
+    }
+
+    // Coding Profiles
+    if (sections?.codingProfiles?.length) {
+      const enabled = sections.codingProfiles.filter(cp => cp.enabled);
+      if (enabled.length > 0) {
+        html += '<div class="context-section"><h3>Coding Profiles</h3><div class="glass-card rounded-xl p-4">';
+        html += '<div class="flex flex-wrap gap-3">';
+        enabled.forEach(cp => {
+          html += `<div class="flex items-center gap-2 text-sm bg-gray-50 rounded-lg px-3 py-2">
+            <span class="material-symbols-outlined text-primary/60 text-sm">code</span>
+            <span class="text-xs font-bold text-on-surface">${escHtml(cp.label)}</span>
+            ${cp.username ? `<span class="text-xs text-on-surface-variant">${escHtml(cp.username)}</span>` : ''}
+          </div>`;
+        });
+        html += '</div></div></div>';
+      }
+    }
+
+    // Dynamic sections
+    for (const key of sectionOrder) {
+      if (visibility?.[key] === false) continue;
+
+      const items = sections?.[key];
+      if (!items || (Array.isArray(items) && items.length === 0)) {
+        if (key === 'summary') continue;
+        if (key === 'education' && !items) continue;
+        if (key === 'skills' && !computed?.skills?.length) continue;
+        continue;
+      }
+
+      const label = sectionLabels?.[key] || key.charAt(0).toUpperCase() + key.slice(1);
+      html += `<div class="context-section"><h3>${escHtml(label)}</h3><div class="glass-card rounded-xl p-4">`;
+
+      if (key === 'projects' && Array.isArray(items)) {
+        items.forEach(proj => {
+          html += `<div class="mb-3 last:mb-0">
+            <p class="text-sm font-bold">${escHtml(proj.title)}</p>
+            ${proj.description ? `<p class="text-xs text-on-surface-variant mt-0.5">${escHtml(proj.description.substring(0, 120))}${proj.description.length > 120 ? '...' : ''}</p>` : ''}
+            ${proj.techStack?.length ? `<div class="flex flex-wrap gap-1 mt-1">${proj.techStack.map(t => `<span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">${escHtml(t)}</span>`).join('')}</div>` : ''}
+            ${proj.bullets?.length ? `<ul class="mt-1 space-y-0.5">${proj.bullets.map(b => `<li class="text-xs text-on-surface-variant flex items-start gap-1"><span class="text-tertiary mt-0.5">\u2022</span>${escHtml(b)}</li>`).join('')}</ul>` : ''}
+            ${proj.githubUrl ? `<a href="${escHtml(proj.githubUrl)}" target="_blank" class="text-[10px] text-primary font-bold mr-2">GitHub</a>` : ''}
+            ${proj.liveUrl ? `<a href="${escHtml(proj.liveUrl)}" target="_blank" class="text-[10px] text-tertiary font-bold">Live Demo</a>` : ''}
+          </div>`;
+        });
+      } else if (key === 'skills' && Array.isArray(items)) {
+        html += `<div class="flex flex-wrap gap-1.5">${items.map(s => `<span class="px-2 py-1 bg-gray-100 text-xs font-medium rounded">${escHtml(s)}</span>`).join('')}</div>`;
+      } else if (key === 'certificates' && Array.isArray(items)) {
+        items.forEach(cert => {
+          html += `<div class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-secondary/40 text-sm">verified</span><span class="text-sm font-medium">${escHtml(cert.name)}</span>${cert.issuer ? `<span class="text-xs text-on-surface-variant">- ${escHtml(cert.issuer)}</span>` : ''}</div>`;
+        });
+      } else if (key === 'achievements' && Array.isArray(items)) {
+        items.forEach(a => {
+          html += `<div class="flex items-center gap-2 text-sm mb-1 last:mb-0">
+            <span class="material-symbols-outlined text-primary/60 text-sm">emoji_events</span>
+            <span class="text-sm font-medium">${escHtml(a.title)}</span>
+            ${a.source ? `<span class="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded font-bold text-on-surface-variant">${escHtml(a.source)}</span>` : ''}
+            ${a.description ? `<span class="text-xs text-on-surface-variant">${escHtml(a.description)}</span>` : ''}
+          </div>`;
+        });
+      } else if (key === 'education' && items) {
+        html += `<div class="text-sm">
+          ${items.institution ? `<p class="font-bold">${escHtml(items.institution)}</p>` : ''}
+          ${items.cgpa ? `<p>CGPA: <strong>${items.cgpa}</strong></p>` : ''}
+          ${items.creditsEarned ? `<p class="text-xs text-on-surface-variant">Credits: ${items.creditsEarned}${items.creditsRequired ? ' / ' + items.creditsRequired : ''}</p>` : ''}
+          ${items.attendance ? `<p class="text-xs text-on-surface-variant">Attendance: ${items.attendance}%</p>` : ''}
+        </div>`;
+      } else if (key === 'summary') {
+        html += `<p class="text-sm text-on-surface-variant italic">${escHtml(items || sections?.profile?.bio || 'No summary available.')}</p>`;
+      }
+
+      html += '</div></div>';
+    }
+
+    contentEl.innerHTML = html;
+    contentEl.classList.remove('hidden');
+  } catch (err) {
+    contentEl.innerHTML = `<div class="text-center py-10"><p class="text-error text-sm font-bold">${escHtml(err.message)}</p></div>`;
+    contentEl.classList.remove('hidden');
+  }
+}
+
+// ─── Download Resume PDF ────────────────────────────────────────────────
+
+async function downloadResumePDF() {
+  const btn = document.querySelector('#tab-context .bg-secondary');
+  if (!btn) return;
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = 'Downloading...';
+  btn.disabled = true;
+
+  try {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_BASE = isLocalhost ? 'http://localhost:5000' : '';
+    const token = window.Clerk && window.Clerk.session ? await window.Clerk.session.getToken() : null;
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}/api/reports/career?resumeProfileId=${resumeId}`, { method: 'GET', headers });
+    if (!res.ok) throw new Error('Failed to generate PDF');
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${resumeData?.name || 'Resume'}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    showStatus('PDF downloaded', false);
+  } catch (err) {
+    showStatus('Error: ' + err.message, true);
+  } finally {
+    btn.innerHTML = origHtml;
+    btn.disabled = false;
+  }
+}
+
+// ─── Reload completion after saves ───────────────────────────────────────
+
+async function loadOverviewCompletion() {
+  try {
+    const res = await window.apiRequest('GET', `/api/career-studio/resume-profiles/${resumeId}`);
+    if (res.success && res.data) {
+      resumeData = res.data;
+      document.getElementById('preview-btn').href = `resume-preview.html?id=${resumeId}`;
+      updateCompletionDisplay(res.data.completion);
+    }
+  } catch (e) {}
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────
+
+if (window.clerkReady) init();
+else window.addEventListener('clerk-ready', init);
+
+</script>
+</body>
+</html>

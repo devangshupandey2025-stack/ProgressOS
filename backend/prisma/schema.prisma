@@ -71,6 +71,8 @@ model User {
   xpTransactions  XPTransaction[]
   careerProfile   CareerProfile?
 
+  certificates    Certificate[]
+
   @@index([clerkId])
 }
 
@@ -201,7 +203,21 @@ model ProjectEntry {
   userId      String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  bullets     ProjectBullet[]
+  resumeProjects ResumeProject[]
+
   @@index([userId])
+}
+
+model ProjectBullet {
+  id          String        @id @default(uuid())
+  projectId   String
+  project     ProjectEntry  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  text        String
+  displayOrder Int          @default(0)
+  createdAt   DateTime      @default(now())
+
+  @@index([projectId])
 }
 
 // ─── Open Source Tracker ─────────────────────────────────────────────────────
@@ -427,6 +443,21 @@ model VITSnapshot {
   @@index([userId, createdAt])
 }
 
+// ─── Certificates ────────────────────────────────────────────────────────────
+
+model Certificate {
+  id             String   @id @default(uuid())
+  name           String
+  issuer         String?
+  credentialUrl  String?
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resumeCertificates ResumeCertificate[]
+
+  @@index([userId])
+}
+
 // ─── Career Studio ─────────────────────────────────────────────────────────
 
 model CareerProfile {
@@ -492,12 +523,111 @@ model ResumeProfile {
   summaryStrategy String         @default("manual")
   isDefault       Boolean        @default(false)
   displayOrder    Int            @default(0)
+  sectionSettings Json?         @default("{}")
   lastGeneratedAt DateTime?
   version         Int            @default(1)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
+  resumeProjects         ResumeProject[]
+  resumeCertificates     ResumeCertificate[]
+  resumeAchievements     ResumeAchievement[]
+  aiReviews              AIReview[]
+  resumeRevisions        ResumeRevision[]
+  activeRevisionId       String?  @unique
+  activeRevision         ResumeRevision?  @relation("ActiveRevision", fields: [activeRevisionId], references: [id], onDelete: SetNull)
+
   @@index([careerProfileId])
+}
+
+// ─── Resume Composition ──────────────────────────────────────────────────────
+
+model ResumeProject {
+  id                String        @id @default(uuid())
+  resumeProfileId   String
+  resumeProfile     ResumeProfile @relation(fields: [resumeProfileId], references: [id], onDelete: Cascade)
+  projectId         String
+  project           ProjectEntry  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  displayOrder      Int           @default(0)
+  selectedBulletIds Json          @default("[]")
+
+  @@unique([resumeProfileId, projectId])
+  @@index([resumeProfileId])
+}
+
+model ResumeCertificate {
+  id              String        @id @default(uuid())
+  resumeProfileId String
+  resumeProfile   ResumeProfile @relation(fields: [resumeProfileId], references: [id], onDelete: Cascade)
+  certificateId   String
+  certificate     Certificate   @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+  displayOrder    Int           @default(0)
+
+  @@unique([resumeProfileId, certificateId])
+  @@index([resumeProfileId])
+}
+
+model ResumeAchievement {
+  id              String        @id @default(uuid())
+  resumeProfileId String
+  resumeProfile   ResumeProfile @relation(fields: [resumeProfileId], references: [id], onDelete: Cascade)
+  achievementKey  String
+  displayOrder    Int           @default(0)
+
+  @@unique([resumeProfileId, achievementKey])
+  @@index([resumeProfileId])
+}
+
+// ─── Career Intelligence ─────────────────────────────────────────────────────
+
+model AIReview {
+  id              String   @id @default(uuid())
+  resumeProfileId String
+  resumeProfile   ResumeProfile @relation(fields: [resumeProfileId], references: [id], onDelete: Cascade)
+  section         String       // "summary" | "project" | "achievement"
+  sectionItemId   String?      // projectId or achievementKey (null for summary)
+  action          String       // "rewrite" | "improve" | "quantify" | "ats-optimize"
+  before          Json         // Original content
+  after           Json         // AI-suggested content
+  edited          Json?        // User-edited version (if different from after)
+  reasoning       String[]
+  confidence      Float?
+  latencyMs       Int?
+  tokens          Int?
+  status          String   @default("pending")  // pending | accepted | rejected
+  promptId        String?      // e.g. "rewrite-summary-v1"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([resumeProfileId])
+}
+
+model ResumeRevision {
+  id              String       @id @default(uuid())
+  resumeProfileId String
+  resumeProfile   ResumeProfile @relation(fields: [resumeProfileId], references: [id], onDelete: Cascade)
+  parentRevisionId String?
+  parentRevision   ResumeRevision? @relation("RevisionChain", fields: [parentRevisionId], references: [id])
+  children         ResumeRevision[] @relation("RevisionChain")
+  label            String?     // e.g. "AI Rewrite: Summary"
+  createdAt        DateTime   @default(now())
+
+  changes          ResumeChange[]
+  activeProfile    ResumeProfile? @relation("ActiveRevision")
+
+  @@index([resumeProfileId])
+}
+
+model ResumeChange {
+  id              String         @id @default(uuid())
+  revisionId      String
+  revision        ResumeRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  section         String         // "summary" | "projects" | "achievements"
+  sectionItemId   String?        // projectId or achievementKey (null for summary)
+  changeType      String         // "replace" | "modify_bullets" | "modify_description"
+  payload         Json           // The actual changes
+
+  @@index([revisionId])
 }
 
 // ─── XPTransaction ───────────────────────────────────────────────────────────

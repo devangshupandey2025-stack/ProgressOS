@@ -17,6 +17,7 @@ const envSchema = z.object({
   CLERK_PUBLISHABLE_KEY: z.string().optional(),
   VIT_ENCRYPTION_KEY: z.string().default('dev-fallback-key-change-in-production'),
   VIT_SYNC_INTERVAL_HOURS: z.coerce.number().default(6),
+  GEMINI_API_KEY: z.string().default(''),
 
 });
 
