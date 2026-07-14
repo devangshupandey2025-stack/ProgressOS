@@ -1048,6 +1048,8 @@
                                 <span id="gh-card-sync-time" class="italic">Not synced</span>
                             </div>
                         </div>
+
+                        <div id="gh-card-error" class="hidden text-[10px] text-red-500 font-medium text-center"></div>
                     </div>
                 </div>
 
@@ -2362,6 +2364,7 @@
         async function loadGitHubCard() {
             const unconnectedEl = document.getElementById('gh-card-unconnected');
             const connectedEl = document.getElementById('gh-card-connected');
+            const errorEl = document.getElementById('gh-card-error');
             const cardEl = document.getElementById('gh-dashboard-card');
             if (!cardEl) return;
 
@@ -2400,6 +2403,20 @@
                     document.getElementById('gh-card-readiness-bar').style.width = `${anal.projectReadiness}%`;
                 }
 
+                // Show error message if repos fetch failed
+                if (!reposRes.success) {
+                    errorEl.textContent = reposRes.error || 'Failed to load repositories';
+                    errorEl.classList.remove('hidden');
+                } else if (!activityRes.success) {
+                    errorEl.textContent = activityRes.error || 'Failed to load activity';
+                    errorEl.classList.remove('hidden');
+                } else if (!analyticsRes.success) {
+                    errorEl.textContent = analyticsRes.error || 'Failed to load analytics';
+                    errorEl.classList.remove('hidden');
+                } else {
+                    errorEl.classList.add('hidden');
+                }
+
                 // Sync time
                 if (lastSyncStr) {
                     const syncTime = new Date(lastSyncStr);
@@ -2416,12 +2433,14 @@
         // ─── GitHub Sync ─────────────────────────────────────────────────────────
         async function syncGitHubCard() {
             const btn = document.getElementById('gh-card-sync-btn');
+            const errorEl = document.getElementById('gh-card-error');
             btn.disabled = true;
             btn.innerHTML = '<span class="material-symbols-outlined text-[12px] animate-spin">sync</span>';
 
             try {
                 const res = await apiRequest('POST', '/api/github/sync');
                 if (res.success) {
+                    errorEl.classList.add('hidden');
                     await loadGitHubCard();
                     btn.innerHTML = '<span class="material-symbols-outlined text-[12px]">check</span>';
                     setTimeout(() => {
@@ -2431,10 +2450,14 @@
                 } else {
                     btn.innerHTML = '<span class="material-symbols-outlined text-[12px]">error</span>';
                     btn.disabled = false;
+                    errorEl.textContent = res.error || 'Sync failed';
+                    errorEl.classList.remove('hidden');
                 }
             } catch {
                 btn.innerHTML = '<span class="material-symbols-outlined text-[12px]">error</span>';
                 btn.disabled = false;
+                errorEl.textContent = 'Sync failed - network error';
+                errorEl.classList.remove('hidden');
             }
         }
 

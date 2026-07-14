@@ -51,7 +51,15 @@ export class GitHubService {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, { headers });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    let response: Response;
+    try {
+      response = await fetch(url, { headers, signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!response.ok) {
       if (response.status === 403) {
