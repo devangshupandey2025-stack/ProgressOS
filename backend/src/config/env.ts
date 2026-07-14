@@ -26,7 +26,11 @@ const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
   console.error('❌ Invalid environment variables:');
   console.error(parsed.error.flatten().fieldErrors);
-  process.exit(1);
+  // In Vercel, process.exit kills the function without returning a response.
+  // Throw instead so the caller can handle it gracefully.
+  throw new Error(
+    `Invalid environment variables: ${JSON.stringify(parsed.error.flatten().fieldErrors)}`
+  );
 }
 
 export const env = parsed.data;

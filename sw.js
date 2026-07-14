@@ -24,6 +24,11 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+async function fromCacheOrFallback(request, fallbackStatus = 503) {
+  const cached = await caches.match(request);
+  return cached || new Response(null, { status: fallbackStatus });
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -31,7 +36,7 @@ self.addEventListener('fetch', (event) => {
   // API requests: network-first with cache fallback
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request).catch(() => caches.match(request))
+      fetch(request).catch(() => fromCacheOrFallback(request, 503))
     );
     return;
   }
@@ -39,7 +44,7 @@ self.addEventListener('fetch', (event) => {
   // CDN / external requests: network-first
   if (url.origin !== self.location.origin) {
     event.respondWith(
-      fetch(request).catch(() => caches.match(request))
+      fetch(request).catch(() => fromCacheOrFallback(request, 503))
     );
     return;
   }
@@ -53,7 +58,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE).then((cache) => cache.put(request, clone));
         }
         return response;
-      }).catch(() => caches.match(request))
+      }).catch(() => fromCacheOrFallback(request, 503))
     );
     return;
   }
@@ -61,14 +66,16 @@ self.addEventListener('fetch', (event) => {
   // Static assets: stale-while-revalidate
   event.respondWith(
     caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request).then((response) => {
-        if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      });
-      return cached || fetchPromise;
+      if (cached) {
+        fetch(request).then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, clone));
+          }
+        });
+        return cached;
+      }
+      return fetch(request).catch(() => new Response(null, { status: 503 }));
     })
   );
 });
